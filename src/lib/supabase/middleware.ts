@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   // Public paths that don't require authentication
   const publicPaths = ['/', '/login', '/register'];
   const isPublicPath = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith('/api/')
+    (path) => pathname === path || pathname.startsWith('/api/') || pathname.startsWith('/auth/')
   );
 
   // Redirect unauthenticated users to login
