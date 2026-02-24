@@ -103,6 +103,49 @@ npx supabase gen types typescript --local > src/types/database.ts
 
 ---
 
+## AI Development Workflow（3者協議確定: 2026-02-25）
+
+### Role Assignment
+- **Claude Code**: オーケストレーター（設計・タスク定義・レビュー・統合・Git・Obsidian）
+- **Codex CLI**: コード生成の主力（仕様確定後の実装）
+- **Gemini CLI**: 補助（複雑なロジック調査・既存コード理解・レビュー用セカンドオピニオン）
+- **Claudeはコードを自分で書かない。必ずCodex CLIまたはGemini CLIに委託する。**
+
+### CLI Usage Rules
+| 状況 | 担当CLI | 理由 |
+|------|---------|------|
+| 仕様確定後の新規実装 | Codex CLI | 速度・自動化・実績 |
+| 既存コードの改修・リファクタ | Gemini CLI | コードベース理解力 |
+| SSE/RLS/認証の実装 | Codex CLI（主）+ Gemini CLI（レビュー） | 高リスク領域は二重チェック |
+| UI/UXの案出し・プロトタイプ | Gemini CLI | 発想の幅 |
+| テストコード作成 | Codex CLI | パターンベース生成に強い |
+| 設計検討・代替案比較 | 3者協議 | 多角的判断 |
+
+### Orchestration Workflow
+```
+Claude Code（オーケストレーター）
+├─ 1. 設計・仕様定義（CLAUDE.md参照）
+├─ 2. タスク定義作成（codex/current-task.txt）
+├─ 3. CLI実行委託
+│   ├─ Codex: codex exec "$(cat codex/current-task.txt)" --full-auto
+│   └─ Gemini: gemini < codex/current-task.txt
+├─ 4. 生成コードのレビュー（型チェック + ビルド確認）
+├─ 5. 統合・Git commit & push
+├─ 6. HANDOVER.md更新
+└─ 7. Obsidianノート作成
+```
+
+### Context Management Rules
+- 残り30%時点で開発停止 → 引き継ぎ作業へ
+- 引き継ぎ作業に15-20%の余力を確保
+- SSE/RLS/認証タスクは途中切断禁止（機能の区切りで引き継ぎ）
+- HANDOVER.md一元管理
+
+### Task Definition Template
+See `codex/TASK_TEMPLATE.md` for the full template.
+
+---
+
 ## Architecture Rules
 
 ### API Design
