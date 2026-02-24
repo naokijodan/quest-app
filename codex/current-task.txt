@@ -1,225 +1,219 @@
-# Task: Sprint2-PhaseC1-AnthropicSSE
+# Task: Sprint2-PhaseC2-Frontend
 # AI: Codex CLI
 # Priority: High
-# Risk Level: Critical (SSE + Auth + DB)
+# Risk Level: Medium
 
 ## 1. Objective
-Anthropic SDKの初期化、SSEストリーミングAPI Route、クエスト関連Server Actionsを実装する。
-クエスト実行のバックエンド全体を構築する。
+クエスト実行のフロントエンド全体を構築する。
+ホーム画面（クエスト一覧）、クエスト詳細+入力画面、実行中画面、結果表示画面。
 
 ## 2. Target Files
 
 ### Create（新規作成）
-- src/lib/anthropic/client.ts （Anthropic SDK初期化）
-- src/lib/anthropic/stream.ts （ストリーミングヘルパー）
-- src/lib/anthropic/templates.ts （プロンプトテンプレート処理）
-- src/app/api/quest/execute/route.ts （SSEストリーミングAPI Route）
-- src/features/quest/actions/index.ts （クエスト関連Server Actions）
+- src/app/(main)/layout.tsx （認証済みユーザーのレイアウト — ヘッダー+メインコンテンツ）
+- src/app/(main)/page.tsx （ホーム画面 — クエスト一覧）
+- src/app/(main)/quest/[id]/page.tsx （クエスト詳細+入力+実行+結果の統合画面）
+- src/features/quest/components/QuestCard.tsx （クエスト一覧のカード）
+- src/features/quest/components/QuestInputForm.tsx （クエスト入力フォーム）
+- src/features/quest/components/QuestExecution.tsx （実行中画面 — マスコット演出）
+- src/features/quest/components/QuestResult.tsx （結果表示画面）
+- src/features/quest/hooks/useQuestExecution.ts （SSEストリーミング接続カスタムフック）
 
 ### Modify（変更）
-- なし
+- なし（新規作成のみ）
 
 ## 3. Dependencies（依存ファイル — 必ず読むこと）
 
+### 共通UI（src/components/ui/index.ts）
+```typescript
+export { Button } from './Button';  // variant: 'primary'|'secondary'|'danger'|'ghost'|'accent', size: 'sm'|'md'|'lg', loading, icon
+export { Card, CardHeader, CardTitle, CardDescription } from './Card';  // padding: 'sm'|'md'|'lg'
+export { Input, Textarea } from './Input';  // label, error
+export { Modal } from './Modal';
+export { Toast } from './Toast';
+```
+
 ### 型定義（src/types/index.ts）
 ```typescript
+export type AvatarType = 'planner' | 'explorer' | 'crafter';
+export type MascotType = 'cat' | 'dog';
 export type QuestCategory = 'basic' | 'business' | 'life' | 'creative' | 'analysis';
 export type QuestDifficulty = 1 | 2 | 3;
 export type QuestRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-export type OutputType = 'markdown' | 'json' | 'text' | 'csv';
 
-export interface PresetQuest {
-  id: string;
-  quest_identifier: string;
-  title: string;
-  description: string;
-  difficulty: QuestDifficulty;
-  category: QuestCategory;
-  xp_reward: number;
-  prompt_template: string;
-  output_type: OutputType;
-  required_inputs: QuestInput[];
-  max_tokens_limit: number;
-  icon: string;
-  is_active: boolean;
-}
-
-export interface QuestRun {
-  id: string;
-  user_id: string;
-  preset_quest_id: string | null;
-  status: QuestRunStatus;
-  input_data: Record<string, string>;
-  partial_output: string | null;
-  output_data: string | null;
-  output_type: OutputType;
-  actual_tokens_used: number | null;
-  error_message: string | null;
-  retry_count: number;
-  started_at: string;
-  completed_at: string | null;
-}
-
-export type QuestSSEEvent =
-  | { type: 'start'; quest_run_id: string }
-  | { type: 'delta'; content: string }
-  | { type: 'progress'; message: string }
-  | { type: 'complete'; quest_run_id: string; xp_gained: number; level_up: boolean }
-  | { type: 'error'; message: string; retryable: boolean };
+export interface PresetQuest { id, quest_identifier, title, description, difficulty, category, xp_reward, prompt_template, output_type, required_inputs: QuestInput[], max_tokens_limit, icon, is_active }
+export interface QuestInput { name, label, type: 'text'|'textarea'|'select', description, example, options?, validation: { required, minLength?, maxLength? } }
+export interface QuestRun { id, user_id, preset_quest_id, status, input_data, partial_output, output_data, output_type, actual_tokens_used, error_message, retry_count, started_at, completed_at }
+export type QuestSSEEvent = { type: 'start', quest_run_id } | { type: 'delta', content } | { type: 'progress', message } | { type: 'complete', quest_run_id, xp_gained, level_up } | { type: 'error', message, retryable }
 ```
 
 ### バリデーション（src/features/quest/types/schema.ts）
 ```typescript
-import { z } from 'zod';
 export const questExecuteSchema = z.object({
   questId: z.string().uuid(),
   inputs: z.record(z.string(), z.string().max(5000)),
 });
-export type QuestExecuteInput = z.infer<typeof questExecuteSchema>;
 ```
 
-### Supabase Server Client（src/lib/supabase/server.ts）
+### Server Actions（src/features/quest/actions/index.ts）
 ```typescript
-export async function createClient() { /* cookieベースのServerClient */ }
+export async function getPresetQuests(): Promise<PresetQuest[]>
+export async function getPresetQuestById(id: string): Promise<PresetQuest | null>
+export async function getUserProfile(): Promise<User | null>
 ```
 
-### ゲーミフィケーション（src/features/gamification/types/index.ts）
+### Zustand Stores
 ```typescript
-export const DIFFICULTY_XP = { 1: 10, 2: 20, 3: 40 } as const;
-export function calculateLevel(xp: number): number { ... }
-export function getUnlockedCategories(level: number): readonly string[] { ... }
+// src/stores/questStore.ts
+export const useQuestStore = create<QuestExecutionState>(...)
+// isExecuting, currentQuestRunId, streamedContent, progressMessages, error
+// startExecution, appendContent, addProgressMessage, completeExecution, failExecution, reset
+
+// src/stores/uiStore.ts
+export const useUIStore = create<UIState>(...)
+// showToast, showXPGainAnimation, setLevelUpModal
+
+// src/stores/userStore.ts
+export const useUserStore = create<UserState>(...)
+// user, setUser, updateXP, incrementQuestCount
 ```
+
+### ゲーミフィケーション
+```typescript
+export const DIFFICULTY_XP = { 1: 10, 2: 20, 3: 40 };
+export function calculateLevel(xp: number): number
+export function getUnlockedCategories(level: number): readonly string[]
+```
+
+### TailwindCSS Theme Colors
+- --quest-primary: #6366f1
+- --quest-accent: #f59e0b
+- --quest-success: #10b981
+- --quest-danger: #ef4444
+- --quest-info: #3b82f6
+- --card-bg, --card-border, --foreground, --muted
 
 ## 4. Requirements（仕様）
 
-### src/lib/anthropic/client.ts
+### (main)/layout.tsx
+- Server Component
+- getUserProfile()でユーザー情報取得
+- 未認証→/login、オンボーディング未完了→/onboarding にリダイレクト
+- シンプルなヘッダー: アプリ名「Quest App」+ ユーザー名 + レベル表示
+- children をレンダリング
+- max-w-4xl, mx-auto, padding
+
+### (main)/page.tsx — ホーム画面
+- Server Component
+- getPresetQuests() でクエスト一覧取得
+- getUserProfile() でユーザー情報取得
+- 「クエストを選ぼう！」タイトル
+- カテゴリ別にグループ分け（basic → business → life → creative → analysis）
+- ロックされたカテゴリはグレーアウト+ロックアイコン
+- 各クエストは QuestCard コンポーネントで表示
+
+### QuestCard.tsx
+- Props: quest: PresetQuest, locked: boolean
+- カード表示: icon, title, description, difficulty(★表示), xp_reward, category badge
+- locked=true の場合: opacity-50, ロックオーバーレイ, クリック不可
+- locked=false の場合: Link to /quest/[id]
+- ホバーエフェクト
+
+### quest/[id]/page.tsx
+- Server Component でクエスト情報取得
+- クエストが存在しない場合は notFound()
+- QuestInputForm をレンダリング
+
+### QuestInputForm.tsx（'use client'）
+- Props: quest: PresetQuest
+- quest.required_inputs に基づいて動的にフォームを生成
+  - type: 'text' → Input コンポーネント
+  - type: 'textarea' → Textarea コンポーネント
+  - type: 'select' → <select> ドロップダウン
+- バリデーション: required, minLength, maxLength をリアルタイムチェック
+- 「クエスト実行！」ボタン → useQuestExecution フックを呼び出し
+- 実行中は QuestExecution コンポーネントを表示
+- 完了後は QuestResult コンポーネントを表示
+- ステートマシン: 'input' | 'executing' | 'completed' | 'error'
+
+### useQuestExecution.ts
 ```typescript
-// Anthropic SDK のシングルトン初期化
-// process.env.ANTHROPIC_API_KEY を使用
-// エラーハンドリング: APIキー未設定時のわかりやすいエラー
-import Anthropic from '@anthropic-ai/sdk';
-
-let client: Anthropic | null = null;
-export function getAnthropicClient(): Anthropic {
-  if (!client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
-    client = new Anthropic({ apiKey });
-  }
-  return client;
-}
+// SSEストリーミング接続を管理するカスタムフック
+// 1. fetch('/api/quest/execute', { method: 'POST', body, signal })
+// 2. ReadableStream を読み取り
+// 3. SSEイベントをパース（data: {...}\n\n）
+// 4. questStore を更新（startExecution, appendContent, etc.）
+// 5. uiStore でXPアニメーション, レベルアップモーダル表示
+// 6. AbortController でキャンセル対応
+// returns: { execute, cancel, phase: 'idle'|'executing'|'completed'|'error' }
 ```
 
-### src/lib/anthropic/templates.ts
-```typescript
-// prompt_template の {{variable}} を実際の入力値で置換
-export function renderTemplate(template: string, inputs: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => inputs[key] ?? '');
-}
-```
+### QuestExecution.tsx（'use client'）
+- questStore から streamedContent, progressMessages を読み取り
+- マスコット演出: 進捗メッセージをフキダシで表示
+- ストリーミング中のテキストをリアルタイム表示
+- 「キャンセル」ボタン
+- ローディングアニメーション（pulse）
 
-### src/lib/anthropic/stream.ts
-```typescript
-// Anthropic ストリーミング呼び出しのヘルパー
-// model: 'claude-sonnet-4-20250514' (デフォルト)
-// system prompt: Quest Appの固定プリフィックス + ユーザーのプロンプト
-// max_tokens: quest.max_tokens_limit
-// streamイベントを AsyncGenerator<string> で返す
-```
+### QuestResult.tsx（'use client'）
+- Props: questRunId, xpGained, levelUp
+- 結果テキスト（streamedContent）をMarkdown風に表示
+- XP獲得演出（+10 XP のバッジ）
+- レベルアップ時はモーダル表示
+- 「結果をコピー」ボタン（navigator.clipboard.writeText）
+- 「もう一度実行」ボタン
+- 「ホームに戻る」リンク
 
-### src/app/api/quest/execute/route.ts （CRITICAL）
-POST ハンドラー。以下の手順で処理する:
-
-1. **認証チェック**: Supabase auth.getUser()
-2. **リクエストバリデーション**: questExecuteSchema.safeParse
-3. **クエスト取得**: preset_quests テーブルから quest を取得
-4. **カテゴリアクセスチェック**: ユーザーのレベルに基づくカテゴリ制限
-5. **デイリークォータチェック**: user_daily_quotas テーブル確認（Free: 10回/日, 10000トークン/日）
-6. **quest_run 作成**: status: 'running' で INSERT
-7. **SSE ストリーム開始**: `start` イベント送信
-8. **Anthropic API ストリーミング呼び出し**: delta イベントを順次送信
-9. **進捗メッセージ**: 途中で `progress` イベントを送信（マスコットのセリフ）
-10. **完了処理**:
-    - quest_run を 'completed' に更新、output_data・tokens保存
-    - XP加算: users テーブルの experience_points を更新
-    - レベルアップ判定
-    - user_daily_quotas のカウント更新
-    - `complete` イベント送信
-11. **エラー時**: partial_output を保存、quest_run を 'failed' に更新、`error` イベント送信
-
-SSEフォーマット:
-```
-data: {"type":"start","quest_run_id":"uuid"}\n\n
-data: {"type":"delta","content":"テキスト"}\n\n
-data: {"type":"progress","message":"がんばってるにゃ！"}\n\n
-data: {"type":"complete","quest_run_id":"uuid","xp_gained":10,"level_up":false}\n\n
-```
-
-レスポンスヘッダー:
-```
-Content-Type: text/event-stream
-Cache-Control: no-cache
-Connection: keep-alive
-```
-
-### src/features/quest/actions/index.ts
-Server Actions for quest-related operations:
-
-```typescript
-'use server';
-// 1. getPresetQuests(): 全アクティブなプリセットクエストを取得
-// 2. getPresetQuestById(id: string): 単一クエスト取得
-// 3. getQuestRun(id: string): quest_run を取得（RLSで本人のみ）
-// 4. getUserProfile(): ログインユーザーのプロフィールを取得
-// 5. getRecentQuestRuns(limit?: number): 最近の実行履歴を取得
-```
-
-## 5. Constraints（制約）
-- TailwindCSS 4のみ使用
-- Server Actionsはデータフェッチ/ミューテーション用、API Route はSSEストリーミングのみ
-- Zod v4 でサーバーサイドバリデーション
-- 型定義は src/types/index.ts の既存型を使用
+## 5. Constraints
+- TailwindCSS 4のみ（CSS Modules禁止）
+- Server Actions でデータ取得（getPresetQuests, getUserProfile等）
 - immutableパターン
-- ファイルは200-400行、最大800行
-- Anthropic APIキーはサーバーサイドのみ（NEXT_PUBLIC_ なし）
-- マスコット進捗メッセージは3-5種類用意（猫系と犬系）
+- 200-400行/ファイル、最大800行
+- lucide-react のアイコンを使用（Lock, Star, Sparkles, Copy, ArrowLeft, Home 等）
+- レスポンシブ対応（モバイルファースト）
 
-## 6. Forbidden（禁止事項）
+## 6. Forbidden
 - dangerouslySetInnerHTML の使用
 - console.log の残置
 - ハードコードされたシークレット
-- 既存のRLSポリシーの変更
 - middleware.ts の変更
-- 新規API Route の作成（/api/quest/execute のみ）
+- 新規API Route の作成
 
-## 7. High-Risk Area Details
-
-### SSE Streaming
-- Endpoint: POST /api/quest/execute
-- Event format: QuestSSEEvent 型に厳密に従う
-- エラー時: partial_output を保存、status を 'failed' に更新
-- AbortController 対応: クライアント切断時にクリーンアップ
-- ReadableStream の new Response() で返す
-
-### Daily Quota (user_daily_quotas テーブル)
-```sql
-CREATE TABLE user_daily_quotas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  quota_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  api_calls_made INTEGER NOT NULL DEFAULT 0,
-  tokens_used INTEGER NOT NULL DEFAULT 0,
-  last_reset_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (user_id, quota_date)
-);
-```
-- 存在しない場合は INSERT、存在する場合は UPDATE
-- Free plan: 10 calls/day, 10000 tokens/day
-
-## 8. Acceptance Criteria
+## 7. Acceptance Criteria
 - [ ] TypeScript型エラーなし（npm run build 成功）
-- [ ] SSEストリーミングがQuestSSEEvent型に準拠
-- [ ] 認証チェック・クォータチェックが正しく動作
-- [ ] quest_run のステータス遷移が正しい（pending→running→completed/failed）
-- [ ] XP加算・レベルアップ判定が正しい
-- [ ] エラー時にpartial_outputが保存される
+- [ ] ホーム画面でクエスト一覧が表示される
+- [ ] クエスト詳細画面で入力フォームが表示される
+- [ ] SSEストリーミングでリアルタイムにテキストが表示される
+- [ ] 完了後に結果表示+XP演出が表示される
+- [ ] レスポンシブ対応（モバイル〜デスクトップ）
+
+## 8. Reference Code
+
+### SSE読み取りパターン
+```typescript
+const response = await fetch('/api/quest/execute', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ questId, inputs }),
+  signal: controller.signal,
+});
+
+const reader = response.body!.getReader();
+const decoder = new TextDecoder();
+let buffer = '';
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buffer += decoder.decode(value, { stream: true });
+  const lines = buffer.split('\n\n');
+  buffer = lines.pop() ?? '';
+  for (const line of lines) {
+    const data = line.replace(/^data: /, '');
+    if (data) {
+      const event: QuestSSEEvent = JSON.parse(data);
+      // handle event...
+    }
+  }
+}
+```

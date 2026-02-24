@@ -1,8 +1,103 @@
 import Link from 'next/link';
-import { Sparkles, Zap, Shield, Trophy } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import { Sparkles, Zap, Shield, Trophy, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+import { createClient } from '@/lib/supabase/server';
+import { getPresetQuests, getUserProfile } from '@/features/quest/actions';
+import { calculateLevel, getUnlockedCategories } from '@/features/gamification/types';
+import { QuestCard } from '@/features/quest/components/QuestCard';
+import type { QuestCategory } from '@/types';
 
-export default function LandingPage() {
+const CATEGORY_ORDER: QuestCategory[] = ['basic', 'business', 'life', 'creative', 'analysis'];
+
+export default async function RootPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return <LandingContent />;
+  }
+
+  const profile = await getUserProfile();
+  if (!profile || !profile.onboarding_completed) {
+    redirect('/onboarding');
+  }
+
+  const quests = await getPresetQuests();
+  const level = typeof profile.level === 'number' ? profile.level : calculateLevel(profile.experience_points);
+  const unlocked = profile.unlocked_categories?.length
+    ? (profile.unlocked_categories as readonly string[])
+    : getUnlockedCategories(level);
+
+  const grouped = CATEGORY_ORDER.map((cat) => ({
+    category: cat,
+    quests: quests.filter((q) => q.category === cat),
+  }));
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-card-border bg-card-bg/60 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
+          <Link href="/" className="flex items-center gap-2 text-foreground">
+            <span className="text-lg font-bold text-quest-primary">Quest App</span>
+          </Link>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-muted">{profile.username}</span>
+            <span className="rounded-md border border-card-border bg-card-bg px-2 py-1 text-foreground">
+              Lv.{level}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        <div className="space-y-6">
+          <div>
+            <h1 className="mb-1 text-2xl font-bold text-foreground">クエストを選ぼう！</h1>
+            <p className="text-sm text-muted">レベルに応じて新しいカテゴリが解放されます。</p>
+          </div>
+
+          <div className="space-y-6">
+            {grouped.map(({ category, quests }) => {
+              const isLocked = !unlocked.includes(category);
+              return (
+                <section key={category} aria-label={`category-${category}`}>
+                  <Card padding="lg" className={isLocked ? 'opacity-70' : ''}>
+                    <CardHeader className="mb-5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="capitalize">{category}</CardTitle>
+                        {isLocked && (
+                          <span className="flex items-center gap-1 rounded-md border border-card-border bg-muted-bg px-2 py-1 text-xs text-muted">
+                            <Lock className="h-3.5 w-3.5" /> Locked
+                          </span>
+                        )}
+                      </div>
+                      <CardDescription>
+                        {isLocked ? 'レベルアップして解放しよう' : '挑戦するクエストを選択'}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {quests.length === 0 && (
+                        <p className="text-sm text-muted">クエストがありません。</p>
+                      )}
+                      {quests.map((q) => (
+                        <QuestCard key={q.id} quest={q} locked={isLocked} />
+                      ))}
+                    </div>
+                  </Card>
+                </section>
+              );
+            })}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function LandingContent() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-16">
       <main className="w-full max-w-2xl text-center">
