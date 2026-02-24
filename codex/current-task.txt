@@ -1,447 +1,258 @@
-# Task: Sprint3-PhaseC-Gamification
+# Task: Phase1-AgentHook-and-QuestExecution
 # AI: Codex CLI
 # Priority: High
-# Risk Level: Low
+# Risk Level: High
 
 ## 1. Objective
-ゲーミフィケーション強化: レベルアップ演出の改善、XP獲得アニメーション、デイリークォータ表示。
+1. `useAgentConnection` フック: Agent接続状態をReactコンポーネントに提供するフック
+2. `useQuestExecution` 書き換え: 既存のSSE/fetch方式をWebSocket Agent経由に変更
 
 ## 2. Target Files
 
 ### Create（新規作成）
-- src/features/gamification/components/LevelUpModal.tsx（改良版レベルアップモーダル）
-- src/features/gamification/components/XpGainOverlay.tsx（XP獲得アニメーション）
-- src/features/gamification/components/DailyQuota.tsx（デイリークォータ表示）
+- src/features/quest/hooks/useAgentConnection.ts — Agent接続状態管理フック
 
 ### Modify（変更）
-- src/app/globals.css（アニメーション追加）
-- src/features/quest/components/QuestResult.tsx（新しいLevelUpModal使用）
-- src/features/quest/actions/index.ts（getDailyQuota追加）
-- src/app/page.tsx（DailyQuota表示追加）
-- src/app/(main)/layout.tsx（XpGainOverlay追加）
+- src/features/quest/hooks/useQuestExecution.ts — SSE→WebSocket版に書き換え
 
-## 3. Dependencies
+## 3. Dependencies（読んでおくファイル）
 
-### uiStore（src/stores/uiStore.ts）
+### Agent接続クライアント（src/lib/agent/client.ts）
 ```typescript
-showLevelUpModal: boolean
-showXPGain: boolean
-xpGainAmount: number
-setLevelUpModal: (show: boolean) => void
-showXPGainAnimation: (amount: number) => void
-hideXPGain: () => void
+import type { AgentClientOptions, AgentEventHandler, StatusChangeHandler } from './client';
+
+export class AgentClient {
+  connect(): void;
+  disconnect(): void;
+  execute(options: {
+    cli_tool: 'claude' | 'codex' | 'gemini';
+    prompt: string;
+    working_directory?: string;
+    allowed_commands?: string[];
+    max_execution_time?: number;
+    requires_approval?: boolean;
+    onEvent: AgentEventHandler;
+  }): { requestId: string; cancel: () => void };
+  ping(timeoutMs?: number): Promise<AgentPongEvent>;
+  async checkHealth(): Promise<AgentHealthResponse | null>;
+  getStatus(): AgentConnectionStatus;
+  onStatusChange(handler: StatusChangeHandler): () => void;
+}
+export function getAgentClient(options?: AgentClientOptions): AgentClient;
 ```
 
-### 既存Modal（src/components/ui/Modal.tsx）
-open, onClose, title, children, className
-
-### 既存QuestResult（src/features/quest/components/QuestResult.tsx）
-- useUIStore で showLevelUpModal, setLevelUpModal を使用
-- レベルアップ時に Modal を表示
-
-### DB Schema（user_daily_quotas）
-```sql
-user_daily_quotas (
-  id UUID,
-  user_id UUID,
-  quota_date DATE DEFAULT CURRENT_DATE,
-  api_calls_made INTEGER DEFAULT 0,
-  tokens_used INTEGER DEFAULT 0,
-  last_reset_at TIMESTAMPTZ
-)
+### Agent型定義（src/lib/agent/types.ts）
+```typescript
+export type AgentConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type AgentResponse = AgentStartEvent | AgentStdoutEvent | AgentStderrEvent | AgentProgressEvent | AgentCompleteEvent | AgentErrorEvent | AgentPongEvent;
+export interface AgentStdoutEvent { type: 'stdout'; request_id: string; content: string; }
+export interface AgentCompleteEvent { type: 'complete'; request_id: string; exit_code: number; output: string; }
+export interface AgentErrorEvent { type: 'error'; request_id: string; message: string; retryable: boolean; }
+export interface AgentProgressEvent { type: 'progress'; request_id: string; message: string; }
+export interface AgentHealthResponse { status: 'ok'; version: string; available_tools: string[]; uptime: number; }
 ```
 
-### Rate Limits（Free plan）
-- Daily calls: 10
-- Daily tokens: 10,000
+### Zustand stores
+- useQuestStore: startExecution(runId), appendContent(text), addProgressMessage(msg), completeExecution(), failExecution(err), reset()
+- useUIStore: showXPGainAnimation(amount), setLevelUpModal(show), showToast(msg, type)
+- useUserStore: updateXP(gained, newLevel), incrementQuestCount()
 
-## 4. Requirements（仕様）
+## 4. Requirements
 
-### ファイル1: src/app/globals.css に追加
-
-既存のCSS末尾に以下のアニメーションを追加する：
-
-```css
-/* XP gain animation */
-@keyframes xp-float-up {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.5);
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-10px) scale(1);
-  }
-  80% {
-    opacity: 1;
-    transform: translateY(-40px) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-60px) scale(0.8);
-  }
-}
-
-.xp-float {
-  animation: xp-float-up 1.5s ease-out forwards;
-}
-
-/* Level up celebration */
-@keyframes level-up-bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-@keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(180deg); }
-}
-
-.level-up-bounce {
-  animation: level-up-bounce 0.6s ease-in-out;
-}
-
-.sparkle-1 { animation: sparkle 1.5s ease-in-out infinite; }
-.sparkle-2 { animation: sparkle 1.5s ease-in-out infinite 0.5s; }
-.sparkle-3 { animation: sparkle 1.5s ease-in-out infinite 1s; }
-```
-
-### ファイル2: src/features/gamification/components/LevelUpModal.tsx
+### 4.1 useAgentConnection.ts
 
 ```typescript
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Star, Sparkles } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { useUIStore } from '@/stores/uiStore';
-import { LEVEL_UNLOCKS } from '@/features/gamification/types';
-import { CATEGORY_LABELS } from '@/features/quest/constants/category';
-import type { QuestCategory } from '@/types';
+import { useEffect, useState, useCallback } from 'react';
+import { getAgentClient } from '@/lib/agent';
+import type { AgentConnectionStatus, AgentHealthResponse } from '@/lib/agent';
 
-interface Props {
-  newLevel: number;
+interface UseAgentConnectionReturn {
+  status: AgentConnectionStatus;
+  availableTools: string[];
+  agentVersion: string | null;
+  connect: () => void;
+  disconnect: () => void;
+  isConnected: boolean;
 }
 
-export function LevelUpModal({ newLevel }: Props) {
-  const open = useUIStore((s) => s.showLevelUpModal);
-  const setOpen = useUIStore((s) => s.setLevelUpModal);
-  const [showContent, setShowContent] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      const timer = setTimeout(() => setShowContent(true), 300);
-      return () => clearTimeout(timer);
-    }
-    setShowContent(false);
-  }, [open]);
-
-  const unlockedCategories = LEVEL_UNLOCKS[newLevel] ?? [];
-  const prevCategories = LEVEL_UNLOCKS[newLevel - 1] ?? [];
-  const newCategories = unlockedCategories.filter(
-    (c) => !prevCategories.includes(c)
-  );
-
-  return (
-    <Modal open={open} onClose={() => setOpen(false)}>
-      <div className="relative text-center">
-        {/* Sparkle decorations */}
-        <div className="absolute -top-2 left-4 text-quest-accent sparkle-1">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        <div className="absolute -top-1 right-6 text-quest-primary sparkle-2">
-          <Star className="h-4 w-4 fill-quest-primary" />
-        </div>
-        <div className="absolute top-8 -right-1 text-quest-accent sparkle-3">
-          <Sparkles className="h-4 w-4" />
-        </div>
-
-        <div className={showContent ? 'level-up-bounce' : ''}>
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-quest-primary/10">
-            <span className="text-3xl font-bold text-quest-primary">
-              {newLevel}
-            </span>
-          </div>
-          <h2 className="mb-1 text-xl font-bold text-foreground">
-            レベルアップ！
-          </h2>
-          <p className="text-sm text-muted">
-            レベル {newLevel} に到達しました！
-          </p>
-        </div>
-
-        {newCategories.length > 0 && (
-          <div className="mt-4 rounded-lg bg-quest-primary/5 p-3">
-            <p className="mb-2 text-xs font-medium text-quest-primary">
-              新しいカテゴリが解放されました
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {newCategories.map((cat) => (
-                <span
-                  key={cat}
-                  className="rounded-md bg-quest-primary/10 px-3 py-1 text-sm font-medium text-quest-primary"
-                >
-                  {CATEGORY_LABELS[cat as QuestCategory] ?? cat}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="mt-5">
-          <Button onClick={() => setOpen(false)} className="min-w-[120px]">
-            やったー！
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
+export function useAgentConnection(options?: {
+  autoConnect?: boolean; // デフォルト true
+  token?: string;
+}): UseAgentConnectionReturn {
+  // 1. getAgentClient() でシングルトン取得
+  // 2. useEffect で autoConnect なら自動接続
+  //    - 初回マウント時に checkHealth() してAgentが起動しているか確認
+  //    - 起動していれば connect()
+  //    - 起動していなければ status = 'disconnected' のまま
+  // 3. onStatusChange でステータスを同期
+  // 4. connect時にping()で利用可能なCLIとバージョンを取得
+  // 5. クリーンアップでdisconnect
+  // 6. isConnected = status === 'connected'
 }
 ```
 
-### ファイル3: src/features/gamification/components/XpGainOverlay.tsx
+### 4.2 useQuestExecution.ts（書き換え）
+
+既存のSSE/fetch方式を完全にWebSocket Agent経由に変更する。
 
 ```typescript
 'use client';
 
-import { useEffect } from 'react';
-import { useUIStore } from '@/stores/uiStore';
-
-export function XpGainOverlay() {
-  const show = useUIStore((s) => s.showXPGain);
-  const amount = useUIStore((s) => s.xpGainAmount);
-  const hide = useUIStore((s) => s.hideXPGain);
-
-  useEffect(() => {
-    if (show) {
-      const timer = setTimeout(hide, 1800);
-      return () => clearTimeout(timer);
-    }
-  }, [show, hide]);
-
-  if (!show) return null;
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
-      <div className="xp-float rounded-full bg-quest-success px-4 py-2 text-lg font-bold text-white shadow-lg">
-        +{amount} XP
-      </div>
-    </div>
-  );
-}
-```
-
-### ファイル4: src/features/gamification/components/DailyQuota.tsx
-
-```typescript
-import { Zap } from 'lucide-react';
-
-interface Props {
-  used: number;
-  limit: number;
-}
-
-export function DailyQuota({ used, limit }: Props) {
-  const remaining = Math.max(0, limit - used);
-  const percentage = limit > 0 ? (used / limit) * 100 : 0;
-  const isLow = remaining <= 2;
-
-  return (
-    <div className="flex items-center gap-2 rounded-lg border border-card-border bg-card-bg px-3 py-2">
-      <Zap className={`h-4 w-4 ${isLow ? 'text-quest-danger' : 'text-quest-accent'}`} />
-      <div className="text-sm">
-        <span className={`font-medium ${isLow ? 'text-quest-danger' : 'text-foreground'}`}>
-          残り {remaining} 回
-        </span>
-        <span className="text-muted"> / {limit} 回（今日）</span>
-      </div>
-      <div className="ml-2 h-1.5 w-16 overflow-hidden rounded-full bg-muted-bg">
-        <div
-          className={`h-full rounded-full transition-all ${isLow ? 'bg-quest-danger' : 'bg-quest-accent'}`}
-          style={{ width: `${Math.min(100, percentage)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-```
-
-### ファイル5: src/features/quest/actions/index.ts に追加
-
-ファイル末尾に以下を追加：
-
-```typescript
-export async function getDailyQuota(): Promise<{ used: number; limit: number }> {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return { used: 0, limit: 10 };
-
-  const today = new Date().toISOString().split('T')[0];
-  const { data } = await supabase
-    .from('user_daily_quotas')
-    .select('api_calls_made')
-    .eq('user_id', user.id)
-    .eq('quota_date', today)
-    .maybeSingle();
-
-  return {
-    used: data?.api_calls_made ?? 0,
-    limit: 10,
-  };
-}
-```
-
-### ファイル6: src/features/quest/components/QuestResult.tsx の変更
-
-変更内容：
-1. 既存のModalインポートとレベルアップ表示を LevelUpModal に置き換える
-2. `import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';` を追加
-3. `import { Modal } from '@/components/ui';` から Modal を除外（Buttonのみに変更）
-4. `useEffect`で`setLevelUpModal`を呼ぶ部分はそのまま残す
-5. ファイル末尾のModal JSXを`<LevelUpModal newLevel={2} />`に置き換える
-   - ただしnewLevelの正確な値が不明なので、コンポーネント自身で storeから読み取る形にする。
-   - 代替案：QuestResultのpropsにlevelUpを渡しているので、levelUpがtrueの時にだけ表示。
-   - LevelUpModal自身がuseUIStoreからopen状態を読み取るので、QuestResult側ではsetLevelUpModal(true)を呼ぶだけでOK。
-
-変更後のQuestResult.tsx全体：
-```typescript
-"use client";
-
-import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { Copy, Home, Sparkles, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { useCallback, useRef, useState } from 'react';
+import { getAgentClient } from '@/lib/agent';
+import type { AgentResponse } from '@/lib/agent';
 import { useQuestStore } from '@/stores/questStore';
 import { useUIStore } from '@/stores/uiStore';
-import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';
+import { useUserStore } from '@/stores/userStore';
 
-interface Props {
-  questRunId: string;
+type Phase = 'idle' | 'executing' | 'completed' | 'error';
+
+interface ExecuteResult {
+  execute: (questId: string, inputs: Record<string, string>) => Promise<void>;
+  cancel: () => void;
+  phase: Phase;
+  questRunId: string | null;
   xpGained: number;
   levelUp: boolean;
-  newLevel?: number;
-  onRetry?: () => void;
+  error: string | null;
 }
 
-export function QuestResult({ questRunId, xpGained, levelUp, newLevel = 2, onRetry }: Props) {
-  const content = useQuestStore((s) => s.streamedContent);
+export function useQuestExecution(): ExecuteResult {
+  // 状態管理は既存と同じ
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [questRunId, setQuestRunId] = useState<string | null>(null);
+  const [xpGained, setXPGained] = useState(0);
+  const [levelUp, setLevelUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cancelRef = useRef<(() => void) | null>(null);
+
+  // store selectors（既存と同じ）
+  const startExecution = useQuestStore((s) => s.startExecution);
+  const appendContent = useQuestStore((s) => s.appendContent);
+  const addProgressMessage = useQuestStore((s) => s.addProgressMessage);
+  const completeExecution = useQuestStore((s) => s.completeExecution);
+  const failExecution = useQuestStore((s) => s.failExecution);
+  const resetStore = useQuestStore((s) => s.reset);
+  const showXPGainAnimation = useUIStore((s) => s.showXPGainAnimation);
   const setLevelUpModal = useUIStore((s) => s.setLevelUpModal);
+  const showToast = useUIStore((s) => s.showToast);
+  const incrementQuestCount = useUserStore((s) => s.incrementQuestCount);
 
-  const [copied, setCopied] = useState(false);
+  const cancel = useCallback(() => {
+    cancelRef.current?.();
+    cancelRef.current = null;
+    failExecution('キャンセルしました');
+    setError('キャンセルしました');
+    setPhase('error');
+  }, [failExecution]);
 
-  useEffect(() => {
-    if (levelUp) setLevelUpModal(true);
-  }, [levelUp, setLevelUpModal]);
+  const execute = useCallback(async (questId: string, inputs: Record<string, string>) => {
+    resetStore();
+    setError(null);
+    setPhase('executing');
+    setQuestRunId(null);
+    setXPGained(0);
+    setLevelUp(false);
 
-  const handleCopy = useCallback(async () => {
+    const client = getAgentClient();
+    if (client.getStatus() !== 'connected') {
+      const msg = 'Quest Agentに接続されていません。Agentを起動してください。';
+      failExecution(msg);
+      setError(msg);
+      setPhase('error');
+      showToast(msg, 'error');
+      return;
+    }
+
+    // Server Action でクエスト情報を取得（prompt_template, difficulty等）
+    // ここではAgent経由の実行に集中する
+    // 実際のXP計算・DB更新はServer Action側で行う（後でPhase 2で実装）
+    // Phase 1ではCLI実行とストリーミング表示のみ
+
+    // プロンプトを構築（inputsのキーバリューをテンプレートに埋め込む）
+    const inputText = Object.entries(inputs)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n');
+
+    const prompt = `以下のユーザー入力に基づいて、クエスト「${questId}」を実行してください。\n\n${inputText}`;
+
     try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {}
-  }, [content]);
+      const { requestId, cancel: agentCancel } = client.execute({
+        cli_tool: 'claude',  // デフォルトでClaude CLI
+        prompt,
+        max_execution_time: 120,
+        onEvent: (event: AgentResponse) => {
+          switch (event.type) {
+            case 'start':
+              setQuestRunId(requestId);
+              startExecution(requestId);
+              break;
+            case 'stdout':
+              appendContent(event.content);
+              break;
+            case 'stderr':
+              // stderr は進捗メッセージとして表示
+              addProgressMessage(event.content);
+              break;
+            case 'progress':
+              addProgressMessage(event.message);
+              break;
+            case 'complete': {
+              completeExecution();
+              incrementQuestCount();
+              // Phase 1では仮のXP（10XP固定）
+              const xp = 10;
+              setXPGained(xp);
+              showXPGainAnimation(xp);
+              setPhase('completed');
+              cancelRef.current = null;
+              break;
+            }
+            case 'error':
+              failExecution(event.message);
+              setError(event.message);
+              showToast(event.message, 'error');
+              setPhase('error');
+              cancelRef.current = null;
+              break;
+          }
+        },
+      });
+      cancelRef.current = agentCancel;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '実行エラーが発生しました';
+      failExecution(msg);
+      setError(msg);
+      setPhase('error');
+    }
+  }, [resetStore, failExecution, startExecution, appendContent, addProgressMessage, completeExecution, incrementQuestCount, showXPGainAnimation, setLevelUpModal, showToast]);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-foreground">
-          <ArrowLeft className="h-4 w-4 text-muted" />
-          <span className="text-sm">結果</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded-md bg-quest-success/10 px-2 py-1 text-xs font-medium text-quest-success">
-            +{xpGained} XP
-          </span>
-          <Button variant="secondary" size="sm" onClick={handleCopy} icon={<Copy className="h-4 w-4" />}>
-            {copied ? 'コピー済み' : '結果をコピー'}
-          </Button>
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-card-border bg-card-bg p-4">
-        <pre className="whitespace-pre-wrap text-sm text-foreground">{content}</pre>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        {onRetry && (
-          <Button onClick={onRetry} icon={<Sparkles className="h-4 w-4" />}>もう一度実行</Button>
-        )}
-        <Link href="/">
-          <Button variant="ghost" icon={<Home className="h-4 w-4" />}>ホームに戻る</Button>
-        </Link>
-      </div>
-
-      <LevelUpModal newLevel={newLevel} />
-
-      <input type="hidden" value={questRunId} readOnly />
-    </div>
-  );
+  return { execute, cancel, phase, questRunId, xpGained, levelUp, error };
 }
 ```
 
-### ファイル7: src/app/page.tsx の変更
-
-1. インポート追加：
-```typescript
-import { getDailyQuota } from '@/features/quest/actions';
-import { DailyQuota } from '@/features/gamification/components/DailyQuota';
-```
-
-2. RootPage関数内、quests取得の後に追加：
-```typescript
-const quota = await getDailyQuota();
-```
-
-3. 「クエストを選ぼう！」の横にDailyQuotaを追加。
-変更前:
-```tsx
-<div>
-  <h1 className="mb-1 text-2xl font-bold text-foreground">クエストを選ぼう！</h1>
-  <p className="text-sm text-muted">レベルに応じて新しいカテゴリが解放されます。</p>
-</div>
-```
-変更後:
-```tsx
-<div className="flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 className="mb-1 text-2xl font-bold text-foreground">クエストを選ぼう！</h1>
-    <p className="text-sm text-muted">レベルに応じて新しいカテゴリが解放されます。</p>
-  </div>
-  <DailyQuota used={quota.used} limit={quota.limit} />
-</div>
-```
-
-### ファイル8: src/app/(main)/layout.tsx の変更
-
-1. インポート追加：
-```typescript
-import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay';
-```
-
-2. `</main>` の後（`</div>` の前）に追加：
-```tsx
-<XpGainOverlay />
-```
+**重要**: executeの引数インターフェースは完全に同じにする（questId, inputs）。呼び出し側のコンポーネントは変更不要にする。
 
 ## 5. Constraints
-- 新しいAPI Routeを作成しない
-- middleware.tsを変更しない
-- TailwindCSS 4のカスタムカラーを使う
+- `'use client'` ディレクティブ必須
+- React 19 のhooks API
+- Zustandストアのセレクタパターン（既存と同じ）
 - immutableパターン
 - セミコロンあり、シングルクォート
+- ファイル200-400行
+- `console.log` 禁止
 
 ## 6. Forbidden
-- dangerouslySetInnerHTML
+- fetch/SSE 方式のコード（完全にWebSocketに移行）
 - console.log
 - ハードコードされたシークレット
-- 新規API Route
+- dangerouslySetInnerHTML
 
 ## 7. Acceptance Criteria
-- [ ] TypeScript型エラーなし
-- [ ] レベルアップモーダルにスパークル装飾とバウンスアニメーション
-- [ ] 新カテゴリ解放メッセージが日本語で表示
-- [ ] XP獲得時にフロートアニメーション（+XX XP）
-- [ ] ホーム画面にデイリークォータ（残り回数）が表示される
-- [ ] ビルド成功
+- [ ] TypeScript型エラーなし（npm run build 成功）
+- [ ] useAgentConnection が接続状態・利用可能ツール・接続/切断メソッドを返す
+- [ ] useQuestExecution のインターフェース（execute, cancel, phase等）が既存と完全互換
+- [ ] Agent未接続時にエラーメッセージを表示
+- [ ] Agent stdout をリアルタイムでstreamして表示

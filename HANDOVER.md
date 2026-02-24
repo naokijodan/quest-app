@@ -1,8 +1,8 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** アーキテクチャ再設計完了、実装Phase 1（Agent基盤）着手前
-**現在のSprint:** Sprint 3 Phase A〜C 完了 → **Sprint 4以降は再設計に基づいて進行**
+**現在のPhase:** 実装Phase 1（Agent基盤）完了 → Phase 2（通常クエストのCLI化）着手前
+**現在のSprint:** Sprint 5 Phase 1 完了
 
 ---
 
@@ -20,7 +20,7 @@
 2. Quest Agent（Node.jsローカルデーモン）を新規追加し、WebSocketでPWAと通信
 3. 通常クエスト（CLI裏実行）+ 冒険ルート（ターミナル克服の旅）の二層構造
 4. レベル上限をLv.3→Lv.10に拡張
-5. `src/lib/anthropic/` と `@anthropic-ai/sdk` は廃止 → Agent経由に置換
+5. `src/lib/anthropic/` と `@anthropic-ai/sdk` は **廃止済み** → Agent経由に置換完了
 
 ---
 
@@ -36,10 +36,10 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** ca7177d (Sprint 3 Phase A〜C)
-- **Status:** REDESIGN.md追加（未コミット）
+- **Latest commit:** Phase 1 Agent基盤実装
+- **Status:** クリーン（コミット済み）
 
-### 実装済み（Sprint 1 + Sprint 2 + Sprint 3 A-C）
+### 実装済み
 
 #### Sprint 1（完了）
 プロジェクト初期化、認証（Google/Email/Magic Link）、UIコンポーネント、ミドルウェア
@@ -54,66 +54,75 @@
 **Phase B:** 履歴画面（/history）、ステータスバッジ
 **Phase C:** レベルアップ演出改善、XP獲得アニメーション、デイリークォータ表示
 
-### ファイル構成（Sprint 3 Phase C終了時点）
+#### Sprint 5 Phase 1: Agent基盤（完了）
+1. [x] `packages/quest-agent/` — Quest Agent実装（WebSocketサーバー + child_process.spawn）
+   - WebSocketサーバー（ws://localhost:3939）
+   - child_process.spawn によるCLI実行（claude/codex/gemini）
+   - stdout/stderrリアルタイム転送
+   - HTTPヘルスチェック（/health + CORS対応）
+   - ワンタイムトークン認証（~/.quest-app/agent-token.json）
+   - コマンドホワイトリスト・サンドボックスセキュリティ
+   - タイムアウト管理・プロセスキャンセル
+2. [x] `src/lib/agent/` — PWA側Agent接続クライアント
+   - AgentClient クラス（接続・再接続・メッセージ送受信）
+   - シングルトンパターン（getAgentClient）
+   - HTTPヘルスチェック・WebSocket ping/pong
+3. [x] `src/features/quest/hooks/useAgentConnection.ts` — 接続状態管理フック
+   - autoConnect（ヘルスチェック → 自動接続）
+   - 利用可能ツール・バージョン取得
+4. [x] `useQuestExecution.ts` → WebSocket版に書き換え
+   - SSE/fetch → AgentClient.execute() 経由
+   - インターフェース完全互換（呼び出し側変更不要）
+   - Agent未接続時エラーメッセージ
+5. [x] `@anthropic-ai/sdk` 依存削除、`src/lib/anthropic/` 廃止
+   - renderTemplate は `src/lib/utils/template.ts` に移動
+   - API Route `/api/quest/execute/` 削除
+
+### ファイル構成（Phase 1完了時点）
 ```
-src/
-├── app/
-│   ├── (auth)/login/page.tsx, register/page.tsx, layout.tsx
-│   ├── (main)/layout.tsx, quest/[id]/page.tsx, history/page.tsx
-│   ├── api/quest/execute/route.ts          ← 廃止予定（Agent経由に置換）
-│   ├── auth/callback/route.ts
-│   ├── onboarding/page.tsx
-│   ├── layout.tsx, page.tsx
-│   └── globals.css
-├── components/ui/ (Button, Card, Input, Modal, Toast, XpProgressBar)
-├── features/
-│   ├── auth/actions/index.ts, components/SignOutButton.tsx
-│   ├── gamification/types/index.ts, components/(LevelUpModal, XpGainOverlay, DailyQuota)
-│   ├── onboarding/components/, actions/
-│   ├── quest/actions/, components/, hooks/useQuestExecution.ts, types/, constants/
-│   └── (NEW) adventure/  ← 冒険ルート（未実装）
-├── lib/
-│   ├── anthropic/ (client.ts, stream.ts, templates.ts)  ← 廃止予定
-│   ├── supabase/ (client.ts, server.ts, middleware.ts)   ← 再利用
-│   ├── (NEW) agent/  ← Agent接続クライアント（未実装）
-│   └── utils/cn.ts
-├── stores/ (userStore.ts, questStore.ts, uiStore.ts)
-├── types/ (index.ts, database.ts)
-└── middleware.ts
+quest-app/
+├── packages/
+│   └── quest-agent/                    ← NEW: ローカルAgent
+│       ├── src/
+│       │   ├── index.ts               — エントリーポイント
+│       │   ├── server.ts              — WebSocketサーバー
+│       │   ├── executor.ts            — CLI実行エンジン
+│       │   ├── types.ts               — メッセージ型定義
+│       │   ├── security.ts            — ホワイトリスト・サンドボックス
+│       │   ├── health.ts              — HTTPヘルスチェック
+│       │   └── auth.ts                — トークン認証
+│       ├── package.json
+│       └── tsconfig.json
+├── src/
+│   ├── app/
+│   │   ├── (auth)/login/page.tsx, register/page.tsx, layout.tsx
+│   │   ├── (main)/layout.tsx, quest/[id]/page.tsx, history/page.tsx
+│   │   ├── api/                       ← quest/execute は削除済み
+│   │   ├── auth/callback/route.ts
+│   │   ├── onboarding/page.tsx
+│   │   ├── layout.tsx, page.tsx
+│   │   └── globals.css
+│   ├── components/ui/ (Button, Card, Input, Modal, Toast, XpProgressBar)
+│   ├── features/
+│   │   ├── auth/actions/index.ts, components/SignOutButton.tsx
+│   │   ├── gamification/types/index.ts, components/(LevelUpModal, XpGainOverlay, DailyQuota)
+│   │   ├── onboarding/components/, actions/
+│   │   ├── quest/actions/, components/, hooks/(useQuestExecution, useAgentConnection), types/, constants/
+│   │   └── (NEW) adventure/  ← 冒険ルート（未実装）
+│   ├── lib/
+│   │   ├── agent/ (client.ts, types.ts, index.ts)  ← NEW: Agent接続クライアント
+│   │   ├── supabase/ (client.ts, server.ts, middleware.ts)
+│   │   └── utils/ (cn.ts, template.ts)
+│   ├── stores/ (userStore.ts, questStore.ts, uiStore.ts)
+│   ├── types/ (index.ts, database.ts)
+│   └── middleware.ts
+└── codex/ (current-task.txt, TASK_TEMPLATE.md)
 ```
 
 ### 接続状況
 - Supabase: ローカル開発環境で接続済み（`supabase start`で起動）
-- Anthropic API: 廃止予定（Agent経由に置換）
-- Quest Agent: 未実装
-
----
-
-## 再利用判定
-
-### そのまま再利用
-- `src/app/(auth)/` — 認証フロー
-- `src/features/auth/` — 認証アクション・コンポーネント
-- `src/features/onboarding/` — オンボーディング
-- `src/features/gamification/` — XP、レベル、演出（拡張必要）
-- `src/components/ui/` — UIコンポーネント全般
-- `src/stores/` — Zustandストア（拡張必要）
-- `src/lib/supabase/` — Supabaseクライアント・認証
-- `src/middleware.ts` — 認証ミドルウェア
-- ランディング/ホーム/履歴画面のレイアウト
-
-### 廃止 → 新規置換
-- `src/lib/anthropic/` → `src/lib/agent/`（Agent WebSocketクライアント）
-- `src/app/api/quest/execute/route.ts` → Agent経由のWebSocket通信
-- `src/features/quest/hooks/useQuestExecution.ts` → WebSocket版
-- `@anthropic-ai/sdk` 依存 → 削除
-
-### 新規追加
-- `packages/quest-agent/` — ローカルAgent（Node.js + ws + child_process）
-- `src/lib/agent/` — Agent接続クライアント
-- `src/features/adventure/` — 冒険ルート
-- `src/components/ui/Terminal.tsx` — ターミナル風UI
-- DBマイグレーション — adventure_progress テーブル、preset_quests拡張
+- Anthropic API: **廃止済み**（SDK削除、ファイル削除完了）
+- Quest Agent: **実装完了**（`cd packages/quest-agent && npm run dev` で起動）
 
 ---
 
@@ -143,29 +152,23 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 ## 次のタスク
 
-### 実装Phase 1: Agent基盤（最優先）
-1. [ ] `packages/quest-agent/` — Quest Agent実装（WebSocketサーバー + child_process.spawn）
-2. [ ] `src/lib/agent/` — PWA側Agent接続クライアント
-3. [ ] `src/features/quest/hooks/useAgentConnection.ts` — 接続状態管理フック
-4. [ ] 既存SSE → WebSocket置き換え（useQuestExecution書き換え）
-5. [ ] `@anthropic-ai/sdk` 依存削除、`src/lib/anthropic/` 廃止
-
-### 実装Phase 2: 通常クエストのCLI化
-6. [ ] 既存10クエストをCLI実行版に変換（cli_prompt_template）
-7. [ ] サンドボックスディレクトリ実装
-8. [ ] Agent未接続時のフォールバックUI
-9. [ ] CLIインストールガイド画面
+### 実装Phase 2: 通常クエストのCLI化（最優先）
+1. [ ] 既存10クエストをCLI実行版に変換（cli_prompt_template）
+2. [ ] サンドボックスディレクトリ実装
+3. [ ] Agent未接続時のフォールバックUI
+4. [ ] CLIインストールガイド画面
+5. [ ] XP計算・DB更新のServer Action（Agent完了時に呼び出す）
 
 ### 実装Phase 3: 冒険ルート
-10. [ ] DB追加マイグレーション（adventure_progress、preset_quests拡張、users拡張）
-11. [ ] 冒険ルートUI基盤
-12. [ ] 第1-5章のクエスト実装
-13. [ ] ターミナル風UIコンポーネント
-14. [ ] 魔王戦演出
+6. [ ] DB追加マイグレーション（adventure_progress、preset_quests拡張、users拡張）
+7. [ ] 冒険ルートUI基盤
+8. [ ] 第1-5章のクエスト実装
+9. [ ] ターミナル風UIコンポーネント
+10. [ ] 魔王戦演出
 
 ### 実装Phase 4: PWA + デプロイ
-15. [ ] serwist（PWA）設定
-16. [ ] Vercelデプロイ（PWA配信のみ）
+11. [ ] serwist（PWA）設定
+12. [ ] Vercelデプロイ（PWA配信のみ）
 
 ---
 
@@ -178,6 +181,7 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | npm audit warnings | next依存、実害なし | 定期チェック |
 | Supabaseローカルのみ | 本番接続なし | Vercelデプロイ時にリモートSupabase設定 |
 | Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
+| XP計算がPhase 1では仮値（10XP固定） | DB更新なし | Phase 2でServer Action実装 |
 
 ---
 
@@ -194,7 +198,9 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | Supabase Client | `src/lib/supabase/client.ts`, `server.ts` |
 | Quest Schemas | `src/features/quest/types/schema.ts` |
 | Gamification | `src/features/gamification/types/index.ts` |
-| SSE（廃止予定） | `src/lib/anthropic/`, `src/app/api/quest/execute/route.ts` |
+| Agent Server | `packages/quest-agent/src/server.ts` |
+| Agent Client | `src/lib/agent/client.ts` |
+| Agent Hooks | `src/features/quest/hooks/useAgentConnection.ts`, `useQuestExecution.ts` |
 
 ---
 

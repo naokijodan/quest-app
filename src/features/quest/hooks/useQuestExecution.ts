@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from 'react';
-import type { QuestSSEEvent } from '@/types';
+import { getAgentClient } from '@/lib/agent';
+import type { AgentResponse } from '@/lib/agent';
 import { useQuestStore } from '@/stores/questStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useUserStore } from '@/stores/userStore';
@@ -19,36 +20,35 @@ interface ExecuteResult {
 }
 
 export function useQuestExecution(): ExecuteResult {
-  const controllerRef = useRef<AbortController | null>(null);
+  // 状態管理は既存と同じ
   const [phase, setPhase] = useState<Phase>('idle');
   const [questRunId, setQuestRunId] = useState<string | null>(null);
   const [xpGained, setXPGained] = useState(0);
   const [levelUp, setLevelUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cancelRef = useRef<(() => void) | null>(null);
 
+  // store selectors（既存と同じ）
   const startExecution = useQuestStore((s) => s.startExecution);
   const appendContent = useQuestStore((s) => s.appendContent);
   const addProgressMessage = useQuestStore((s) => s.addProgressMessage);
   const completeExecution = useQuestStore((s) => s.completeExecution);
   const failExecution = useQuestStore((s) => s.failExecution);
   const resetStore = useQuestStore((s) => s.reset);
-
   const showXPGainAnimation = useUIStore((s) => s.showXPGainAnimation);
   const setLevelUpModal = useUIStore((s) => s.setLevelUpModal);
   const showToast = useUIStore((s) => s.showToast);
-
-  const updateXP = useUserStore((s) => s.updateXP);
   const incrementQuestCount = useUserStore((s) => s.incrementQuestCount);
 
   const cancel = useCallback(() => {
-    controllerRef.current?.abort();
+    cancelRef.current?.();
+    cancelRef.current = null;
     failExecution('キャンセルしました');
     setError('キャンセルしました');
     setPhase('error');
   }, [failExecution]);
 
   const execute = useCallback(async (questId: string, inputs: Record<string, string>) => {
-    // reset previous state
     resetStore();
     setError(null);
     setPhase('executing');
@@ -56,82 +56,71 @@ export function useQuestExecution(): ExecuteResult {
     setXPGained(0);
     setLevelUp(false);
 
-    const controller = new AbortController();
-    controllerRef.current = controller;
+    const client = getAgentClient();
+    if (client.getStatus() !== 'connected') {
+      const msg = 'Quest Agentに接続されていません。Agentを起動してください。';
+      failExecution(msg);
+      setError(msg);
+      setPhase('error');
+      showToast(msg, 'error');
+      return;
+    }
+
+    // プロンプトを構築（inputsのキーバリューをテンプレートに埋め込む）
+    const inputText = Object.entries(inputs)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n');
+
+    const prompt = `以下のユーザー入力に基づいて、クエスト「${questId}」を実行してください。\n\n${inputText}`;
 
     try {
-      const response = await fetch('/api/quest/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questId, inputs }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok || !response.body) {
-        const msg = `実行に失敗しました (${response.status})`;
-        failExecution(msg);
-        setError(msg);
-        setPhase('error');
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop() ?? '';
-        for (const line of lines) {
-          const data = line.replace(/^data: /, '');
-          if (!data) continue;
-          const event: QuestSSEEvent = JSON.parse(data);
+      const { requestId, cancel: agentCancel } = client.execute({
+        cli_tool: 'claude',
+        prompt,
+        max_execution_time: 120,
+        onEvent: (event: AgentResponse) => {
           switch (event.type) {
             case 'start':
-              setQuestRunId(event.quest_run_id);
-              startExecution(event.quest_run_id);
+              setQuestRunId(requestId);
+              startExecution(requestId);
               break;
-            case 'delta':
+            case 'stdout':
               appendContent(event.content);
+              break;
+            case 'stderr':
+              addProgressMessage(event.content);
               break;
             case 'progress':
               addProgressMessage(event.message);
               break;
-            case 'complete':
-              setQuestRunId(event.quest_run_id);
-              setXPGained(event.xp_gained);
-              setLevelUp(event.level_up);
+            case 'complete': {
               completeExecution();
               incrementQuestCount();
-              // optimistic UI effects
-              showXPGainAnimation(event.xp_gained);
-              if (event.level_up) {
-                setLevelUpModal(true);
-              }
+              const xp = 10;
+              setXPGained(xp);
+              showXPGainAnimation(xp);
               setPhase('completed');
+              cancelRef.current = null;
               break;
+            }
             case 'error':
               failExecution(event.message);
               setError(event.message);
               showToast(event.message, 'error');
               setPhase('error');
+              cancelRef.current = null;
               break;
           }
-        }
-      }
+        },
+      });
+      cancelRef.current = agentCancel;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '通信エラーが発生しました';
+      const msg = e instanceof Error ? e.message : '実行エラーが発生しました';
       failExecution(msg);
       setError(msg);
       setPhase('error');
-    } finally {
-      controllerRef.current = null;
     }
   }, [resetStore, failExecution, startExecution, appendContent, addProgressMessage, completeExecution, incrementQuestCount, showXPGainAnimation, setLevelUpModal, showToast]);
 
   return { execute, cancel, phase, questRunId, xpGained, levelUp, error };
 }
-

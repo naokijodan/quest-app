@@ -2,4 +2,3 @@
 export function renderTemplate(template: string, inputs: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => inputs[key] ?? '');
 }
-
