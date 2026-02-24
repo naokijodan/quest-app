@@ -1,2 +1,2 @@
-Quest AppのSprint 2を開始。Phase Aから自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
+Quest AppのSprint 3を開始。Phase Aから自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
 参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
