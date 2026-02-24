@@ -1,1 +1,183 @@
-# (empty - Claudeがタスクを定義する際にここに書き込む)
+# Task: Sprint2-PhaseB-Onboarding
+# AI: Codex CLI
+# Priority: High
+# Risk Level: High (Auth + DB)
+
+## 1. Objective
+認証後の初回ユーザーに3ステップのオンボーディング画面を提供する。
+ステップ: 名前入力 → アバター選択 → マスコット選択 → 完了（最初のクエストへ誘導）
+
+## 2. Target Files
+
+### Create（新規作成）
+- src/features/onboarding/components/OnboardingWizard.tsx （ウィザード全体）
+- src/features/onboarding/components/StepName.tsx （Step 1: 名前入力）
+- src/features/onboarding/components/StepAvatar.tsx （Step 2: アバター選択）
+- src/features/onboarding/components/StepMascot.tsx （Step 3: マスコット選択）
+- src/features/onboarding/components/StepComplete.tsx （完了演出）
+- src/features/onboarding/actions/index.ts （Server Action: completeOnboarding）
+- src/app/onboarding/page.tsx （オンボーディングページ）
+
+### Modify（変更）
+- なし（新規作成のみ）
+
+## 3. Dependencies（依存ファイル — 必ず読むこと）
+
+### 共通UI
+```typescript
+// src/components/ui/index.ts
+export { Button } from './Button';  // variant: 'primary'|'secondary'|'danger'|'ghost'|'accent', size: 'sm'|'md'|'lg', loading, icon props
+export { Card, CardHeader, CardTitle, CardDescription } from './Card';  // padding: 'sm'|'md'|'lg'
+export { Input, Textarea } from './Input';  // label, error props
+export { Modal } from './Modal';
+export { Toast } from './Toast';
+```
+
+### 型定義
+```typescript
+// src/types/index.ts
+export type AvatarType = 'planner' | 'explorer' | 'crafter';
+export type MascotType = 'cat' | 'dog';
+```
+
+### バリデーション
+```typescript
+// src/features/quest/types/schema.ts
+export const onboardingSchema = z.object({
+  username: z.string().min(2).max(30).regex(/^[a-zA-Z0-9_-]+$/),
+  avatar_type: z.enum(['planner', 'explorer', 'crafter']),
+  mascot_type: z.enum(['cat', 'dog']),
+});
+export type OnboardingInput = z.infer<typeof onboardingSchema>;
+```
+
+### Supabase Server Client
+```typescript
+// src/lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+export async function createClient() { ... }
+```
+
+### ユーティリティ
+```typescript
+// src/lib/utils/cn.ts
+export function cn(...inputs: ClassValue[]): string
+```
+
+### TailwindCSS Theme Colors (globals.css)
+- --quest-primary: #6366f1 (メインカラー)
+- --quest-accent: #f59e0b (アクセント/XP)
+- --quest-success: #10b981 (成功)
+- --card-bg, --card-border, --foreground, --muted（UIカラー）
+
+## 4. Requirements（仕様）
+
+### OnboardingWizard.tsx
+- 'use client' コンポーネント
+- ステート管理: currentStep (1-4), formData: { username, avatar_type, mascot_type }
+- プログレスバーを上部に表示（Step 1/3, 2/3, 3/3）
+- 各ステップはアニメーション付きで遷移（CSS transition）
+- immutableなstate更新（spread operator使用）
+
+### StepName.tsx (Step 1)
+- 「冒険者の名前を決めよう！」
+- Inputコンポーネントでusername入力
+- バリデーション: 2-30文字、英数字+ハイフン+アンダースコアのみ
+- 入力時にリアルタイムバリデーション表示
+- 「次へ」ボタン
+
+### StepAvatar.tsx (Step 2)
+- 「キャラクタータイプを選ぼう！」
+- 3つのカードから選択:
+  - planner: 「プランナー」計画を立てるのが得意 🧙‍♂️
+  - explorer: 「エクスプローラー」好奇心旺盛な冒険家 ⚔️
+  - crafter: 「クラフター」ものづくりの達人 🛠️
+- 選択中のカードはborder-quest-primaryでハイライト
+- 「次へ」「戻る」ボタン
+
+### StepMascot.tsx (Step 3)
+- 「相棒を選ぼう！」
+- 2つのカードから選択:
+  - cat: 「ネコ」気まぐれだけど賢い 🐱
+  - dog: 「イヌ」忠実で元気いっぱい 🐶
+- 選択中のカードはborder-quest-primaryでハイライト
+- 「完了」「戻る」ボタン
+- 「完了」押下時にServer Actionを呼び出し
+
+### StepComplete.tsx (Step 4)
+- 「冒険の準備が整いました！」
+- ユーザーが選択した情報を表示（名前、アバター、マスコット）
+- 「最初のクエストへ！」ボタン → /(main) へリダイレクト
+- 簡単なアニメーション（scale + fade in）
+
+### Server Action: completeOnboarding
+```typescript
+'use server';
+// 1. Supabase auth.getUser() でユーザーID取得
+// 2. onboardingSchema でバリデーション
+// 3. users テーブルに INSERT (id, username, avatar_type, mascot_type, onboarding_completed: true)
+// 4. エラーハンドリング（username重複時のメッセージ）
+// 5. 成功時はリダイレクトしない（クライアント側で制御）
+```
+
+### app/onboarding/page.tsx
+```typescript
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { OnboardingWizard } from '@/features/onboarding/components/OnboardingWizard';
+// 1. 未認証ならリダイレクト
+// 2. 既にオンボーディング済みならメインページへリダイレクト
+// 3. OnboardingWizard を表示
+```
+
+## 5. Constraints（制約）
+- TailwindCSS 4のみ使用（CSS Modules禁止）
+- Server Actions使用（API Route不可）
+- Zod v4でサーバーサイドバリデーション（src/features/quest/types/schema.ts の onboardingSchema 使用）
+- 型定義は src/types/index.ts の既存型を使用
+- immutableパターン（state mutation禁止）
+- ファイルは200-400行、最大800行
+- 全コンポーネントでTailwindCSSのテーマカラー変数を使用（ハードコードされた色値禁止）
+
+## 6. Forbidden（禁止事項）
+- [ ] dangerouslySetInnerHTML の使用
+- [ ] console.log の残置
+- [ ] ハードコードされたシークレット
+- [ ] 既存のRLSポリシーの変更
+- [ ] middleware.ts の変更
+- [ ] 新規API Routeの作成
+
+## 7. Acceptance Criteria
+- [ ] TypeScript型エラーなし（npm run build 成功）
+- [ ] 3ステップのウィザードが正常に遷移する
+- [ ] Server Actionでusersテーブルにレコードが作成される
+- [ ] オンボーディング完了後にメインページへ遷移できる
+- [ ] username重複時に適切なエラーメッセージが表示される
+- [ ] レスポンシブ対応（モバイル〜デスクトップ）
+
+## 8. Reference Code
+
+### 既存のログインページパターン（src/app/(auth)/login/page.tsx）
+```tsx
+'use client';
+import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
+
+// formData → Server Action → result.error / result.success パターン
+```
+
+### 既存のServer Actionパターン（src/features/auth/actions/index.ts）
+```typescript
+'use server';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+
+export async function signInWithEmail(formData: FormData) {
+  const supabase = await createClient();
+  // ... validation, supabase operation, error handling
+  return { error: 'エラーメッセージ' };
+}
+```
