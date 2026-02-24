@@ -14,7 +14,7 @@ Quest Appは、非エンジニア（子供〜高齢者）向けのゲーム風AI
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Framework | Next.js (App Router) | 15.x |
+| Framework | Next.js (App Router) | 16.x |
 | UI | React + TypeScript | 19.x |
 | Styling | TailwindCSS | 4.x |
 | State | Zustand | 5.x |
@@ -227,10 +227,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Phase 1: MVP (Current)
 One-path success experience: Onboarding → Quest Execute → Result → Level Up
 
-**Sprint 1 (Week 1-2):** Project setup, Auth, Middleware, UI components
-**Sprint 2 (Week 3-4):** Onboarding, Home, Quest list
-**Sprint 3 (Week 5-6):** Quest execution (streaming), Result display
-**Sprint 4 (Week 7-8):** Gamification, History, PWA, E2E tests, Deploy
+**Sprint 1 (Week 1-2):** Project setup, Auth, Middleware, UI components [DONE]
+**Sprint 2 (Week 3-4):** Minimal Onboarding (3 steps) + Quest Execution (streaming) + Result display
+**Sprint 3 (Week 5-6):** Home, Quest list, Gamification (XP, Level Up)
+**Sprint 4 (Week 7-8):** History, PWA, E2E tests, Vercel deploy
 
 ### Phase 2: Extension
 Custom quests, Marketplace, Multi-AI, Stripe billing
@@ -277,6 +277,17 @@ ci: CI/CD
 - [ ] No dangerouslySetInnerHTML
 - [ ] Prompt injection prevention (system/user prompt separation)
 - [ ] Rate limiting on quest execution
+
+---
+
+## Known Technical Issues
+
+| Issue | Impact | Plan |
+|-------|--------|------|
+| middleware.ts deprecated (Next.js 16) | Build warning only, no runtime impact | Phase 2でproxy APIに移行 |
+| Zod v4 (^4.3.6) breaking changes | API差異あり（v3からの移行に注意） | 現行動作に問題なし、Phase 1はこのまま |
+| Supabase未接続 | .env.local未設定のためDB操作不可 | 次セッションで最優先対応 |
+| lucide-react npm audit warnings | 15 vulnerabilities (moderate/high) | next依存、実害なし、定期チェック |
 
 ---
 
