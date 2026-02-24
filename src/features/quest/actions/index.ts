@@ -1,7 +1,13 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import type { PresetQuest, QuestRun, User } from '@/types';
+import type {
+  PresetQuest,
+  QuestRun,
+  User,
+  QuestCategory,
+  QuestDifficulty,
+} from '@/types';
 
 export async function getPresetQuests(): Promise<PresetQuest[]> {
   const supabase = await createClient();
@@ -61,3 +67,56 @@ export async function getRecentQuestRuns(limit = 10): Promise<QuestRun[]> {
   return (data as QuestRun[]) ?? [];
 }
 
+export interface QuestRunWithQuest extends QuestRun {
+  quest_title: string;
+  quest_icon: string;
+  quest_category: QuestCategory;
+  quest_difficulty: QuestDifficulty;
+  xp_reward: number;
+}
+
+export async function getQuestRunsWithQuestInfo(limit = 20): Promise<QuestRunWithQuest[]> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return [];
+
+  const { data: runs } = await supabase
+    .from('quest_runs')
+    .select('*, preset_quests(title, icon, category, difficulty, xp_reward)')
+    .eq('user_id', user.id)
+    .order('started_at', { ascending: false })
+    .limit(limit);
+
+  if (!runs) return [];
+
+  return runs.map((run: any) => ({
+    ...run,
+    quest_title: run.preset_quests?.title ?? '不明なクエスト',
+    quest_icon: run.preset_quests?.icon ?? '📝',
+    quest_category: run.preset_quests?.category ?? 'basic',
+    quest_difficulty: run.preset_quests?.difficulty ?? 1,
+    xp_reward: run.preset_quests?.xp_reward ?? 0,
+    preset_quests: undefined,
+  })) as QuestRunWithQuest[];
+}
+
+export async function getDailyQuota(): Promise<{ used: number; limit: number }> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return { used: 0, limit: 10 };
+
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('user_daily_quotas')
+    .select('api_calls_made')
+    .eq('user_id', user.id)
+    .eq('quota_date', today)
+    .maybeSingle();
+
+  return {
+    used: data?.api_calls_made ?? 0,
+    limit: 10,
+  };
+}

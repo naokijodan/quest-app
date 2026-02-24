@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Lock, Star } from 'lucide-react';
 import type { PresetQuest } from '@/types';
 import { Card } from '@/components/ui';
+import { CATEGORY_LABELS } from '@/features/quest/constants/category';
 
 interface Props {
   quest: PresetQuest;
@@ -44,8 +45,8 @@ export function QuestCard({ quest, locked }: Props) {
               <h3 className="truncate text-base font-semibold text-foreground">
                 {quest.title}
               </h3>
-              <span className="shrink-0 rounded-md bg-quest-primary/10 px-2 py-0.5 text-xs font-medium text-quest-primary capitalize">
-                {quest.category}
+              <span className="shrink-0 rounded-md bg-quest-primary/10 px-2 py-0.5 text-xs font-medium text-quest-primary">
+                {CATEGORY_LABELS[quest.category]}
               </span>
             </div>
             <p className="line-clamp-2 text-sm text-muted">{quest.description}</p>
@@ -64,4 +65,3 @@ export function QuestCard({ quest, locked }: Props) {
     </Wrapper>
   );
 }
-

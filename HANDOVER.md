@@ -2,7 +2,7 @@
 
 **最終更新:** 2026-02-25
 **現在のPhase:** Phase 1 - MVP
-**現在のSprint:** Sprint 2 完了、Sprint 3 着手前
+**現在のSprint:** Sprint 3 Phase A〜C 完了、Phase D 着手前
 
 ---
 
@@ -18,10 +18,10 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `2851bf1` feat: Sprint 2 Phase C - クエスト実行フロントエンド+バックエンド完成
-- **Status:** Clean, up to date with origin/main
+- **Latest commit:** Sprint 3 Phase A〜C（コミット待ち）
+- **Status:** 変更あり（Phase A〜Cの全実装）
 
-### 実装済み（Sprint 1 + Sprint 2）
+### 実装済み（Sprint 1 + Sprint 2 + Sprint 3 A-C）
 
 #### Sprint 1（完了）
 プロジェクト初期化、認証（Google/Email/Magic Link）、UIコンポーネント、ミドルウェア
@@ -43,9 +43,6 @@
 **Phase C: クエスト実行（MVP核心）**
 - [x] Anthropic SDK初期化（client.ts, stream.ts, templates.ts）
 - [x] POST /api/quest/execute SSEストリーミングAPI Route
-  - 認証チェック、カテゴリアクセス制御、デイリークォータ
-  - quest_runステータス管理、XP加算、レベルアップ判定
-  - マスコット進捗メッセージ（猫/犬）
 - [x] Server Actions（クエスト一覧、詳細、履歴取得）
 - [x] ホーム画面（認証状態で分岐: ランディング/クエスト一覧）
 - [x] (main)レイアウト（ヘッダー+ユーザー情報）
@@ -54,25 +51,49 @@
 - [x] 結果表示画面（コピー+XP演出+レベルアップモーダル）
 - [x] useQuestExecutionフック（SSE接続管理）
 
-### ファイル構成（Sprint 2終了時点）
+#### Sprint 3 Phase A〜C（完了）
+
+**Phase A: ホーム画面の仕上げ**
+- [x] XPプログレスバー（ヘッダー表示、レスポンシブ対応）
+- [x] カテゴリ日本語名表示（基本/ビジネス/生活/クリエイティブ/分析）
+- [x] サインアウトボタン（LogOutアイコン、Server Action）
+
+**Phase B: 履歴画面**
+- [x] /history ページ（実行履歴一覧、最大50件）
+- [x] 過去の結果を展開表示（クリックで開閉）+コピー機能
+- [x] ステータスバッジ（完了/失敗/キャンセル/実行中/待機中 日本語表示）
+- [x] ヘッダーに履歴ページへのナビゲーションリンク
+
+**Phase C: ゲーミフィケーション強化**
+- [x] レベルアップ演出の改善（スパークルデコ+バウンスアニメ+新カテゴリ表示）
+- [x] XP獲得フロートアニメーション（+XX XP オーバーレイ）
+- [x] デイリークォータ表示（残り回数/上限、プログレスバー）
+
+### ファイル構成（Sprint 3 Phase C終了時点）
 ```
 src/
 ├── app/
 │   ├── (auth)/login/page.tsx, register/page.tsx, layout.tsx
-│   ├── (main)/layout.tsx, quest/[id]/page.tsx
+│   ├── (main)/layout.tsx, quest/[id]/page.tsx, history/page.tsx ← NEW
 │   ├── api/quest/execute/route.ts
 │   ├── auth/callback/route.ts
 │   ├── onboarding/page.tsx
 │   ├── layout.tsx, page.tsx (統合: ランディング+ホーム)
-│   └── globals.css
-├── components/ui/ (Button, Card, Input, Modal, Toast)
+│   └── globals.css (XP/レベルアップアニメーション追加)
+├── components/ui/ (Button, Card, Input, Modal, Toast, XpProgressBar) ← XpProgressBar NEW
 ├── features/
 │   ├── auth/actions/index.ts
+│   ├── auth/components/SignOutButton.tsx ← NEW
 │   ├── gamification/types/index.ts
+│   ├── gamification/components/ ← NEW
+│   │   ├── LevelUpModal.tsx (改良版)
+│   │   ├── XpGainOverlay.tsx
+│   │   └── DailyQuota.tsx
 │   ├── onboarding/components/ (OnboardingWizard, StepName, StepAvatar, StepMascot, StepComplete)
 │   ├── onboarding/actions/index.ts
-│   ├── quest/actions/index.ts
-│   ├── quest/components/ (QuestCard, QuestInputForm, QuestExecution, QuestResult)
+│   ├── quest/actions/index.ts (getQuestRunsWithQuestInfo, getDailyQuota 追加)
+│   ├── quest/components/ (QuestCard, QuestInputForm, QuestExecution, QuestResult, HistoryList, StatusBadge) ← HistoryList, StatusBadge NEW
+│   ├── quest/constants/category.ts ← NEW (CATEGORY_LABELS)
 │   ├── quest/hooks/useQuestExecution.ts
 │   └── quest/types/schema.ts
 ├── lib/
@@ -87,7 +108,7 @@ src/
 ### 接続状況
 - Supabase: ローカル開発環境で接続済み（`supabase start`で起動）
 - Anthropic API: SDK実装済み、`.env.local`にAPIキー設定が必要
-- Upstash Redis: Sprint 3 で接続予定
+- Upstash Redis: Sprint 4 で接続予定
 
 ---
 
@@ -117,26 +138,17 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 ## 次のタスク
 
-### Sprint 3 Phase A: ホーム画面の仕上げ
-- [ ] XPプログレスバー（ヘッダーまたはホーム画面）
-- [ ] カテゴリ日本語名の表示（basic→基本, business→ビジネス等）
-- [ ] サインアウトボタン
-
-### Sprint 3 Phase B: 履歴画面
-- [ ] /history ページ（実行履歴一覧）
-- [ ] 過去の結果を再表示
-- [ ] ステータスバッジ（完了/失敗/キャンセル）
-
-### Sprint 3 Phase C: ゲーミフィケーション強化
-- [ ] レベルアップ演出の改善
-- [ ] XP獲得アニメーション
-- [ ] デイリークォータ表示（残り回数）
-
 ### Sprint 3 Phase D: PWA + デプロイ準備
 - [ ] serwist（PWA）設定
 - [ ] manifest.json の完備
 - [ ] E2Eテスト（メインフロー）
 - [ ] Vercelデプロイ設定
+
+### Sprint 4（予定）
+- [ ] Upstash Redis レートリミット接続
+- [ ] パフォーマンス最適化
+- [ ] 本番Supabase設定
+- [ ] Vercelデプロイ
 
 ---
 

@@ -3,20 +3,21 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Copy, Home, Sparkles, ArrowLeft } from 'lucide-react';
-import { Button, Modal } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useQuestStore } from '@/stores/questStore';
 import { useUIStore } from '@/stores/uiStore';
+import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';
 
 interface Props {
   questRunId: string;
   xpGained: number;
   levelUp: boolean;
+  newLevel?: number;
   onRetry?: () => void;
 }
 
-export function QuestResult({ questRunId, xpGained, levelUp, onRetry }: Props) {
+export function QuestResult({ questRunId, xpGained, levelUp, newLevel = 2, onRetry }: Props) {
   const content = useQuestStore((s) => s.streamedContent);
-  const showLevelUpModal = useUIStore((s) => s.showLevelUpModal);
   const setLevelUpModal = useUIStore((s) => s.setLevelUpModal);
 
   const [copied, setCopied] = useState(false);
@@ -63,20 +64,9 @@ export function QuestResult({ questRunId, xpGained, levelUp, onRetry }: Props) {
         </Link>
       </div>
 
-      <Modal open={showLevelUpModal} onClose={() => setLevelUpModal(false)} title="レベルアップ！">
-        <div className="space-y-3">
-          <p className="text-sm text-foreground">おめでとうございます！新しいレベルに到達しました。</p>
-          <div className="rounded-md bg-quest-primary/10 p-3 text-sm text-quest-primary">
-            新しいカテゴリやクエストが解放されました！
-          </div>
-          <div className="text-right">
-            <Button onClick={() => setLevelUpModal(false)}>OK</Button>
-          </div>
-        </div>
-      </Modal>
+      <LevelUpModal newLevel={newLevel} />
 
       <input type="hidden" value={questRunId} readOnly />
     </div>
   );
 }
-
