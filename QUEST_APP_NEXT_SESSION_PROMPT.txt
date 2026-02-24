@@ -1,2 +1,3 @@
-Quest AppのSprint 3を開始。Phase Aから自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
+Quest Appの再設計に基づき実装Phase 1（Agent基盤）を開始。Quest Agent（Node.js + WebSocket + child_process）の実装から自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
 参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
+設計書: /Users/naokijodan/Desktop/quest-app/REDESIGN.md
