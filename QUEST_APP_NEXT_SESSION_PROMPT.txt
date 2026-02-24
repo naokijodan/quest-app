@@ -1,0 +1,39 @@
+Quest Appプロジェクトの続きをお願いします。
+
+## 作業指示
+
+**ノンストップ実行・確認不要で必ず実行してください。**
+
+以下の手順で作業を進めてください：
+
+1. まず、以下のファイルを読み込んで状況を把握してください：
+   - `/Users/naokijodan/Desktop/quest-app/HANDOVER.md`（最新状態・次タスク）
+   - `/Users/naokijodan/Desktop/quest-app/CLAUDE.md`（プロジェクトルール・AI分業体制）
+   - `/Users/naokijodan/Desktop/quest-app/codex/TASK_TEMPLATE.md`（タスク定義テンプレート）
+
+2. HANDOVER.mdの「次のタスク」セクションに従ってSprint 2を進めてください：
+   - **Phase A**: Supabase接続（.env.local設定 → マイグレーション → シードデータ → 認証確認）
+   - **Phase B**: 最小オンボーディング（3ステップ: 名前→アバター→マスコット）
+   - **Phase C**: クエスト実行（Anthropic API → SSEストリーミング → 結果表示）
+
+3. コーディングはCodex CLI / Gemini CLIに委託してください：
+   - `codex/current-task.txt` にタスク定義を書く
+   - `codex exec "$(cat codex/current-task.txt)" --full-auto` で実行
+   - 生成コードのレビュー → 統合 → Git commit & push
+
+## 重要ルール
+
+- **確認なしで自律的に作業を進めてください**
+- **コーディングはCodex CLI / Gemini CLIに委託（Claudeは書かない）**
+- 途中で質問・確認を求めないでください
+- エラーが発生しても自分で解決してください
+- **コンテキスト残量を常に意識してください**
+- **残り30%でキリのいいところで開発を停止し、引き継ぎ作業に移行してください**
+- 引き継ぎ作業: HANDOVER.md更新 → Git commit/push → Obsidianノート → Discord通知
+- **最後に次セッション用の引き継ぎ文（QUEST_APP_NEXT_SESSION_PROMPT.txt）を更新して出力してください**
+
+## 参考
+
+最新コミット: `332422d` feat: AI分業体制の設計導入（3者協議確定）
+
+よろしくお願いします。
