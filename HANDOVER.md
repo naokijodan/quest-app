@@ -48,12 +48,10 @@ Sprint 1完了: プロジェクト初期化、認証、UIコンポーネント�
 6. 更新した引き継ぎ文を画面に出力（ユーザーがコピペで次セッションに貼る）
 
 ### セッション終了時の出力フォーマット
+引き継ぎ文は1-2行で簡潔に。詳細はHANDOVER.mdに書く。
 ```
-## 完了報告
-[今回完了したタスクの簡潔なリスト]
-
-## 次セッション引き継ぎ文
-[QUEST_APP_NEXT_SESSION_PROMPT.txt の内容をそのまま出力]
+Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
+参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
 ```
 
 ---
