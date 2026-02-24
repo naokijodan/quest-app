@@ -1,183 +1,225 @@
-# Task: Sprint2-PhaseB-Onboarding
+# Task: Sprint2-PhaseC1-AnthropicSSE
 # AI: Codex CLI
 # Priority: High
-# Risk Level: High (Auth + DB)
+# Risk Level: Critical (SSE + Auth + DB)
 
 ## 1. Objective
-認証後の初回ユーザーに3ステップのオンボーディング画面を提供する。
-ステップ: 名前入力 → アバター選択 → マスコット選択 → 完了（最初のクエストへ誘導）
+Anthropic SDKの初期化、SSEストリーミングAPI Route、クエスト関連Server Actionsを実装する。
+クエスト実行のバックエンド全体を構築する。
 
 ## 2. Target Files
 
 ### Create（新規作成）
-- src/features/onboarding/components/OnboardingWizard.tsx （ウィザード全体）
-- src/features/onboarding/components/StepName.tsx （Step 1: 名前入力）
-- src/features/onboarding/components/StepAvatar.tsx （Step 2: アバター選択）
-- src/features/onboarding/components/StepMascot.tsx （Step 3: マスコット選択）
-- src/features/onboarding/components/StepComplete.tsx （完了演出）
-- src/features/onboarding/actions/index.ts （Server Action: completeOnboarding）
-- src/app/onboarding/page.tsx （オンボーディングページ）
+- src/lib/anthropic/client.ts （Anthropic SDK初期化）
+- src/lib/anthropic/stream.ts （ストリーミングヘルパー）
+- src/lib/anthropic/templates.ts （プロンプトテンプレート処理）
+- src/app/api/quest/execute/route.ts （SSEストリーミングAPI Route）
+- src/features/quest/actions/index.ts （クエスト関連Server Actions）
 
 ### Modify（変更）
-- なし（新規作成のみ）
+- なし
 
 ## 3. Dependencies（依存ファイル — 必ず読むこと）
 
-### 共通UI
+### 型定義（src/types/index.ts）
 ```typescript
-// src/components/ui/index.ts
-export { Button } from './Button';  // variant: 'primary'|'secondary'|'danger'|'ghost'|'accent', size: 'sm'|'md'|'lg', loading, icon props
-export { Card, CardHeader, CardTitle, CardDescription } from './Card';  // padding: 'sm'|'md'|'lg'
-export { Input, Textarea } from './Input';  // label, error props
-export { Modal } from './Modal';
-export { Toast } from './Toast';
+export type QuestCategory = 'basic' | 'business' | 'life' | 'creative' | 'analysis';
+export type QuestDifficulty = 1 | 2 | 3;
+export type QuestRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type OutputType = 'markdown' | 'json' | 'text' | 'csv';
+
+export interface PresetQuest {
+  id: string;
+  quest_identifier: string;
+  title: string;
+  description: string;
+  difficulty: QuestDifficulty;
+  category: QuestCategory;
+  xp_reward: number;
+  prompt_template: string;
+  output_type: OutputType;
+  required_inputs: QuestInput[];
+  max_tokens_limit: number;
+  icon: string;
+  is_active: boolean;
+}
+
+export interface QuestRun {
+  id: string;
+  user_id: string;
+  preset_quest_id: string | null;
+  status: QuestRunStatus;
+  input_data: Record<string, string>;
+  partial_output: string | null;
+  output_data: string | null;
+  output_type: OutputType;
+  actual_tokens_used: number | null;
+  error_message: string | null;
+  retry_count: number;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export type QuestSSEEvent =
+  | { type: 'start'; quest_run_id: string }
+  | { type: 'delta'; content: string }
+  | { type: 'progress'; message: string }
+  | { type: 'complete'; quest_run_id: string; xp_gained: number; level_up: boolean }
+  | { type: 'error'; message: string; retryable: boolean };
 ```
 
-### 型定義
+### バリデーション（src/features/quest/types/schema.ts）
 ```typescript
-// src/types/index.ts
-export type AvatarType = 'planner' | 'explorer' | 'crafter';
-export type MascotType = 'cat' | 'dog';
-```
-
-### バリデーション
-```typescript
-// src/features/quest/types/schema.ts
-export const onboardingSchema = z.object({
-  username: z.string().min(2).max(30).regex(/^[a-zA-Z0-9_-]+$/),
-  avatar_type: z.enum(['planner', 'explorer', 'crafter']),
-  mascot_type: z.enum(['cat', 'dog']),
+import { z } from 'zod';
+export const questExecuteSchema = z.object({
+  questId: z.string().uuid(),
+  inputs: z.record(z.string(), z.string().max(5000)),
 });
-export type OnboardingInput = z.infer<typeof onboardingSchema>;
+export type QuestExecuteInput = z.infer<typeof questExecuteSchema>;
 ```
 
-### Supabase Server Client
+### Supabase Server Client（src/lib/supabase/server.ts）
 ```typescript
-// src/lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-export async function createClient() { ... }
+export async function createClient() { /* cookieベースのServerClient */ }
 ```
 
-### ユーティリティ
+### ゲーミフィケーション（src/features/gamification/types/index.ts）
 ```typescript
-// src/lib/utils/cn.ts
-export function cn(...inputs: ClassValue[]): string
+export const DIFFICULTY_XP = { 1: 10, 2: 20, 3: 40 } as const;
+export function calculateLevel(xp: number): number { ... }
+export function getUnlockedCategories(level: number): readonly string[] { ... }
 ```
-
-### TailwindCSS Theme Colors (globals.css)
-- --quest-primary: #6366f1 (メインカラー)
-- --quest-accent: #f59e0b (アクセント/XP)
-- --quest-success: #10b981 (成功)
-- --card-bg, --card-border, --foreground, --muted（UIカラー）
 
 ## 4. Requirements（仕様）
 
-### OnboardingWizard.tsx
-- 'use client' コンポーネント
-- ステート管理: currentStep (1-4), formData: { username, avatar_type, mascot_type }
-- プログレスバーを上部に表示（Step 1/3, 2/3, 3/3）
-- 各ステップはアニメーション付きで遷移（CSS transition）
-- immutableなstate更新（spread operator使用）
-
-### StepName.tsx (Step 1)
-- 「冒険者の名前を決めよう！」
-- Inputコンポーネントでusername入力
-- バリデーション: 2-30文字、英数字+ハイフン+アンダースコアのみ
-- 入力時にリアルタイムバリデーション表示
-- 「次へ」ボタン
-
-### StepAvatar.tsx (Step 2)
-- 「キャラクタータイプを選ぼう！」
-- 3つのカードから選択:
-  - planner: 「プランナー」計画を立てるのが得意 🧙‍♂️
-  - explorer: 「エクスプローラー」好奇心旺盛な冒険家 ⚔️
-  - crafter: 「クラフター」ものづくりの達人 🛠️
-- 選択中のカードはborder-quest-primaryでハイライト
-- 「次へ」「戻る」ボタン
-
-### StepMascot.tsx (Step 3)
-- 「相棒を選ぼう！」
-- 2つのカードから選択:
-  - cat: 「ネコ」気まぐれだけど賢い 🐱
-  - dog: 「イヌ」忠実で元気いっぱい 🐶
-- 選択中のカードはborder-quest-primaryでハイライト
-- 「完了」「戻る」ボタン
-- 「完了」押下時にServer Actionを呼び出し
-
-### StepComplete.tsx (Step 4)
-- 「冒険の準備が整いました！」
-- ユーザーが選択した情報を表示（名前、アバター、マスコット）
-- 「最初のクエストへ！」ボタン → /(main) へリダイレクト
-- 簡単なアニメーション（scale + fade in）
-
-### Server Action: completeOnboarding
+### src/lib/anthropic/client.ts
 ```typescript
-'use server';
-// 1. Supabase auth.getUser() でユーザーID取得
-// 2. onboardingSchema でバリデーション
-// 3. users テーブルに INSERT (id, username, avatar_type, mascot_type, onboarding_completed: true)
-// 4. エラーハンドリング（username重複時のメッセージ）
-// 5. 成功時はリダイレクトしない（クライアント側で制御）
+// Anthropic SDK のシングルトン初期化
+// process.env.ANTHROPIC_API_KEY を使用
+// エラーハンドリング: APIキー未設定時のわかりやすいエラー
+import Anthropic from '@anthropic-ai/sdk';
+
+let client: Anthropic | null = null;
+export function getAnthropicClient(): Anthropic {
+  if (!client) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
+    client = new Anthropic({ apiKey });
+  }
+  return client;
+}
 ```
 
-### app/onboarding/page.tsx
+### src/lib/anthropic/templates.ts
 ```typescript
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { OnboardingWizard } from '@/features/onboarding/components/OnboardingWizard';
-// 1. 未認証ならリダイレクト
-// 2. 既にオンボーディング済みならメインページへリダイレクト
-// 3. OnboardingWizard を表示
+// prompt_template の {{variable}} を実際の入力値で置換
+export function renderTemplate(template: string, inputs: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => inputs[key] ?? '');
+}
+```
+
+### src/lib/anthropic/stream.ts
+```typescript
+// Anthropic ストリーミング呼び出しのヘルパー
+// model: 'claude-sonnet-4-20250514' (デフォルト)
+// system prompt: Quest Appの固定プリフィックス + ユーザーのプロンプト
+// max_tokens: quest.max_tokens_limit
+// streamイベントを AsyncGenerator<string> で返す
+```
+
+### src/app/api/quest/execute/route.ts （CRITICAL）
+POST ハンドラー。以下の手順で処理する:
+
+1. **認証チェック**: Supabase auth.getUser()
+2. **リクエストバリデーション**: questExecuteSchema.safeParse
+3. **クエスト取得**: preset_quests テーブルから quest を取得
+4. **カテゴリアクセスチェック**: ユーザーのレベルに基づくカテゴリ制限
+5. **デイリークォータチェック**: user_daily_quotas テーブル確認（Free: 10回/日, 10000トークン/日）
+6. **quest_run 作成**: status: 'running' で INSERT
+7. **SSE ストリーム開始**: `start` イベント送信
+8. **Anthropic API ストリーミング呼び出し**: delta イベントを順次送信
+9. **進捗メッセージ**: 途中で `progress` イベントを送信（マスコットのセリフ）
+10. **完了処理**:
+    - quest_run を 'completed' に更新、output_data・tokens保存
+    - XP加算: users テーブルの experience_points を更新
+    - レベルアップ判定
+    - user_daily_quotas のカウント更新
+    - `complete` イベント送信
+11. **エラー時**: partial_output を保存、quest_run を 'failed' に更新、`error` イベント送信
+
+SSEフォーマット:
+```
+data: {"type":"start","quest_run_id":"uuid"}\n\n
+data: {"type":"delta","content":"テキスト"}\n\n
+data: {"type":"progress","message":"がんばってるにゃ！"}\n\n
+data: {"type":"complete","quest_run_id":"uuid","xp_gained":10,"level_up":false}\n\n
+```
+
+レスポンスヘッダー:
+```
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+### src/features/quest/actions/index.ts
+Server Actions for quest-related operations:
+
+```typescript
+'use server';
+// 1. getPresetQuests(): 全アクティブなプリセットクエストを取得
+// 2. getPresetQuestById(id: string): 単一クエスト取得
+// 3. getQuestRun(id: string): quest_run を取得（RLSで本人のみ）
+// 4. getUserProfile(): ログインユーザーのプロフィールを取得
+// 5. getRecentQuestRuns(limit?: number): 最近の実行履歴を取得
 ```
 
 ## 5. Constraints（制約）
-- TailwindCSS 4のみ使用（CSS Modules禁止）
-- Server Actions使用（API Route不可）
-- Zod v4でサーバーサイドバリデーション（src/features/quest/types/schema.ts の onboardingSchema 使用）
+- TailwindCSS 4のみ使用
+- Server Actionsはデータフェッチ/ミューテーション用、API Route はSSEストリーミングのみ
+- Zod v4 でサーバーサイドバリデーション
 - 型定義は src/types/index.ts の既存型を使用
-- immutableパターン（state mutation禁止）
+- immutableパターン
 - ファイルは200-400行、最大800行
-- 全コンポーネントでTailwindCSSのテーマカラー変数を使用（ハードコードされた色値禁止）
+- Anthropic APIキーはサーバーサイドのみ（NEXT_PUBLIC_ なし）
+- マスコット進捗メッセージは3-5種類用意（猫系と犬系）
 
 ## 6. Forbidden（禁止事項）
-- [ ] dangerouslySetInnerHTML の使用
-- [ ] console.log の残置
-- [ ] ハードコードされたシークレット
-- [ ] 既存のRLSポリシーの変更
-- [ ] middleware.ts の変更
-- [ ] 新規API Routeの作成
+- dangerouslySetInnerHTML の使用
+- console.log の残置
+- ハードコードされたシークレット
+- 既存のRLSポリシーの変更
+- middleware.ts の変更
+- 新規API Route の作成（/api/quest/execute のみ）
 
-## 7. Acceptance Criteria
+## 7. High-Risk Area Details
+
+### SSE Streaming
+- Endpoint: POST /api/quest/execute
+- Event format: QuestSSEEvent 型に厳密に従う
+- エラー時: partial_output を保存、status を 'failed' に更新
+- AbortController 対応: クライアント切断時にクリーンアップ
+- ReadableStream の new Response() で返す
+
+### Daily Quota (user_daily_quotas テーブル)
+```sql
+CREATE TABLE user_daily_quotas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quota_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  api_calls_made INTEGER NOT NULL DEFAULT 0,
+  tokens_used INTEGER NOT NULL DEFAULT 0,
+  last_reset_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, quota_date)
+);
+```
+- 存在しない場合は INSERT、存在する場合は UPDATE
+- Free plan: 10 calls/day, 10000 tokens/day
+
+## 8. Acceptance Criteria
 - [ ] TypeScript型エラーなし（npm run build 成功）
-- [ ] 3ステップのウィザードが正常に遷移する
-- [ ] Server Actionでusersテーブルにレコードが作成される
-- [ ] オンボーディング完了後にメインページへ遷移できる
-- [ ] username重複時に適切なエラーメッセージが表示される
-- [ ] レスポンシブ対応（モバイル〜デスクトップ）
-
-## 8. Reference Code
-
-### 既存のログインページパターン（src/app/(auth)/login/page.tsx）
-```tsx
-'use client';
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
-
-// formData → Server Action → result.error / result.success パターン
-```
-
-### 既存のServer Actionパターン（src/features/auth/actions/index.ts）
-```typescript
-'use server';
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-
-export async function signInWithEmail(formData: FormData) {
-  const supabase = await createClient();
-  // ... validation, supabase operation, error handling
-  return { error: 'エラーメッセージ' };
-}
-```
+- [ ] SSEストリーミングがQuestSSEEvent型に準拠
+- [ ] 認証チェック・クォータチェックが正しく動作
+- [ ] quest_run のステータス遷移が正しい（pending→running→completed/failed）
+- [ ] XP加算・レベルアップ判定が正しい
+- [ ] エラー時にpartial_outputが保存される
