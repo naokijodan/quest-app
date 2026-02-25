@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 562cf1f feat: UI/アニメーション全面改善
+- **Latest commit:** 61bfe73 feat: 冒険進捗表示・ローカルフォント移行・XPバーリアルタイム更新
 - **Status:** クリーン（コミット済み・プッシュ済み）
 
 ### 実装済み
@@ -98,8 +98,9 @@
 10. [x] E2E検証: ログイン → クエスト実行 → XP付与（Playwright）
 11. [x] E2E検証: 冒険ルートページ → 第1章 → プロローグモーダル
 12. [x] UI/アニメーション全面改善（ホバー、グラデーション、stagger、glow、NavLink等）
-13. [ ] **Vercelデプロイ（ユーザー操作必要）**
-14. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
+13. [x] 冒険チャプター進捗バー + ローカルフォント移行 + XPバーリアルタイム更新
+14. [ ] **Vercelデプロイ（ユーザー操作必要）**
+15. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
 
 ### ファイル構成（Phase 4時点）
 ```
@@ -139,7 +140,9 @@ quest-app/
 │   │   ├── Button, Card, Input, Modal, Toast, XpProgressBar
 │   │   ├── Terminal.tsx
 │   │   ├── OfflineBanner.tsx          ← NEW: オフライン検知バナー
-│   │   └── NavLink.tsx               ← NEW: アクティブリンクインジケーター付きナビ
+│   │   ├── NavLink.tsx               ← NEW: アクティブリンクインジケーター付きナビ
+│   │   ├── XpProgressBarClient.tsx  ← NEW: リアルタイムXPバー（userStore連動）
+│   │   └── LevelBadgeClient.tsx     ← NEW: リアルタイムLv表示
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── gamification/
@@ -292,10 +295,10 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 ### 改善候補（優先度順）
 - [x] UI/アニメーション改善（ホバーエフェクト、グラデーションXPバー、ページ遷移、stagger-children等）
 - [x] 結果表示のスタイリング改善（result-output, glow-success）
-- [ ] 冒険ルートのチャプター一覧UI改善（各クエストの進捗表示）
+- [x] 冒険ルートのチャプター一覧UI改善（各クエストの進捗バー表示）
+- [x] Google Fonts → ローカルフォント移行（geistパッケージ、オフライン対応）
+- [x] XPバーのリアルタイム更新（XpProgressBarClient + LevelBadgeClient）
 - [ ] PWAアイコンを正式なデザインに差し替え（現在はプレースホルダ）
-- [ ] Google Fonts → ローカルフォントへの移行（オフライン対応強化）
-- [ ] XPバーのリアルタイム更新（クエスト完了後のヘッダー即時反映）
 
 ---
 
