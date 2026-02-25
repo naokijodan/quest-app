@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 1cca03a feat: RPG化リデザイン — ダークテーマ・ギルド掲示板・ワールドマップ・第0章統合
+- **Latest commit:** 41d8aab fix: 第0章マイグレーションにchapter制約変更を追加
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -92,34 +92,39 @@ PWA設定、E2E検証、UI/アニメーション改善、Vercelデプロイ、Su
 
 ---
 
-## 次のタスク【最優先】
+## 完了タスク（2026-02-26）
 
-### 1. Supabaseリモートに第0章マイグレーション適用
-```bash
-# ローカルからリモートへプッシュ
-cd ~/Desktop/quest-app
-npx supabase db push
+### 1. Supabaseリモートに第0章マイグレーション適用 ✅
+- `adventure_chapter` CHECK制約を `BETWEEN 1 AND 5` → `BETWEEN 0 AND 5` に変更
+- 第0章の3クエスト（武器確認・武器鍛造・仲間召喚）をリモートDBに投入済み
+- マイグレーションファイルも制約変更を含むように更新・コミット済み
 
-# または Supabase Dashboard > SQL Editor で直接実行:
-# supabase/migrations/00004_phase5_setup_adventure.sql の内容をコピペ
-```
+### 2. 本番環境UI確認 ✅
+- ダークRPGテーマ正常表示
+- ランディングページ、ログイン画面確認済み
+- manifest.webmanifest Syntax Error（serwist既知問題）
 
-### 2. 本番環境でUI目視確認
-- Vercel自動デプロイ（1cca03aプッシュ済み）を待ってから確認
-- ダークテーマ、ギルド掲示板、ワールドマップ、第0章フロー
-- モバイル底部ナビ（GameNav）の動作確認
+### 3. 冒険入口Lv.4+問題 → 問題なしと判定 ✅
+- ホーム画面CTA、GameNav、ナビリンクすべてレベル制限なし
+- 第0章・第1章はLv.1で解放済み
+- 第2章以降の段階ロックは設計通り
 
-### 3. オンボーディング → 第0章 → ホームのフロー確認
-- 新規ユーザー登録 → オンボーディング完了 → `/adventure/0/ch0-weapon-check` へ遷移
-- 武器確認 → 武器鍛造 → 仲間召喚 → ギルド掲示板（ホーム）
+### 4. .env.local をリモートSupabase向けに更新 ✅
+- NEXT_PUBLIC_SUPABASE_URL → `https://yabrrdonqlttzwrfpqdu.supabase.co`
+- ANON_KEY / SERVICE_ROLE_KEY → リモートプロジェクトのキーに変更
+
+---
+
+## 次のタスク
 
 ### Phase 5 残り候補
+- [ ] Vercel環境変数にリモートSupabaseキーを設定（本番DBとの接続）
 - [ ] Google認証プロバイダ設定（Supabase + Google Cloud Console）
+- [ ] オンボーディング → 第0章 → ホームのE2Eフロー確認
 - [ ] カスタムドメイン設定
 - [ ] Upstash Redis（レート制限）
 - [ ] Stripe課金連携
 - [ ] カスタムクエスト作成機能
-- [ ] 冒険ルートの冒険レベル要件撤廃（Lv.4→Lv.1で冒険入口表示）
 
 ---
 
@@ -178,7 +183,7 @@ quest-app/
 │       ├── 00001_initial_schema.sql
 │       ├── 00002_phase2_cli_columns.sql
 │       ├── 00003_phase3_adventure.sql
-│       └── 00004_phase5_setup_adventure.sql  ← NEW Phase 5（未適用）
+│       └── 00004_phase5_setup_adventure.sql  ← Phase 5（適用済み 2026-02-26）
 ├── vercel.json
 └── next.config.ts
 ```
@@ -190,8 +195,8 @@ quest-app/
 | 問題 | 影響 | 対応 |
 |------|------|------|
 | middleware.ts非推奨 | ビルド警告のみ | Phase 5+でproxy移行 |
-| 00004マイグレーション未適用 | 第0章が本番で動かない | Supabaseリモートへpush |
-| ホーム画面の冒険入口がLv.4+ | 新規ユーザーに見えない | 要件撤廃を検討 |
+| 00004マイグレーション | **適用済み**（2026-02-26） | 制約変更+データ投入完了 |
+| Vercel環境変数未設定 | 本番がリモートDB未接続の可能性 | Vercelダッシュボードで設定 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
 | Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
 
