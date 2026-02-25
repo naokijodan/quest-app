@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getUserProfile } from '@/features/quest/actions';
 import { calculateLevel } from '@/features/gamification/types';
-import { XpProgressBar } from '@/components/ui/XpProgressBar';
+import { XpProgressBarClient } from '@/components/ui/XpProgressBarClient';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { History, Settings, Sword } from 'lucide-react';
 import { NavLink } from '@/components/ui/NavLink';
 import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay';
+import { LevelBadgeClient } from '@/components/ui/LevelBadgeClient';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 export const dynamic = 'force-dynamic';
@@ -39,11 +40,9 @@ export default async function MainLayout({
             <NavLink href="/setup" icon={<Settings className="h-4 w-4" />} label="セットアップ" />
           </nav>
           <div className="flex items-center gap-3 text-sm">
-            <XpProgressBar xp={user.experience_points} level={level} />
+            <XpProgressBarClient initialXp={user.experience_points} initialLevel={level} />
             <span className="text-muted">{user.username}</span>
-            <span className="rounded-md border border-card-border bg-card-bg px-2 py-1 text-foreground">
-              Lv.{level}
-            </span>
+            <LevelBadgeClient initialLevel={level} />
             <SignOutButton />
           </div>
         </div>

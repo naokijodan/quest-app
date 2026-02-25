@@ -1,4 +1,8 @@
-Quest App Phase 4（PWA + デプロイ）に着手。serwist設定、Vercelデプロイ、Supabaseリモート接続から。Phase 3の冒険シードデータ投入・動作検証も並行して実施。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
-参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
-設計書: /Users/naokijodan/Desktop/quest-app/REDESIGN.md
-最新コミット: ed16301 (feat: Phase 3 冒険ルート実装)
+Quest AppのPhase 4（デプロイ）を継続。E2E検証・UI/アニメーション改善は完了済み。次は以下のいずれかから：
+  1. Vercelデプロイ（vercel login → vercel --prod）※ブラウザ認証が必要
+  2. Supabaseリモート接続設定（ユーザー操作必要）
+  3. その他改善候補（冒険ルート進捗表示、PWAアイコン正式化、ローカルフォント移行等）
+  確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
+  参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
+  設計書: /Users/naokijodan/Desktop/quest-app/REDESIGN.md
+  最新コミット: cdec531 (docs: HANDOVER.md UI/アニメーション改善完了を反映)

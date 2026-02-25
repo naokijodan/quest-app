@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getUserProfile } from '@/features/quest/actions';
 import { calculateLevel } from '@/features/gamification/types';
 import { CHAPTERS } from '@/features/adventure/types';
@@ -14,13 +13,20 @@ export default async function AdventurePage() {
   const level = typeof user.level === 'number' ? user.level : calculateLevel(user.experience_points);
   const progress = await getAdventureProgress();
 
-  const firstQuestByChapter = await Promise.all(
+  const chapterData = await Promise.all(
     CHAPTERS.map(async (c) => {
       const qs = await getAdventureQuests(c.number);
-      return { chapter: c.number, first: qs[0]?.quest_identifier };
+      const totalQuests = qs.length;
+      const completedQuests = qs.filter((q) => q.progress?.status === 'completed').length;
+      return {
+        chapter: c.number,
+        first: qs[0]?.quest_identifier,
+        totalQuests,
+        completedQuests,
+      };
     })
   );
-  const firstMap = new Map(firstQuestByChapter.map((x) => [x.chapter, x.first] as const));
+  const dataMap = new Map(chapterData.map((x) => [x.chapter, x] as const));
 
   return (
     <div className="space-y-6">
@@ -35,8 +41,9 @@ export default async function AdventurePage() {
           const chapterProgress = progress.filter((p) => p.chapter === c.number);
           const completed = chapterProgress.length > 0 && chapterProgress.every((p) => p.status === 'completed');
           const current = user.adventure_chapter === c.number;
-          const href = !locked && firstMap.get(c.number)
-            ? `/adventure/${c.number}/${encodeURIComponent(firstMap.get(c.number) as string)}`
+          const data = dataMap.get(c.number);
+          const href = !locked && data?.first
+            ? `/adventure/${c.number}/${encodeURIComponent(data.first)}`
             : undefined;
           return (
             <ChapterCard
@@ -46,6 +53,8 @@ export default async function AdventurePage() {
               current={current}
               completed={completed}
               href={href}
+              totalQuests={data?.totalQuests ?? 0}
+              completedQuests={data?.completedQuests ?? 0}
             />
           );
         })}
@@ -57,4 +66,3 @@ export default async function AdventurePage() {
     </div>
   );
 }
-

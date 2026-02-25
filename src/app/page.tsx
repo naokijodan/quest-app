@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Sparkles, Zap, Shield, Trophy, Lock, History, ArrowRight } from 'lucide-react';
+import { NavLink } from '@/components/ui/NavLink';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
 import { CATEGORY_LABELS } from '@/features/quest/constants/category';
-import { XpProgressBar } from '@/components/ui/XpProgressBar';
+import { XpProgressBarClient } from '@/components/ui/XpProgressBarClient';
+import { LevelBadgeClient } from '@/components/ui/LevelBadgeClient';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { createClient } from '@/lib/supabase/server';
 import { getPresetQuests, getUserProfile } from '@/features/quest/actions';
@@ -49,17 +51,12 @@ export default async function RootPage() {
             <Link href="/" className="flex items-center gap-2 text-foreground">
               <span className="text-lg font-bold text-quest-primary">Quest App</span>
             </Link>
-            <Link href="/history" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline">履歴</span>
-            </Link>
+            <NavLink href="/history" icon={<History className="h-4 w-4" />} label="履歴" />
           </nav>
           <div className="flex items-center gap-3 text-sm">
-            <XpProgressBar xp={profile.experience_points} level={level} />
+            <XpProgressBarClient initialXp={profile.experience_points} initialLevel={level} />
             <span className="text-muted">{profile.username}</span>
-            <span className="rounded-md border border-card-border bg-card-bg px-2 py-1 text-foreground">
-              Lv.{level}
-            </span>
+            <LevelBadgeClient initialLevel={level} />
             <SignOutButton />
           </div>
         </div>

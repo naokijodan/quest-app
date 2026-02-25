@@ -11,15 +11,19 @@ interface Props {
   current: boolean;
   completed: boolean;
   href?: string;
+  totalQuests: number;
+  completedQuests: number;
 }
 
-export function ChapterCard({ chapter, locked, current, completed, href }: Props) {
+export function ChapterCard({ chapter, locked, current, completed, href, totalQuests, completedQuests }: Props) {
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     locked || !href ? (
       <div className="cursor-not-allowed">{children}</div>
     ) : (
       <Link href={href}>{children}</Link>
     );
+
+  const progressPct = totalQuests > 0 ? Math.round((completedQuests / totalQuests) * 100) : 0;
 
   return (
     <Wrapper>
@@ -58,10 +62,32 @@ export function ChapterCard({ chapter, locked, current, completed, href }: Props
               )}
             </div>
             <p className="mt-1 text-sm text-muted">{chapter.description}</p>
+
+            {totalQuests > 0 && !locked && (
+              <div className="mt-3">
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="text-muted">進捗</span>
+                  <span className={cn(
+                    'font-medium',
+                    completed ? 'text-quest-success' : 'text-foreground'
+                  )}>
+                    {completedQuests} / {totalQuests}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted-bg">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-500',
+                      completed ? 'bg-quest-success' : 'xp-bar-gradient'
+                    )}
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
     </Wrapper>
   );
 }
-
