@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 4864c4f Phase 4 PWA設定
+- **Latest commit:** 48dbb01 Agent sandbox fix + E2E検証
 - **Status:** クリーン（コミット済み・プッシュ済み）
 
 ### 実装済み
@@ -93,8 +93,12 @@
 5. [x] webpack mode対応（serwist Turbopack非互換）
 6. [x] vercel.json 作成（リージョン: hnd1, SW headers設定）
 7. [x] ビルド成功確認（`npm run build` パス）
-8. [ ] **Vercelデプロイ（ユーザー操作必要）**
-9. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
+8. [x] Agent sandbox修正（codex --skip-git-repo-check + git init）
+9. [x] StoryDialogリテラル\n改行修正
+10. [x] E2E検証: ログイン → クエスト実行 → XP付与（Playwright）
+11. [x] E2E検証: 冒険ルートページ → 第1章 → プロローグモーダル
+12. [ ] **Vercelデプロイ（ユーザー操作必要）**
+13. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
 
 ### ファイル構成（Phase 4時点）
 ```
@@ -104,9 +108,9 @@ quest-app/
 │       ├── src/
 │       │   ├── index.ts
 │       │   ├── server.ts
-│       │   ├── executor.ts            — per-request sandbox対応
+│       │   ├── executor.ts            — per-request sandbox対応 + codex --skip-git-repo-check
 │       │   ├── types.ts               — sandbox_files追加
-│       │   ├── security.ts            — createRequestSandbox, cleanup追加
+│       │   ├── security.ts            — createRequestSandbox + git init, cleanup追加
 │       │   ├── health.ts
 │       │   └── auth.ts
 │       ├── package.json
