@@ -1,8 +1,8 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** Phase 2完了 + Phase 3（冒険ルート）完了 → Phase 4（PWA + デプロイ）着手
-**現在のSprint:** Sprint 7 Phase 3 冒険ルート完了
+**現在のPhase:** Phase 4（PWA + デプロイ）— PWA設定完了、デプロイ準備完了
+**現在のSprint:** Sprint 9 Phase 4 PWA + デプロイ
 
 ---
 
@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** ed16301 Phase 3 冒険ルート実装
+- **Latest commit:** 4864c4f Phase 4 PWA設定
 - **Status:** クリーン（コミット済み・プッシュ済み）
 
 ### 実装済み
@@ -73,7 +73,7 @@
 
 #### Sprint 7 Phase 3: 冒険ルート（完了）
 1. [x] DB追加マイグレーション（adventure_progress、preset_quests拡張、users.adventure_chapter）
-2. [x] 冒険クエスト全14種のシードデータ（第1-5章）
+2. [x] 冒険クエスト全14種のシードデータ（第1-5章）→ ローカルSupabaseに投入済み
 3. [x] 冒険ルートUI基盤（features/adventure: types, actions, components）
 4. [x] /adventure チャプター選択ページ
 5. [x] /adventure/[chapter]/[questId] クエスト実行ページ
@@ -85,7 +85,18 @@
 11. [x] ホーム画面にLv.4+で冒険ルート入口表示
 12. [x] ナビに冒険リンク追加
 
-### ファイル構成（Phase 3完了時点）
+#### Sprint 9 Phase 4: PWA + デプロイ（進行中）
+1. [x] serwist 9.x PWA設定（Service Worker + manifest.ts + next.config.ts）
+2. [x] PWAアイコン（192/512px placeholder）
+3. [x] オフライン検知UI（OfflineBanner + useOnlineStatus）
+4. [x] Next.js 16 params Promise型修正
+5. [x] webpack mode対応（serwist Turbopack非互換）
+6. [x] vercel.json 作成（リージョン: hnd1, SW headers設定）
+7. [x] ビルド成功確認（`npm run build` パス）
+8. [ ] **Vercelデプロイ（ユーザー操作必要）**
+9. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
+
+### ファイル構成（Phase 4時点）
 ```
 quest-app/
 ├── packages/
@@ -104,59 +115,133 @@ quest-app/
 │   ├── app/
 │   │   ├── (auth)/login/page.tsx, register/page.tsx, layout.tsx
 │   │   ├── (main)/
-│   │   │   ├── layout.tsx             — 冒険・セットアップナビ追加
-│   │   │   ├── quest/[id]/page.tsx
+│   │   │   ├── layout.tsx             — 冒険・セットアップナビ + OfflineBanner追加
+│   │   │   ├── quest/[id]/page.tsx    — params Promise型修正済み
 │   │   │   ├── history/page.tsx
-│   │   │   ├── setup/page.tsx         ← NEW: CLIセットアップガイド
-│   │   │   └── adventure/             ← NEW: 冒険ルート
-│   │   │       ├── page.tsx           — チャプター選択
-│   │   │       └── [chapter]/[questId]/page.tsx — クエスト実行
+│   │   │   ├── setup/page.tsx
+│   │   │   └── adventure/
+│   │   │       ├── page.tsx
+│   │   │       └── [chapter]/[questId]/page.tsx — params Promise型修正済み
 │   │   ├── api/
 │   │   ├── auth/callback/route.ts
 │   │   ├── onboarding/page.tsx
-│   │   ├── layout.tsx, page.tsx       — 冒険ルート入口追加
+│   │   ├── layout.tsx                 — PWA metadata (appleWebApp, formatDetection)
+│   │   ├── manifest.ts               ← NEW: Web App Manifest
+│   │   ├── sw.ts                      ← NEW: Service Worker
+│   │   ├── page.tsx
 │   │   └── globals.css
 │   ├── components/ui/
 │   │   ├── Button, Card, Input, Modal, Toast, XpProgressBar
-│   │   └── Terminal.tsx               ← NEW: ターミナル風UI
+│   │   ├── Terminal.tsx
+│   │   └── OfflineBanner.tsx          ← NEW: オフライン検知バナー
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── gamification/
 │   │   ├── onboarding/
 │   │   ├── quest/
-│   │   ├── setup/                     ← NEW: CLIセットアップ
-│   │   │   └── components/CliSetupGuide.tsx
-│   │   └── adventure/                 ← NEW: 冒険ルート
-│   │       ├── types/index.ts
-│   │       ├── actions/index.ts
-│   │       └── components/
-│   │           ├── ChapterCard.tsx
-│   │           ├── AdventureQuestCard.tsx
-│   │           ├── StoryDialog.tsx
-│   │           ├── AdventureQuestRunner.tsx
-│   │           ├── BossVictory.tsx
-│   │           └── AdventureChapterComplete.tsx
+│   │   ├── setup/
+│   │   └── adventure/
+│   ├── hooks/
+│   │   └── useOnlineStatus.ts         ← NEW: navigator.onLine フック
 │   ├── lib/
 │   │   ├── agent/
 │   │   ├── supabase/
 │   │   └── utils/
 │   ├── stores/
-│   ├── types/index.ts                 — AdventureProgress, QuestType追加
+│   ├── types/index.ts
 │   └── middleware.ts
 ├── supabase/
 │   ├── migrations/
 │   │   ├── 00001_initial_schema.sql
 │   │   ├── 00002_phase2_cli_columns.sql
-│   │   └── 00003_phase3_adventure.sql ← NEW
+│   │   └── 00003_phase3_adventure.sql
 │   ├── seed.sql
-│   └── seed_phase3_adventure.sql      ← NEW
-└── codex/
+│   └── seed_phase3_adventure.sql
+├── public/
+│   └── icons/
+│       ├── icon-192x192.png           ← NEW
+│       └── icon-512x512.png           ← NEW
+├── codex/
+├── vercel.json                        ← NEW
+└── next.config.ts                     — withSerwist() ラップ済み
 ```
 
 ### 接続状況
 - Supabase: ローカル開発環境で接続済み（`supabase start`で起動）
 - Anthropic API: **廃止済み**
 - Quest Agent: **実装完了**（`cd packages/quest-agent && npm run dev` で起動）
+- PWA: **設定完了**（Service Worker + Manifest）
+
+---
+
+## Vercelデプロイ手順（ユーザー操作必要）
+
+### Step 1: Vercel CLIログイン
+```bash
+cd ~/Desktop/quest-app
+npx vercel login
+# ブラウザが開くのでGitHubアカウントでログイン
+```
+
+### Step 2: Vercelプロジェクト作成
+```bash
+npx vercel
+# 以下の質問に答える:
+# - Set up and deploy? → Y
+# - Which scope? → 自分のアカウント
+# - Link to existing project? → N
+# - Project name? → quest-app
+# - Directory? → ./
+# - Override settings? → N
+```
+
+### Step 3: Supabaseリモートプロジェクト作成
+1. https://supabase.com/dashboard でプロジェクト作成
+2. プロジェクト名: `quest-app`
+3. リージョン: `Northeast Asia (Tokyo)`
+4. パスワード設定
+
+### Step 4: Supabaseリモートにマイグレーション適用
+```bash
+# Supabase CLIログイン
+npx supabase login
+# ブラウザでAccessTokenを取得
+
+# リモートプロジェクトをリンク
+npx supabase link --project-ref <PROJECT_REF>
+
+# マイグレーション適用
+npx supabase db push
+
+# シードデータ投入
+# Supabase Dashboard > SQL Editor で seed.sql と seed_phase3_adventure.sql を実行
+```
+
+### Step 5: Vercel環境変数設定
+```bash
+# Supabase DashboardのSettings > APIから取得
+npx vercel env add NEXT_PUBLIC_SUPABASE_URL production
+# → https://<project-ref>.supabase.co
+
+npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+# → Supabase Dashboard > Settings > API > anon key
+
+npx vercel env add SUPABASE_SERVICE_ROLE_KEY production
+# → Supabase Dashboard > Settings > API > service_role key
+
+npx vercel env add NEXT_PUBLIC_APP_URL production
+# → https://quest-app-xxx.vercel.app（デプロイ後のURL）
+```
+
+### Step 6: デプロイ
+```bash
+npx vercel --prod
+```
+
+### Step 7: Supabase認証設定
+1. Supabase Dashboard > Authentication > URL Configuration
+2. Site URL: `https://quest-app-xxx.vercel.app`
+3. Redirect URLs: `https://quest-app-xxx.vercel.app/auth/callback`
 
 ---
 
@@ -185,16 +270,18 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 ## 次のタスク
 
-### 実装Phase 4: PWA + デプロイ
-1. [ ] serwist（PWA）設定
-2. [ ] オフライン対応（Agent未接続時のUI改善）
-3. [ ] Vercelデプロイ（PWA配信のみ）
-4. [ ] Supabaseリモート接続設定
+### ユーザー操作必要（対話的ログイン）
+1. [ ] Vercel CLIログイン + デプロイ（上記手順参照）
+2. [ ] Supabaseリモートプロジェクト作成 + マイグレーション適用
+3. [ ] Vercel環境変数設定
+4. [ ] Supabase認証リダイレクトURL設定
 
-### 改善候補（Phase 4と並行可能）
+### 改善候補（デプロイ後に実施可能）
 - [ ] 冒険クエストの動作検証（Supabaseにシードデータ投入 → 実際のCLI実行テスト）
 - [ ] E2Eテスト（Playwright: オンボーディング → クエスト → 冒険ルート）
 - [ ] 冒険ルートのチャプター一覧UI改善（各クエストの進捗表示）
+- [ ] PWAアイコンを正式なデザインに差し替え
+- [ ] Google Fonts → ローカルフォントへの移行（オフライン対応強化）
 
 ---
 
@@ -202,13 +289,14 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 | 問題 | 影響 | 対応 |
 |------|------|------|
-| middleware.ts非推奨 | ビルド警告のみ | Phase 4でproxy移行 |
+| middleware.ts非推奨 | ビルド警告のみ | Phase 5でproxy移行 |
 | Zod v4 breaking changes | 現行動作に影響なし | このまま |
 | npm audit warnings | next依存、実害なし | 定期チェック |
-| Supabaseローカルのみ | 本番接続なし | Vercelデプロイ時にリモートSupabase設定 |
+| Supabaseローカルのみ | 本番接続なし | ユーザーがリモートSupabase設定 |
 | Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
-| Phase 3のシードデータ未投入 | 冒険クエスト動作確認不可 | `supabase db push` + seed実行 |
 | BossVictory.tsx uses style jsx | Next.js styled-jsx設定必要かも | 要確認 |
+| serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
+| PWAアイコンがプレースホルダ | 紫色の単色アイコン | 正式デザイン後に差し替え |
 
 ---
 
@@ -233,6 +321,8 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | XP Server Action | `src/features/quest/actions/complete-quest.ts` |
 | Adventure Actions | `src/features/adventure/actions/index.ts` |
 | Adventure Types | `src/features/adventure/types/index.ts` |
+| PWA Config | `next.config.ts` (withSerwist), `src/app/sw.ts`, `src/app/manifest.ts` |
+| Vercel Config | `vercel.json` |
 
 ---
 
