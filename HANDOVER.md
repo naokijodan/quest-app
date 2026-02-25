@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 8538f16 HANDOVER.md E2E検証完了状態に更新
+- **Latest commit:** 562cf1f feat: UI/アニメーション全面改善
 - **Status:** クリーン（コミット済み・プッシュ済み）
 
 ### 実装済み
@@ -97,8 +97,9 @@
 9. [x] StoryDialogリテラル\n改行修正
 10. [x] E2E検証: ログイン → クエスト実行 → XP付与（Playwright）
 11. [x] E2E検証: 冒険ルートページ → 第1章 → プロローグモーダル
-12. [ ] **Vercelデプロイ（ユーザー操作必要）**
-13. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
+12. [x] UI/アニメーション全面改善（ホバー、グラデーション、stagger、glow、NavLink等）
+13. [ ] **Vercelデプロイ（ユーザー操作必要）**
+14. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
 
 ### ファイル構成（Phase 4時点）
 ```
@@ -137,7 +138,8 @@ quest-app/
 │   ├── components/ui/
 │   │   ├── Button, Card, Input, Modal, Toast, XpProgressBar
 │   │   ├── Terminal.tsx
-│   │   └── OfflineBanner.tsx          ← NEW: オフライン検知バナー
+│   │   ├── OfflineBanner.tsx          ← NEW: オフライン検知バナー
+│   │   └── NavLink.tsx               ← NEW: アクティブリンクインジケーター付きナビ
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── gamification/
@@ -288,12 +290,12 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 4. [ ] Supabase認証リダイレクトURL設定
 
 ### 改善候補（優先度順）
-- [ ] UI/アニメーション改善（ユーザーから「もっとこだわった方がいい」との要望あり）
+- [x] UI/アニメーション改善（ホバーエフェクト、グラデーションXPバー、ページ遷移、stagger-children等）
+- [x] 結果表示のスタイリング改善（result-output, glow-success）
 - [ ] 冒険ルートのチャプター一覧UI改善（各クエストの進捗表示）
 - [ ] PWAアイコンを正式なデザインに差し替え（現在はプレースホルダ）
 - [ ] Google Fonts → ローカルフォントへの移行（オフライン対応強化）
 - [ ] XPバーのリアルタイム更新（クエスト完了後のヘッダー即時反映）
-- [ ] 結果表示のスタイリング改善（出力テキストの見栄え）
 
 ---
 
