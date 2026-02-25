@@ -1,4 +1,4 @@
-Quest App Phase 2残タスク（サンドボックスディレクトリ実装 + CLIインストールガイド画面）を完了し、Phase 3（冒険ルート）に着手。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
+Quest App Phase 4（PWA + デプロイ）に着手。serwist設定、Vercelデプロイ、Supabaseリモート接続から。Phase 3の冒険シードデータ投入・動作検証も並行して実施。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
 参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
 設計書: /Users/naokijodan/Desktop/quest-app/REDESIGN.md
-最新コミット: 06af41f (docs: HANDOVER.md Phase 2完了状態に更新)
+最新コミット: ed16301 (feat: Phase 3 冒険ルート実装)
