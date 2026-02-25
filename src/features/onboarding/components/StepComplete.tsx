@@ -30,8 +30,8 @@ export function StepComplete({ username, avatar_type, mascot_type }: StepComplet
         padding="lg"
       >
         <CardHeader className="mb-4">
-          <CardTitle>冒険の準備が整いました！</CardTitle>
-          <CardDescription>あなたのプロフィールが作成されました。</CardDescription>
+          <CardTitle>プロフィール作成完了！</CardTitle>
+          <CardDescription>次は旅の準備（第0章）へ進みましょう。</CardDescription>
         </CardHeader>
 
         <div className="mx-auto my-4 w-full max-w-md rounded-lg border border-card-border bg-card-bg p-4 text-left">
@@ -43,7 +43,7 @@ export function StepComplete({ username, avatar_type, mascot_type }: StepComplet
           <div className="text-foreground">{mapMascotLabel(mascot_type)}</div>
         </div>
 
-        <Button size="lg" onClick={() => router.push('/')}>最初のクエストへ！</Button>
+        <Button size="lg" onClick={() => router.push('/adventure/0/ch0-weapon-check')}>旅の準備を始める</Button>
       </Card>
     </div>
   );

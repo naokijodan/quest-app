@@ -1,7 +1,7 @@
 import { getUserProfile } from '@/features/quest/actions';
 import { calculateLevel } from '@/features/gamification/types';
 import { CHAPTERS } from '@/features/adventure/types';
-import { ChapterCard } from '@/features/adventure/components/ChapterCard';
+import { WorldMap } from '@/features/adventure/components/WorldMap';
 import { getAdventureProgress, getAdventureQuests } from '@/features/adventure/actions';
 
 export const dynamic = 'force-dynamic';
@@ -18,50 +18,45 @@ export default async function AdventurePage() {
       const qs = await getAdventureQuests(c.number);
       const totalQuests = qs.length;
       const completedQuests = qs.filter((q) => q.progress?.status === 'completed').length;
+      const chapterProgress = progress.filter((p) => p.chapter === c.number);
+      const completed = chapterProgress.length > 0 && chapterProgress.every((p) => p.status === 'completed');
+      const current = user.adventure_chapter === c.number;
+      const locked = level < c.requiredLevel;
+      const first = qs[0]?.quest_identifier;
+      const href = !locked && first
+        ? `/adventure/${c.number}/${encodeURIComponent(first)}`
+        : undefined;
+
       return {
-        chapter: c.number,
-        first: qs[0]?.quest_identifier,
+        chapter: c,
+        locked,
+        current,
+        completed,
+        href,
         totalQuests,
         completedQuests,
       };
     })
   );
-  const dataMap = new Map(chapterData.map((x) => [x.chapter, x] as const));
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-foreground">冒険ルート</h1>
-        <p className="mt-1 text-sm text-muted">ターミナルの魔王を倒す旅へ。章を選んで進もう。</p>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-2 stagger-children">
-        {CHAPTERS.map((c) => {
-          const locked = level < c.requiredLevel;
-          const chapterProgress = progress.filter((p) => p.chapter === c.number);
-          const completed = chapterProgress.length > 0 && chapterProgress.every((p) => p.status === 'completed');
-          const current = user.adventure_chapter === c.number;
-          const data = dataMap.get(c.number);
-          const href = !locked && data?.first
-            ? `/adventure/${c.number}/${encodeURIComponent(data.first)}`
-            : undefined;
-          return (
-            <ChapterCard
-              key={c.number}
-              chapter={c}
-              locked={locked}
-              current={current}
-              completed={completed}
-              href={href}
-              totalQuests={data?.totalQuests ?? 0}
-              completedQuests={data?.completedQuests ?? 0}
-            />
-          );
-        })}
+    <div className="space-y-6 page-enter">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-quest-primary/20 text-2xl torch-flicker">
+          🗺️
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">冒険の地図</h1>
+          <p className="text-sm text-muted">ターミナルの魔王を倒す旅へ。拠点を辿って進もう。</p>
+        </div>
       </div>
 
-      <div className="text-xs text-muted">
-        Lv.{level} 以上で次の章が解放されます。
+      {/* World Map */}
+      <WorldMap chapters={chapterData} />
+
+      <div className="rounded-lg border border-card-border bg-card-bg/50 px-4 py-3 text-xs text-muted">
+        現在 Lv.{level} — レベルアップで新しい拠点が解放されます。
       </div>
     </div>
   );

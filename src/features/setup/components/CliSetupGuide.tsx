@@ -1,67 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getAgentClient } from '@/lib/agent';
-import type { AgentHealthResponse } from '@/lib/agent';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { Terminal, CheckCircle, Circle, Download, ArrowRight, RefreshCw } from 'lucide-react';
 import { useAgentConnection } from '@/features/quest/hooks/useAgentConnection';
-
-interface CliInfo {
-  name: string;
-  command: string; // tool id in available_tools
-  installCommand: string;
-  description: string;
-  available: boolean;
-}
+import { useCliDetection } from '@/features/setup/hooks/useCliDetection';
 
 export function CliSetupGuide() {
-  const [health, setHealth] = useState<AgentHealthResponse | null>(null);
-  const [checking, setChecking] = useState(false);
-
-  const client = useMemo(() => getAgentClient(), []);
-
-  const { status, connect, isConnected, availableTools: connectedAvailableTools, agentVersion } = useAgentConnection();
-
-  const refreshHealth = useCallback(async () => {
-    setChecking(true);
-    const h = await client.checkHealth();
-    setHealth(h);
-    setChecking(false);
-  }, [client]);
-
-  useEffect(() => {
-    // 初回ヘルスチェック
-    void refreshHealth();
-  }, [refreshHealth]);
-
-  const availableTools = health?.available_tools ?? [];
-  const hasAnyCli = availableTools.length > 0;
-
-  const cliList: CliInfo[] = [
-    {
-      name: 'Claude Code',
-      command: 'claude',
-      installCommand: 'npm install -g @anthropic-ai/claude-code',
-      description: 'Anthropicの公式CLI。Claude Proサブスク（月額$20）が必要。',
-      available: availableTools.includes('claude'),
-    },
-    {
-      name: 'Codex CLI',
-      command: 'codex',
-      installCommand: 'npm install -g @openai/codex',
-      description: 'OpenAIの公式CLI。ChatGPT Proサブスク（月額$20）が必要。',
-      available: availableTools.includes('codex'),
-    },
-    {
-      name: 'Gemini CLI',
-      command: 'gemini',
-      installCommand: 'npm install -g @anthropic-ai/gemini-cli',
-      description: '（まだ利用不可 — 今後対応予定）',
-      available: availableTools.includes('gemini'),
-    },
-  ];
+  const { cliList, hasAnyCli, checking, refreshHealth } = useCliDetection();
+  const { status, connect, isConnected, agentVersion } = useAgentConnection();
 
   const statusLabel = (
     status === 'connected' ? '接続中' :
@@ -71,7 +18,7 @@ export function CliSetupGuide() {
 
   const handleRecheck = async () => {
     await refreshHealth();
-    if (health && status !== 'connected') {
+    if (status !== 'connected') {
       connect();
     }
   };
@@ -132,7 +79,6 @@ export function CliSetupGuide() {
                     className="mt-1"
                     icon={<Download className="h-4 w-4" />}
                     onClick={() => {
-                      // クリップボードへのコピー（静かに失敗を無視）
                       navigator?.clipboard?.writeText(cli.installCommand).catch(() => {});
                     }}
                   >

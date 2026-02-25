@@ -101,22 +101,3 @@ export async function getQuestRunsWithQuestInfo(limit = 20): Promise<QuestRunWit
   })) as QuestRunWithQuest[];
 }
 
-export async function getDailyQuota(): Promise<{ used: number; limit: number }> {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
-  if (!user) return { used: 0, limit: 10 };
-
-  const today = new Date().toISOString().split('T')[0];
-  const { data } = await supabase
-    .from('user_daily_quotas')
-    .select('api_calls_made')
-    .eq('user_id', user.id)
-    .eq('quota_date', today)
-    .maybeSingle();
-
-  return {
-    used: data?.api_calls_made ?? 0,
-    limit: 10,
-  };
-}
