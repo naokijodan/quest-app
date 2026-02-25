@@ -1,8 +1,8 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** Phase 4（PWA + デプロイ）— **全タスク完了、本番デプロイ済み**
-**現在のSprint:** Sprint 9 Phase 4 PWA + デプロイ
+**現在のPhase:** Phase 5（RPG化リデザイン）— **UI全面改修完了、DB seed未適用**
+**現在のSprint:** Sprint 10 Phase 5 RPG化リデザイン
 
 ---
 
@@ -36,276 +36,152 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 0e1a211 feat: PWAアイコンをプレースホルダから正式デザインに差し替え
+- **Latest commit:** 1cca03a feat: RPG化リデザイン — ダークテーマ・ギルド掲示板・ワールドマップ・第0章統合
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
 
-### 実装済み
+### Phase 5 で変更したもの（RPG化リデザイン）
 
-#### Sprint 1（完了）
-プロジェクト初期化、認証（Google/Email/Magic Link）、UIコンポーネント、ミドルウェア
+#### 削除
+- `src/features/gamification/components/DailyQuota.tsx` — 旧API時代の残骸、CLI経由では無意味
+- `getDailyQuota()` 関数（`src/features/quest/actions/index.ts`）
+- `page.tsx` の DailyQuota インポート・表示
 
-#### Sprint 2（完了）
-**Phase A:** Supabase接続（ローカル環境、4テーブル、シードデータ、型生成）
-**Phase B:** 最小オンボーディング（3ステップウィザード）
-**Phase C:** クエスト実行MVP（Anthropic SSE、Server Actions、ホーム/詳細/実行/結果画面）
+#### 全面改修
+- `src/app/globals.css` — ダークRPGテーマ（`#0f172a`）、RPGアニメーション12種追加
+- `src/app/page.tsx` — ギルド掲示板レイアウト + RPGランディング
+- `src/app/(main)/layout.tsx` — ゲームメニューナビ（冒険の記録/冒険に出る/装備）
+- `src/app/(main)/adventure/page.tsx` — ワールドマップ風レイアウト
+- `src/app/(main)/adventure/[chapter]/[questId]/page.tsx` — 第0章分岐追加
+- `src/features/quest/components/QuestCard.tsx` — 依頼書風デザイン
+- `src/features/quest/constants/category.ts` — RPG風カテゴリ名
+- `src/features/adventure/types/index.ts` — 第0章追加
+- `src/features/onboarding/components/StepComplete.tsx` — 遷移先を第0章に変更
+- `src/features/setup/components/CliSetupGuide.tsx` — useCliDetection フック使用に変更
 
-#### Sprint 3 Phase A〜C（完了）
-**Phase A:** XPプログレスバー、カテゴリ日本語名、サインアウトボタン
-**Phase B:** 履歴画面（/history）、ステータスバッジ
-**Phase C:** レベルアップ演出改善、XP獲得アニメーション、デイリークォータ表示
+#### 新規ファイル
+| ファイル | 説明 |
+|---------|------|
+| `src/components/ui/StatusBar.tsx` | RPG風ステータスバー（Lv + XP + ユーザー名） |
+| `src/components/ui/GameNav.tsx` | モバイル底部固定ゲームメニュー |
+| `src/features/adventure/components/WorldMap.tsx` | ワールドマップレイアウト（縦拠点連結） |
+| `src/features/adventure/components/SetupChapterRunner.tsx` | 第0章ルーティング用クライアントラッパー |
+| `src/features/adventure/components/SetupQuestWeaponCheck.tsx` | 第0章: CLI検出（武器確認） |
+| `src/features/adventure/components/SetupQuestWeaponForge.tsx` | 第0章: インストールガイド（鍛冶屋） |
+| `src/features/adventure/components/SetupQuestSummonAlly.tsx` | 第0章: Agent起動（仲間召喚） |
+| `src/features/setup/hooks/useCliDetection.ts` | CLI検出ロジック共通フック |
+| `supabase/migrations/00004_phase5_setup_adventure.sql` | 第0章シードデータ（3クエスト） |
 
-#### Sprint 5 Phase 1: Agent基盤（完了）
-1. [x] `packages/quest-agent/` — Quest Agent実装（WebSocketサーバー + child_process.spawn）
-2. [x] `src/lib/agent/` — PWA側Agent接続クライアント
-3. [x] `src/features/quest/hooks/useAgentConnection.ts` — 接続状態管理フック
-4. [x] `useQuestExecution.ts` → WebSocket版に書き換え
-5. [x] `@anthropic-ai/sdk` 依存削除、`src/lib/anthropic/` 廃止
+### 実装済み（Phase 1-4）
 
-#### Sprint 6 Phase 2: 通常クエストのCLI化（完了）
-1. [x] 既存10クエストをCLI実行版に変換（cli_prompt_template）
-2. [x] サンドボックスディレクトリ実装（per-request隔離 + file listing + cleanup）
-3. [x] Agent未接続時のフォールバックUI（AgentStatusBanner + /setup リンク）
-4. [x] CLIインストールガイド画面（/setup — 3ステップウィザード）
-5. [x] XP計算・DB更新のServer Action（completeQuestRun）
-6. [x] DB: preset_questsにCLI列追加 + users.level上限10に拡張
-7. [x] ゲーミフィケーション: Lv.1-10対応
-8. [x] useQuestExecution: cli_prompt_template + XP Server Action統合
+#### Sprint 1-2（完了）
+プロジェクト初期化、認証、UIコンポーネント、Supabase接続、オンボーディング、クエスト実行MVP
 
-#### Sprint 7 Phase 3: 冒険ルート（完了）
-1. [x] DB追加マイグレーション（adventure_progress、preset_quests拡張、users.adventure_chapter）
-2. [x] 冒険クエスト全14種のシードデータ（第1-5章）→ ローカルSupabaseに投入済み
-3. [x] 冒険ルートUI基盤（features/adventure: types, actions, components）
-4. [x] /adventure チャプター選択ページ
-5. [x] /adventure/[chapter]/[questId] クエスト実行ページ
-6. [x] Terminal.tsx（Tokyo Night テーマ、タイピングエフェクト、対話モード）
-7. [x] StoryDialog（プロローグ/エピローグ演出）
-8. [x] AdventureQuestRunner（入力フォーム、CLI実行、進行管理統合）
-9. [x] BossVictory（魔王戦勝利の全画面アニメーション）
-10. [x] AdventureChapterComplete（章クリアサマリー）
-11. [x] ホーム画面にLv.4+で冒険ルート入口表示
-12. [x] ナビに冒険リンク追加
+#### Sprint 3（完了）
+XPプログレスバー、履歴画面、レベルアップ演出、デイリークォータ
 
-#### Sprint 9 Phase 4: PWA + デプロイ（進行中）
-1. [x] serwist 9.x PWA設定（Service Worker + manifest.ts + next.config.ts）
-2. [x] PWAアイコン（192/512px placeholder）
-3. [x] オフライン検知UI（OfflineBanner + useOnlineStatus）
-4. [x] Next.js 16 params Promise型修正
-5. [x] webpack mode対応（serwist Turbopack非互換）
-6. [x] vercel.json 作成（リージョン: hnd1, SW headers設定）
-7. [x] ビルド成功確認（`npm run build` パス）
-8. [x] Agent sandbox修正（codex --skip-git-repo-check + git init）
-9. [x] StoryDialogリテラル\n改行修正
-10. [x] E2E検証: ログイン → クエスト実行 → XP付与（Playwright）
-11. [x] E2E検証: 冒険ルートページ → 第1章 → プロローグモーダル
-12. [x] UI/アニメーション全面改善（ホバー、グラデーション、stagger、glow、NavLink等）
-13. [x] 冒険チャプター進捗バー + ローカルフォント移行 + XPバーリアルタイム更新
-14. [x] PWAアイコン正式デザイン差し替え（DALL-E 3生成、巻物+星モチーフ）
-15. [x] Vercelデプロイ（quest-app-eight.vercel.app、hnd1リージョン）
-16. [x] Supabaseリモートプロジェクト作成（yabrrdonqlttzwrfpqdu、Tokyo）
-17. [x] マイグレーション3つ適用 + シードデータ24クエスト投入
-18. [x] Vercel環境変数4つ設定 + 再デプロイ
-19. [x] Supabase認証リダイレクトURL設定
+#### Sprint 5-6（完了）
+Quest Agent基盤、通常クエストCLI化、サンドボックス、CLIインストールガイド
 
-### ファイル構成（Phase 4時点）
-```
-quest-app/
-├── packages/
-│   └── quest-agent/
-│       ├── src/
-│       │   ├── index.ts
-│       │   ├── server.ts
-│       │   ├── executor.ts            — per-request sandbox対応 + codex --skip-git-repo-check
-│       │   ├── types.ts               — sandbox_files追加
-│       │   ├── security.ts            — createRequestSandbox + git init, cleanup追加
-│       │   ├── health.ts
-│       │   └── auth.ts
-│       ├── package.json
-│       └── tsconfig.json
-├── src/
-│   ├── app/
-│   │   ├── (auth)/login/page.tsx, register/page.tsx, layout.tsx
-│   │   ├── (main)/
-│   │   │   ├── layout.tsx             — 冒険・セットアップナビ + OfflineBanner追加
-│   │   │   ├── quest/[id]/page.tsx    — params Promise型修正済み
-│   │   │   ├── history/page.tsx
-│   │   │   ├── setup/page.tsx
-│   │   │   └── adventure/
-│   │   │       ├── page.tsx
-│   │   │       └── [chapter]/[questId]/page.tsx — params Promise型修正済み
-│   │   ├── api/
-│   │   ├── auth/callback/route.ts
-│   │   ├── onboarding/page.tsx
-│   │   ├── layout.tsx                 — PWA metadata (appleWebApp, formatDetection)
-│   │   ├── manifest.ts               ← NEW: Web App Manifest
-│   │   ├── sw.ts                      ← NEW: Service Worker
-│   │   ├── page.tsx
-│   │   └── globals.css
-│   ├── components/ui/
-│   │   ├── Button, Card, Input, Modal, Toast, XpProgressBar
-│   │   ├── Terminal.tsx
-│   │   ├── OfflineBanner.tsx          ← NEW: オフライン検知バナー
-│   │   ├── NavLink.tsx               ← NEW: アクティブリンクインジケーター付きナビ
-│   │   ├── XpProgressBarClient.tsx  ← NEW: リアルタイムXPバー（userStore連動）
-│   │   └── LevelBadgeClient.tsx     ← NEW: リアルタイムLv表示
-│   ├── features/
-│   │   ├── auth/
-│   │   ├── gamification/
-│   │   ├── onboarding/
-│   │   ├── quest/
-│   │   ├── setup/
-│   │   └── adventure/
-│   ├── hooks/
-│   │   └── useOnlineStatus.ts         ← NEW: navigator.onLine フック
-│   ├── lib/
-│   │   ├── agent/
-│   │   ├── supabase/
-│   │   └── utils/
-│   ├── stores/
-│   ├── types/index.ts
-│   └── middleware.ts
-├── supabase/
-│   ├── migrations/
-│   │   ├── 00001_initial_schema.sql
-│   │   ├── 00002_phase2_cli_columns.sql
-│   │   └── 00003_phase3_adventure.sql
-│   ├── seed.sql
-│   └── seed_phase3_adventure.sql
-├── public/
-│   └── icons/
-│       ├── icon-192x192.png           ← NEW
-│       └── icon-512x512.png           ← NEW
-├── codex/
-├── vercel.json                        ← NEW
-└── next.config.ts                     — withSerwist() ラップ済み
-```
+#### Sprint 7（完了）
+冒険ルート全14種シードデータ、Terminal.tsx、StoryDialog、AdventureQuestRunner、BossVictory
 
-### 接続状況
-- Supabase: ローカル開発環境で接続済み（`supabase start`で起動）
-- Anthropic API: **廃止済み**
-- Quest Agent: **実装完了**（`cd packages/quest-agent && npm run dev` で起動）
-- PWA: **設定完了**（Service Worker + Manifest）
+#### Sprint 9（完了）
+PWA設定、E2E検証、UI/アニメーション改善、Vercelデプロイ、Supabaseリモート
 
 ---
 
-## Vercelデプロイ手順（ユーザー操作必要）
+## 次のタスク【最優先】
 
-### Step 1: Vercel CLIログイン
+### 1. Supabaseリモートに第0章マイグレーション適用
 ```bash
+# ローカルからリモートへプッシュ
 cd ~/Desktop/quest-app
-npx vercel login
-# ブラウザが開くのでGitHubアカウントでログイン
-```
-
-### Step 2: Vercelプロジェクト作成
-```bash
-npx vercel
-# 以下の質問に答える:
-# - Set up and deploy? → Y
-# - Which scope? → 自分のアカウント
-# - Link to existing project? → N
-# - Project name? → quest-app
-# - Directory? → ./
-# - Override settings? → N
-```
-
-### Step 3: Supabaseリモートプロジェクト作成
-1. https://supabase.com/dashboard でプロジェクト作成
-2. プロジェクト名: `quest-app`
-3. リージョン: `Northeast Asia (Tokyo)`
-4. パスワード設定
-
-### Step 4: Supabaseリモートにマイグレーション適用
-```bash
-# Supabase CLIログイン
-npx supabase login
-# ブラウザでAccessTokenを取得
-
-# リモートプロジェクトをリンク
-npx supabase link --project-ref <PROJECT_REF>
-
-# マイグレーション適用
 npx supabase db push
 
-# シードデータ投入
-# Supabase Dashboard > SQL Editor で seed.sql と seed_phase3_adventure.sql を実行
+# または Supabase Dashboard > SQL Editor で直接実行:
+# supabase/migrations/00004_phase5_setup_adventure.sql の内容をコピペ
 ```
 
-### Step 5: Vercel環境変数設定
-```bash
-# Supabase DashboardのSettings > APIから取得
-npx vercel env add NEXT_PUBLIC_SUPABASE_URL production
-# → https://<project-ref>.supabase.co
+### 2. 本番環境でUI目視確認
+- Vercel自動デプロイ（1cca03aプッシュ済み）を待ってから確認
+- ダークテーマ、ギルド掲示板、ワールドマップ、第0章フロー
+- モバイル底部ナビ（GameNav）の動作確認
 
-npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-# → Supabase Dashboard > Settings > API > anon key
+### 3. オンボーディング → 第0章 → ホームのフロー確認
+- 新規ユーザー登録 → オンボーディング完了 → `/adventure/0/ch0-weapon-check` へ遷移
+- 武器確認 → 武器鍛造 → 仲間召喚 → ギルド掲示板（ホーム）
 
-npx vercel env add SUPABASE_SERVICE_ROLE_KEY production
-# → Supabase Dashboard > Settings > API > service_role key
-
-npx vercel env add NEXT_PUBLIC_APP_URL production
-# → https://quest-app-xxx.vercel.app（デプロイ後のURL）
-```
-
-### Step 6: デプロイ
-```bash
-npx vercel --prod
-```
-
-### Step 7: Supabase認証設定
-1. Supabase Dashboard > Authentication > URL Configuration
-2. Site URL: `https://quest-app-xxx.vercel.app`
-3. Redirect URLs: `https://quest-app-xxx.vercel.app/auth/callback`
-
----
-
-## コンテキスト管理ルール
-
-### 引き継ぎタイミング
-- **残り30%** で開発停止 → 引き継ぎ作業へ
-- **引き継ぎ作業に15-20%** の余力を確保
-- **SSE/RLS/認証タスクは途中切断禁止**
-
-### 引き継ぎ時の必須アクション
-1. HANDOVER.md 更新
-2. git commit & push
-3. Obsidianノート作成
-4. Discord通知
-5. `QUEST_APP_NEXT_SESSION_PROMPT.txt` 更新
-6. 引き継ぎ文を画面に出力
-
-### セッション終了時の出力フォーマット
-```
-Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて。確認不要。コーディングはCodex CLI / Gemini CLIに委託すること。
-参照: /Users/naokijodan/Desktop/quest-app/HANDOVER.md
-```
-
----
-
-## 次のタスク
-
-### E2E検証結果（2026-02-25完了）
-- [x] Agent起動 + healthcheck + codex CLI sandbox実行
-- [x] 通常クエスト全フロー: ログイン → 一覧 → 入力 → 実行 → 結果 → +10 XP（Playwright 15.2s）
-- [x] 冒険ルート: ページ表示 → 5章カード → 第1章 → プロローグモーダル（Playwright 10.4s）
-- [x] DB更新確認: experience_points=10, quest_count=1, quest_run status=completed
-- **注意**: claude --printはネスト環境で動作不可のため出力空。実運用（ユーザー環境）では問題なし
-
-### デプロイ完了（2026-02-25）
-1. [x] Vercelデプロイ — quest-app-eight.vercel.app
-2. [x] Supabaseリモートプロジェクト — yabrrdonqlttzwrfpqdu (Tokyo)
-3. [x] マイグレーション3つ + シードデータ24クエスト投入
-4. [x] Vercel環境変数4つ設定 + 再デプロイ
-5. [x] Supabase認証リダイレクトURL設定
-6. [x] PWAアイコン正式デザイン差し替え
-
-### Phase 5 候補（今後）
+### Phase 5 残り候補
 - [ ] Google認証プロバイダ設定（Supabase + Google Cloud Console）
 - [ ] カスタムドメイン設定
 - [ ] Upstash Redis（レート制限）
 - [ ] Stripe課金連携
 - [ ] カスタムクエスト作成機能
+- [ ] 冒険ルートの冒険レベル要件撤廃（Lv.4→Lv.1で冒険入口表示）
+
+---
+
+## ファイル構成（Phase 5時点）
+```
+quest-app/
+├── packages/
+│   └── quest-agent/                    — ローカルAgent（WebSocket + child_process.spawn）
+├── src/
+│   ├── app/
+│   │   ├── (auth)/login, register
+│   │   ├── (main)/
+│   │   │   ├── layout.tsx             — ゲームメニューナビ + StatusBar + GameNav
+│   │   │   ├── quest/[id]/page.tsx
+│   │   │   ├── history/page.tsx
+│   │   │   ├── setup/page.tsx         — 装備（CLIセットアップ独立ページ）
+│   │   │   └── adventure/
+│   │   │       ├── page.tsx           — ワールドマップ
+│   │   │       └── [chapter]/[questId]/page.tsx — 第0章分岐対応
+│   │   ├── onboarding/page.tsx
+│   │   ├── page.tsx                   — ギルド掲示板 + RPGランディング
+│   │   ├── globals.css                — ダークRPGテーマ + RPGアニメーション
+│   │   ├── manifest.ts, sw.ts
+│   │   └── layout.tsx
+│   ├── components/ui/
+│   │   ├── StatusBar.tsx              ← NEW Phase 5
+│   │   ├── GameNav.tsx                ← NEW Phase 5
+│   │   └── (既存: Button, Card, Terminal, NavLink, etc.)
+│   ├── features/
+│   │   ├── adventure/
+│   │   │   ├── components/
+│   │   │   │   ├── WorldMap.tsx           ← NEW Phase 5
+│   │   │   │   ├── SetupChapterRunner.tsx ← NEW Phase 5
+│   │   │   │   ├── SetupQuestWeaponCheck.tsx ← NEW Phase 5
+│   │   │   │   ├── SetupQuestWeaponForge.tsx ← NEW Phase 5
+│   │   │   │   ├── SetupQuestSummonAlly.tsx  ← NEW Phase 5
+│   │   │   │   └── (既存: ChapterCard, StoryDialog, AdventureQuestRunner, etc.)
+│   │   │   ├── actions/index.ts
+│   │   │   └── types/index.ts         — 第0章追加
+│   │   ├── setup/
+│   │   │   ├── components/CliSetupGuide.tsx — useCliDetection使用に変更
+│   │   │   └── hooks/useCliDetection.ts    ← NEW Phase 5
+│   │   ├── quest/
+│   │   │   ├── components/QuestCard.tsx    — 依頼書風リデザイン
+│   │   │   └── constants/category.ts      — RPG風カテゴリ名
+│   │   ├── gamification/
+│   │   │   └── components/
+│   │   │       ├── LevelUpModal.tsx
+│   │   │       └── XpGainOverlay.tsx
+│   │   │       (DailyQuota.tsx は削除)
+│   │   └── onboarding/
+│   │       └── components/StepComplete.tsx — 遷移先を第0章に変更
+│   └── (lib/, stores/, types/, hooks/)
+├── supabase/
+│   └── migrations/
+│       ├── 00001_initial_schema.sql
+│       ├── 00002_phase2_cli_columns.sql
+│       ├── 00003_phase3_adventure.sql
+│       └── 00004_phase5_setup_adventure.sql  ← NEW Phase 5（未適用）
+├── vercel.json
+└── next.config.ts
+```
 
 ---
 
@@ -313,14 +189,11 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 | 問題 | 影響 | 対応 |
 |------|------|------|
-| middleware.ts非推奨 | ビルド警告のみ | Phase 5でproxy移行 |
-| Zod v4 breaking changes | 現行動作に影響なし | このまま |
-| npm audit warnings | next依存、実害なし | 定期チェック |
-| Supabaseリモート接続済み | — | 解決済み |
-| Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
-| BossVictory.tsx uses style jsx | Next.js styled-jsx設定必要かも | 要確認 |
+| middleware.ts非推奨 | ビルド警告のみ | Phase 5+でproxy移行 |
+| 00004マイグレーション未適用 | 第0章が本番で動かない | Supabaseリモートへpush |
+| ホーム画面の冒険入口がLv.4+ | 新規ユーザーに見えない | 要件撤廃を検討 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| PWAアイコン差し替え済み | — | 解決済み |
+| Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
 
 ---
 
@@ -332,11 +205,11 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | DB Schema | `supabase/migrations/00001_initial_schema.sql` |
 | Phase 2 Migration | `supabase/migrations/00002_phase2_cli_columns.sql` |
 | Phase 3 Migration | `supabase/migrations/00003_phase3_adventure.sql` |
+| Phase 5 Migration | `supabase/migrations/00004_phase5_setup_adventure.sql` |
 | RLS Policy | `00001_initial_schema.sql` + `00003_phase3_adventure.sql` |
 | Auth Actions | `src/features/auth/actions/index.ts` |
 | Auth Callback | `src/app/auth/callback/route.ts` |
 | Middleware | `src/lib/supabase/middleware.ts` |
-| Supabase Client | `src/lib/supabase/client.ts`, `server.ts` |
 | Quest Schemas | `src/features/quest/types/schema.ts` |
 | Gamification | `src/features/gamification/types/index.ts` |
 | Agent Server | `packages/quest-agent/src/server.ts` |
@@ -345,7 +218,9 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | XP Server Action | `src/features/quest/actions/complete-quest.ts` |
 | Adventure Actions | `src/features/adventure/actions/index.ts` |
 | Adventure Types | `src/features/adventure/types/index.ts` |
-| PWA Config | `next.config.ts` (withSerwist), `src/app/sw.ts`, `src/app/manifest.ts` |
+| Setup Chapter | `src/features/adventure/components/SetupChapterRunner.tsx` |
+| CLI Detection | `src/features/setup/hooks/useCliDetection.ts` |
+| PWA Config | `next.config.ts`, `src/app/sw.ts`, `src/app/manifest.ts` |
 | Vercel Config | `vercel.json` |
 
 ---
