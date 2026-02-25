@@ -4,7 +4,7 @@ import { getUserProfile } from '@/features/quest/actions';
 import { calculateLevel } from '@/features/gamification/types';
 import { XpProgressBar } from '@/components/ui/XpProgressBar';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
-import { History } from 'lucide-react';
+import { History, Settings } from 'lucide-react';
 import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +35,10 @@ export default async function MainLayout({
             <Link href="/history" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
               <History className="h-4 w-4" />
               <span className="hidden sm:inline">履歴</span>
+            </Link>
+            <Link href="/setup" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">セットアップ</span>
             </Link>
           </nav>
           <div className="flex items-center gap-3 text-sm">

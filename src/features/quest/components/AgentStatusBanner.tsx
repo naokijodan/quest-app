@@ -2,6 +2,7 @@
 
 import { useAgentConnection } from '@/features/quest/hooks/useAgentConnection';
 import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 
 export function AgentStatusBanner() {
   const { status, connect, agentVersion, availableTools } = useAgentConnection();
@@ -37,9 +38,14 @@ export function AgentStatusBanner() {
             <span className="inline-block h-2 w-2 rounded-full bg-quest-danger" />
             Agent接続エラー
           </div>
-          <Button variant="secondary" size="sm" onClick={connect}>
-            再接続
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link href="/setup" className="text-xs text-quest-primary hover:underline">
+              セットアップガイドを見る →
+            </Link>
+            <Button variant="secondary" size="sm" onClick={connect}>
+              再接続
+            </Button>
+          </div>
         </div>
         <p className="mt-2 text-xs text-muted">
           Quest Agentが起動していることを確認してください。
@@ -56,9 +62,14 @@ export function AgentStatusBanner() {
           <span className="inline-block h-2 w-2 rounded-full bg-quest-accent" />
           Quest Agentが未接続です
         </div>
-        <Button variant="secondary" size="sm" onClick={connect}>
-          接続
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link href="/setup" className="text-xs text-quest-primary hover:underline">
+            セットアップガイドを見る →
+          </Link>
+          <Button variant="secondary" size="sm" onClick={connect}>
+            接続
+          </Button>
+        </div>
       </div>
       <div className="mt-2 space-y-1 text-xs text-muted">
         <p>クエストを実行するにはQuest Agentの起動が必要です。</p>
@@ -70,4 +81,3 @@ export function AgentStatusBanner() {
     </div>
   );
 }
-

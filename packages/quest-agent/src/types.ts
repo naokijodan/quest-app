@@ -57,6 +57,7 @@ export interface AgentCompleteEvent extends AgentStreamEvent {
   type: 'complete';
   exit_code: number;
   output: string;
+  sandbox_files?: string[];  // NEW: files created in sandbox
 }
 
 export interface AgentErrorEvent extends AgentStreamEvent {
@@ -80,4 +81,3 @@ export type AgentResponse =
   | AgentCompleteEvent
   | AgentErrorEvent
   | AgentPongEvent;
-

@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import type WebSocket from 'ws';
-import { validateAllowedCommands } from './security.js';
+import { validateAllowedCommands, listSandboxFiles } from './security.js';
 import type { AgentRequest, AgentStartEvent, AgentStdoutEvent, AgentStderrEvent, AgentCompleteEvent, AgentErrorEvent, AgentProgressEvent } from './types.js';
 
 const log = (...args: unknown[]): void => {
@@ -11,6 +11,7 @@ const log = (...args: unknown[]): void => {
 export interface ExecuteRuntime {
   cwd: string;
   timeoutSec: number;
+  sandboxPath?: string;  // NEW: sandbox directory for file listing
 }
 
 export function mapCliCommand(cli: 'claude' | 'codex' | 'gemini', prompt: string): { command: string; args: string[] } {
@@ -111,15 +112,18 @@ export function executeCommand(
     if (timeoutHandle) clearTimeout(timeoutHandle);
     running.delete(id);
     const exitCode = code ?? -1;
+    const sandboxFiles = runtime.sandboxPath
+      ? listSandboxFiles(runtime.sandboxPath)
+      : undefined;
     const ev: AgentCompleteEvent = {
       type: 'complete',
       request_id: id,
       exit_code: exitCode,
       output,
+      sandbox_files: sandboxFiles,
     };
     ws.send(JSON.stringify(ev));
   });
 
   return child;
 }
-

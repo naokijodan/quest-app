@@ -20,6 +20,45 @@ export function ensureSandboxDir(): string {
   return SANDBOX_DIR;
 }
 
+// Create a per-request sandbox subdirectory
+export function createRequestSandbox(requestId: string): string {
+  const sanitized = requestId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const dir = path.join(SANDBOX_DIR, sanitized);
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+// List files in a sandbox directory (non-recursive, top-level only)
+export function listSandboxFiles(sandboxPath: string): string[] {
+  try {
+    return fs.readdirSync(sandboxPath);
+  } catch {
+    return [];
+  }
+}
+
+// Remove old sandbox directories, keeping the most recent `keepCount`
+export function cleanupOldSandboxes(keepCount: number = 20): void {
+  try {
+    const entries = fs.readdirSync(SANDBOX_DIR, { withFileTypes: true });
+    const dirs = entries
+      .filter(e => e.isDirectory())
+      .map(e => ({
+        name: e.name,
+        fullPath: path.join(SANDBOX_DIR, e.name),
+        mtime: fs.statSync(path.join(SANDBOX_DIR, e.name)).mtimeMs,
+      }))
+      .sort((a, b) => b.mtime - a.mtime);
+
+    const toRemove = dirs.slice(keepCount);
+    for (const dir of toRemove) {
+      fs.rmSync(dir.fullPath, { recursive: true, force: true });
+    }
+  } catch {
+    // ignore cleanup errors
+  }
+}
+
 export function which(cmd: string): string | null {
   const r = spawnSync(process.platform === 'win32' ? 'where' : 'which', [cmd], {
     stdio: 'pipe',
@@ -95,4 +134,3 @@ export function validateAllowedCommands(
   }
   return { ok: true };
 }
-

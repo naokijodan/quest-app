@@ -3,7 +3,7 @@ import url from 'node:url';
 import type { ChildProcess } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { startHealthServer } from './health.js';
-import { ensureSandboxDir, listAvailableTools, checkCliAvailable } from './security.js';
+import { ensureSandboxDir, listAvailableTools, checkCliAvailable, createRequestSandbox, cleanupOldSandboxes } from './security.js';
 import { getOrCreateToken, verifyToken } from './auth.js';
 import { executeCommand } from './executor.js';
 import type { AgentMessage, AgentRequest, AgentCancelRequest, AgentPongEvent, AgentErrorEvent, AgentProgressEvent } from './types.js';
@@ -117,9 +117,13 @@ export function createServer(opts: ServerOptions): RunningServer {
           return;
         }
         let cwd: string;
+        let sandboxPath: string | undefined;
         const wd = req.payload.working_directory;
         if (!wd || wd === 'sandbox') {
-          cwd = ensureSandboxDir();
+          sandboxPath = createRequestSandbox(req.id);
+          cwd = sandboxPath;
+          // Async cleanup of old sandboxes (fire-and-forget)
+          setTimeout(() => cleanupOldSandboxes(20), 100);
         } else {
           cwd = wd;
         }
@@ -127,7 +131,7 @@ export function createServer(opts: ServerOptions): RunningServer {
         const timeoutSec = req.payload.max_execution_time && req.payload.max_execution_time > 0 ? req.payload.max_execution_time : 120;
 
         try {
-          executeCommand(ws, req, running, { cwd, timeoutSec });
+          executeCommand(ws, req, running, { cwd, timeoutSec, sandboxPath });
         } catch (e) {
           sendError(ws, req.id, `Execution rejected: ${String(e)}`);
         }

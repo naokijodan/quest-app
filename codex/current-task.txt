@@ -1,155 +1,139 @@
-# Task: Phase2-Fallback-UI
+# Task: Phase2-CLIInstallGuide
 # AI: Codex CLI
 # Priority: High
-# Risk Level: Medium
+# Risk Level: Low
 
 ## 1. Objective
-Create an Agent connection status banner component that shows when the Quest Agent is not connected. Also integrate it into the quest detail page so users see a clear message instead of just an error.
+Create a `/setup` page that guides users through installing CLI tools (Claude Code, Codex CLI, Gemini CLI) and setting up the Quest Agent. The page should show installation status for each CLI (using Agent health check) and provide step-by-step instructions.
 
 ## 2. Target Files
-
 ### Create
-- src/features/quest/components/AgentStatusBanner.tsx
+- `src/app/(main)/setup/page.tsx` — Server component wrapper
+- `src/features/setup/components/CliSetupGuide.tsx` — Client component with interactive installation status
 
 ### Modify
-- src/app/(main)/quest/[id]/page.tsx — Add AgentStatusBanner above QuestInputForm
+- `src/app/(main)/layout.tsx` — Add "セットアップ" nav link
+- `src/features/quest/components/AgentStatusBanner.tsx` — Add link to /setup page in disconnected/error states
 
-## 3. Dependencies (READ these files first)
-- src/features/quest/hooks/useAgentConnection.ts (connection hook)
-- src/app/(main)/quest/[id]/page.tsx (current page)
-- src/features/quest/components/QuestInputForm.tsx (form component)
-- src/components/ui/Button.tsx (Button component pattern)
-- src/components/ui/Card.tsx (Card component pattern)
+## 3. Dependencies (must read first)
+- `src/app/(main)/layout.tsx` — Current layout with nav
+- `src/components/ui/Button.tsx` — Button component
+- `src/components/ui/Card.tsx` — Card, CardHeader, CardTitle, CardDescription
+- `src/features/quest/hooks/useAgentConnection.ts` — Agent connection hook
+- `src/features/quest/components/AgentStatusBanner.tsx` — Current banner component
+- `src/lib/agent/client.ts` — AgentClient with checkHealth()
 
 ## 4. Requirements
 
-### 4.1 src/features/quest/components/AgentStatusBanner.tsx
+### 4.1 src/app/(main)/setup/page.tsx
+Simple server component wrapper:
+```tsx
+import { CliSetupGuide } from '@/features/setup/components/CliSetupGuide';
 
-Create a client component that:
-- Uses `useAgentConnection` hook to get connection status
-- When `status === 'connected'`: renders nothing (null)
-- When `status === 'disconnected'`: renders a yellow warning banner with instructions
-- When `status === 'connecting'`: renders a blue info banner with spinner
-- When `status === 'error'`: renders a red error banner with retry button
-
-```typescript
-'use client';
-
-import { useAgentConnection } from '@/features/quest/hooks/useAgentConnection';
-import { Button } from '@/components/ui/Button';
-
-export function AgentStatusBanner() {
-  const { status, connect, agentVersion, availableTools } = useAgentConnection();
-
-  if (status === 'connected') {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-quest-success/30 bg-quest-success/10 px-4 py-3 text-sm text-quest-success">
-        <span className="inline-block h-2 w-2 rounded-full bg-quest-success" />
-        Agent接続中{agentVersion ? ` (v${agentVersion})` : ''}
-        {availableTools.length > 0 && (
-          <span className="ml-auto text-xs text-muted">
-            {availableTools.join(', ')}
-          </span>
-        )}
-      </div>
-    );
-  }
-
-  if (status === 'connecting') {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-quest-primary/30 bg-quest-primary/10 px-4 py-3 text-sm text-quest-primary">
-        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-quest-primary" />
-        Quest Agentに接続中...
-      </div>
-    );
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="rounded-lg border border-quest-danger/30 bg-quest-danger/10 px-4 py-3 text-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-quest-danger">
-            <span className="inline-block h-2 w-2 rounded-full bg-quest-danger" />
-            Agent接続エラー
-          </div>
-          <Button variant="secondary" size="sm" onClick={connect}>
-            再接続
-          </Button>
-        </div>
-        <p className="mt-2 text-xs text-muted">
-          Quest Agentが起動していることを確認してください。
+export default function SetupPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">セットアップガイド</h1>
+        <p className="mt-1 text-sm text-muted">
+          Quest AppでAIクエストを実行するための環境設定を行います。
         </p>
       </div>
-    );
-  }
-
-  // disconnected
-  return (
-    <div className="rounded-lg border border-quest-accent/30 bg-quest-accent/10 px-4 py-3 text-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-quest-accent">
-          <span className="inline-block h-2 w-2 rounded-full bg-quest-accent" />
-          Quest Agentが未接続です
-        </div>
-        <Button variant="secondary" size="sm" onClick={connect}>
-          接続
-        </Button>
-      </div>
-      <div className="mt-2 space-y-1 text-xs text-muted">
-        <p>クエストを実行するにはQuest Agentの起動が必要です。</p>
-        <p>ターミナルで以下を実行してください:</p>
-        <code className="mt-1 block rounded bg-card-bg px-2 py-1 font-mono text-foreground">
-          cd packages/quest-agent && npm run dev
-        </code>
-      </div>
+      <CliSetupGuide />
     </div>
   );
 }
 ```
 
-### 4.2 src/app/(main)/quest/[id]/page.tsx
+### 4.2 src/features/setup/components/CliSetupGuide.tsx
+Client component that:
+1. Checks Agent health on mount (using `getAgentClient().checkHealth()`)
+2. Displays 3 sections:
+   - **Step 1: CLIツールのインストール** — Shows cards for each CLI (Claude Code, Codex CLI, Gemini CLI) with:
+     - Name, description, install command
+     - Status indicator: installed (green) / not installed (gray) — based on Agent health `available_tools`
+     - At least one CLI must be installed
+   - **Step 2: Quest Agentの起動** — Shows the command to start the agent and current connection status
+   - **Step 3: 準備完了！** — Green checkmark when both agent connected and at least 1 CLI available
 
-Add the AgentStatusBanner below the quest title/description and above QuestInputForm:
+CLI installation info:
+- **Claude Code**: `npm install -g @anthropic-ai/claude-code` — Anthropicの公式CLI。Claude Proサブスク（月額$20）が必要。
+- **Codex CLI**: `npm install -g @openai/codex` — OpenAIの公式CLI。ChatGPT Proサブスク（月額$20）が必要。
+- **Gemini CLI**: `npm install -g @anthropic-ai/gemini-cli` — (まだ利用不可 — 今後対応予定)
 
-```typescript
-import { notFound } from 'next/navigation';
-import { getPresetQuestById, getUserProfile } from '@/features/quest/actions';
-import { QuestInputForm } from '@/features/quest/components/QuestInputForm';
-import { AgentStatusBanner } from '@/features/quest/components/AgentStatusBanner';
+Agent start command: `cd packages/quest-agent && npm run dev`
 
-export default async function QuestDetailPage({ params }: { params: { id: string } }) {
-  const [quest, user] = await Promise.all([
-    getPresetQuestById(params.id),
-    getUserProfile(),
-  ]);
-  if (!quest) return notFound();
-  if (!user) return notFound();
+Use these icon imports from lucide-react: `Terminal, CheckCircle, Circle, Download, ArrowRight, RefreshCw, Settings`
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{quest.title}</h1>
-        <p className="mt-1 text-sm text-muted">{quest.description}</p>
-      </div>
-      <AgentStatusBanner />
-      <QuestInputForm quest={quest} />
-    </div>
-  );
+Component structure:
+```tsx
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { getAgentClient } from '@/lib/agent';
+import type { AgentHealthResponse } from '@/lib/agent';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+import { Button } from '@/components/ui/Button';
+import { Terminal, CheckCircle, Circle, Download, ArrowRight, RefreshCw, Settings } from 'lucide-react';
+
+interface CliInfo {
+  name: string;
+  command: string;
+  installCommand: string;
+  description: string;
+  available: boolean;
 }
+
+export function CliSetupGuide() {
+  const [health, setHealth] = useState<AgentHealthResponse | null>(null);
+  const [checking, setChecking] = useState(false);
+  // ...
+}
+```
+
+Style using existing Tailwind tokens:
+- quest-success for installed/connected
+- muted for not installed
+- quest-primary for CTA buttons
+- Card component for each section
+- code blocks with `rounded bg-card-bg px-3 py-2 font-mono text-sm text-foreground` for commands
+
+### 4.3 Layout modification
+Add a "セットアップ" link in the nav, using the Settings icon from lucide-react:
+```tsx
+<Link href="/setup" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
+  <Settings className="h-4 w-4" />
+  <span className="hidden sm:inline">セットアップ</span>
+</Link>
+```
+Place it after the 履歴 link.
+
+### 4.4 AgentStatusBanner modification
+In the `disconnected` and `error` states, add a link to `/setup`:
+```tsx
+<Link href="/setup" className="text-xs text-quest-primary hover:underline">
+  セットアップガイドを見る →
+</Link>
 ```
 
 ## 5. Constraints
-- 'use client' directive for AgentStatusBanner
-- Use existing TailwindCSS color tokens (quest-success, quest-danger, quest-accent, quest-primary)
-- Use existing Button component
+- 'use client' for CliSetupGuide.tsx
+- Use existing UI components (Card, Button)
+- TailwindCSS 4 only (no CSS modules)
 - No console.log
-- No new dependencies
+- No new npm dependencies
+- Japanese text for all user-facing strings
+- Import `Settings` from lucide-react (already a dependency)
 
-## 6. Acceptance Criteria
-- [ ] AgentStatusBanner.tsx created
-- [ ] Shows green indicator when connected
-- [ ] Shows yellow banner with instructions when disconnected
-- [ ] Shows blue spinner when connecting
-- [ ] Shows red error with retry button on error
-- [ ] Integrated into quest detail page
+## 6. Forbidden
+- [ ] console.log usage
+- [ ] New npm packages
+- [ ] dangerouslySetInnerHTML
+- [ ] English-only UI text
+
+## 7. Acceptance Criteria
+- [ ] `/setup` page renders with 3-step guide
+- [ ] CLI installation status detected via Agent health check
+- [ ] "Check again" button refreshes status
+- [ ] Nav link added to layout
+- [ ] AgentStatusBanner links to /setup
 - [ ] TypeScript compiles without errors
