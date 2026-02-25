@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: 'Quest App - AI Workflow',
   description:
     'ゲーム感覚でAIを使いこなそう。クエストを選んで30秒で成果物を手に入れる。',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Quest App',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -33,6 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

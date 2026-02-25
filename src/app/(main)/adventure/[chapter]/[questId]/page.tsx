@@ -4,9 +4,10 @@ import { AgentStatusBanner } from '@/features/quest/components/AgentStatusBanner
 import { AdventureQuestRunner } from '@/features/adventure/components/AdventureQuestRunner';
 import { startAdventureChapter } from '@/features/adventure/actions';
 
-export default async function AdventureQuestDetailPage({ params }: { params: { chapter: string; questId: string } }) {
-  const chapterNum = Number(params.chapter);
-  const questIdentifier = decodeURIComponent(params.questId);
+export default async function AdventureQuestDetailPage({ params }: { params: Promise<{ chapter: string; questId: string }> }) {
+  const { chapter, questId } = await params;
+  const chapterNum = Number(chapter);
+  const questIdentifier = decodeURIComponent(questId);
 
   const supabase = await createClient();
   const { data: quest } = await supabase

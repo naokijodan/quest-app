@@ -1,94 +1,88 @@
-# Task: Phase3-BossBattle-Victory
+# Task: Sprint9-Offline-Banner
 # AI: Codex CLI
 # Priority: Medium
 # Risk Level: Low
 
-## 1. Objective
-Create a boss battle victory celebration component for the final quest (Chapter 5, adv-5-2). When the user completes the last adventure quest, show a special full-screen victory animation with the "ターミナルマスター" title.
+## 1. Objective（目的）
+PWAのオフライン状態を検知して表示するバナーコンポーネントを作成する。
 
-## 2. Target Files
-### Create
-- `src/features/adventure/components/BossVictory.tsx` — Full-screen victory animation
-- `src/features/adventure/components/AdventureChapterComplete.tsx` — Chapter completion summary
+## 2. Target Files（対象ファイル）
+### Create（新規作成）
+- src/hooks/useOnlineStatus.ts — navigator.onLine + online/offline イベントのカスタムフック
+- src/components/ui/OfflineBanner.tsx — オフライン時に表示するバナー
 
-### Modify
-- `src/features/adventure/components/AdventureQuestRunner.tsx` — Show BossVictory for the final quest
+### Modify（変更）
+- src/app/(main)/layout.tsx — OfflineBannerを追加
 
-## 3. Dependencies (must read first)
-- `src/features/adventure/components/AdventureQuestRunner.tsx` — Current quest runner
-- `src/features/adventure/types/index.ts` — CHAPTERS constant
-- `src/components/ui/Button.tsx` — Button component
-- `src/components/ui/Modal.tsx` — Modal component
-- `src/features/gamification/components/LevelUpModal.tsx` — Existing level-up modal pattern
+## 3. Dependencies（依存ファイル — 必ず読むこと）
+- src/app/(main)/layout.tsx（現在のメインレイアウト）
+- src/features/quest/components/AgentStatusBanner.tsx（参考: ステータスバナーの実装パターン）
 
-## 4. Requirements
+## 4. Requirements（仕様）
 
-### 4.1 src/features/adventure/components/BossVictory.tsx
-Full-screen victory celebration:
+### src/hooks/useOnlineStatus.ts
 ```typescript
 'use client';
-interface BossVictoryProps {
-  open: boolean;
-  onClose: () => void;
-  username: string;
+import { useSyncExternalStore } from 'react';
+
+function subscribe(callback: () => void) {
+  window.addEventListener('online', callback);
+  window.addEventListener('offline', callback);
+  return () => {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  };
+}
+
+function getSnapshot() {
+  return navigator.onLine;
+}
+
+function getServerSnapshot() {
+  return true; // SSR時はオンライン扱い
+}
+
+export function useOnlineStatus(): boolean {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 ```
 
-Features:
-- Full-screen overlay with dark background and animation
-- Big center text: "ターミナルマスター" with glow effect
-- Subtext: "{username}はターミナルを克服した！"
-- Confetti/sparkle animation using CSS keyframes (no external deps)
-- "冒険の記録を見る" button that links to /history
-- "ホームに戻る" button
-- Auto-play entrance animation
-
-CSS animations to use (inline Tailwind + keyframes in the component):
-- Text fade-in + scale-up
-- Sparkle particles (floating dots)
-- Background pulse
-
-### 4.2 src/features/adventure/components/AdventureChapterComplete.tsx
-Chapter completion card:
+### src/components/ui/OfflineBanner.tsx
 ```typescript
-interface Props {
-  chapter: number;
-  title: string;
-  nextChapter?: { number: number; title: string } | null;
+'use client';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { WifiOff } from 'lucide-react';
+
+export function OfflineBanner() {
+  const isOnline = useOnlineStatus();
+  if (isOnline) return null;
+
+  return (
+    <div className="flex items-center gap-2 bg-quest-accent/20 px-4 py-2 text-sm text-quest-accent">
+      <WifiOff className="h-4 w-4" />
+      <span>オフライン状態です。一部の機能が制限されます。</span>
+    </div>
+  );
 }
 ```
-- Shows "第{chapter}章クリア！" with chapter title
-- If nextChapter exists, shows "次の章: {title}" with link
-- If no next chapter (final), shows special congratulations
 
-### 4.3 AdventureQuestRunner modification
-After completing quest adv-5-2 (identified by `quest.quest_identifier === 'adv-5-2'`), show `BossVictory` instead of the regular `StoryDialog` complete dialog.
+### src/app/(main)/layout.tsx の変更
+- `<OfflineBanner />` をメインコンテンツの上に追加
+- import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
-Add detection:
-```typescript
-const isFinalBoss = quest.quest_identifier === 'adv-5-2';
-```
+## 5. Constraints（制約）
+- TailwindCSS 4のみ使用
+- lucide-reactのアイコンを使用（既存依存）
+- useSyncExternalStoreを使う（React 19対応）
+- ファイルは50行以内
 
-In the phase === 'completed' effect:
-- If isFinalBoss: show BossVictory
-- Otherwise: show StoryDialog as before
-
-## 5. Constraints
-- CSS-only animations (no external animation libraries)
-- Use existing Tailwind tokens where possible
-- Japanese text only
-- No console.log
-- No new dependencies
-- Immutable patterns
-
-## 6. Forbidden
-- [ ] External animation libraries (framer-motion, etc.)
-- [ ] console.log
-- [ ] New npm packages
+## 6. Forbidden（禁止事項）
+- [ ] console.log の残置
+- [ ] 外部ライブラリの追加
+- [ ] dangerouslySetInnerHTML
 
 ## 7. Acceptance Criteria
-- [ ] BossVictory.tsx renders with full-screen animation
-- [ ] adv-5-2 completion triggers BossVictory
-- [ ] Other quests use StoryDialog as before
-- [ ] AdventureChapterComplete shows chapter summary
-- [ ] TypeScript compiles without errors
+- [ ] TypeScript型エラーなし
+- [ ] オフライン時にバナーが表示される
+- [ ] オンラインに戻ったらバナーが消える
+- [ ] SSR時にエラーが出ない

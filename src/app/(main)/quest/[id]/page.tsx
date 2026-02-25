@@ -3,9 +3,10 @@ import { getPresetQuestById, getUserProfile } from '@/features/quest/actions';
 import { QuestInputForm } from '@/features/quest/components/QuestInputForm';
 import { AgentStatusBanner } from '@/features/quest/components/AgentStatusBanner';
 
-export default async function QuestDetailPage({ params }: { params: { id: string } }) {
+export default async function QuestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [quest, user] = await Promise.all([
-    getPresetQuestById(params.id),
+    getPresetQuestById(id),
     getUserProfile(),
   ]);
   if (!quest) return notFound();

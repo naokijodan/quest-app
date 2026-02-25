@@ -6,6 +6,7 @@ import { XpProgressBar } from '@/components/ui/XpProgressBar';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { History, Settings, Sword } from 'lucide-react';
 import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,7 @@ export default async function MainLayout({
           </div>
         </div>
       </header>
-
+      <OfflineBanner />
       <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
       <XpGainOverlay />
     </div>
