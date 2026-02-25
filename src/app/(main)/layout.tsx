@@ -9,6 +9,8 @@ import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay'
 import { StatusBar } from '@/components/ui/StatusBar';
 import { GameNav } from '@/components/ui/GameNav';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { ScreenTransition } from '@/components/ui/ScreenTransition';
+import { SoundToggle } from '@/components/ui/SoundToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,30 +31,38 @@ export default async function MainLayout({
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
-      <header className="border-b border-card-border bg-card-bg/80 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-          <nav className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 text-foreground">
-              <span className="text-lg font-bold text-quest-primary tracking-wide">Quest App</span>
-            </Link>
-            <div className="hidden sm:flex items-center gap-1">
-              <NavLink href="/history" icon={<Scroll className="h-4 w-4" />} label="冒険の記録" />
-              <NavLink href="/adventure" icon={<Sword className="h-4 w-4" />} label="冒険に出る" />
-              <NavLink href="/setup" icon={<Wrench className="h-4 w-4" />} label="装備" />
+      {/* RPG HUD Header */}
+      <header className="sticky top-0 z-40">
+        <div className="rpg-window !rounded-none" style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
+          <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2 sm:px-5">
+            <div className="flex items-center gap-4">
+              <Link href="/" className="font-dot-gothic text-base sm:text-lg font-bold text-rpg-gold tracking-widest hover:text-white transition-colors">
+                Quest App
+              </Link>
+              <div className="hidden sm:flex items-center gap-1">
+                <NavLink href="/history" icon={<Scroll className="h-4 w-4" />} label="記録" />
+                <NavLink href="/adventure" icon={<Sword className="h-4 w-4" />} label="冒険" />
+                <NavLink href="/setup" icon={<Wrench className="h-4 w-4" />} label="装備" />
+              </div>
             </div>
-          </nav>
-          <div className="flex items-center gap-3">
-            <StatusBar
-              initialXp={user.experience_points}
-              initialLevel={level}
-              username={user.username}
-            />
-            <SignOutButton />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <StatusBar
+                initialXp={user.experience_points}
+                initialLevel={level}
+                username={user.username}
+              />
+              <SoundToggle />
+              <SignOutButton />
+            </div>
           </div>
         </div>
       </header>
       <OfflineBanner />
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        <ScreenTransition>
+          {children}
+        </ScreenTransition>
+      </main>
       <GameNav />
       <XpGainOverlay />
     </div>

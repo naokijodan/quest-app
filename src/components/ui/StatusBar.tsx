@@ -1,7 +1,7 @@
 'use client';
 
 import { useUserStore } from '@/stores/userStore';
-import { xpToNextLevel } from '@/features/gamification/types';
+import { xpToNextLevel, LEVEL_THRESHOLDS } from '@/features/gamification/types';
 
 interface Props {
   initialXp: number;
@@ -9,33 +9,46 @@ interface Props {
   username: string;
 }
 
+const TOTAL_SEGMENTS = 10;
+
 export function StatusBar({ initialXp, initialLevel, username }: Props) {
   const storeUser = useUserStore((s) => s.user);
   const xp = storeUser?.experience_points ?? initialXp;
   const level = storeUser?.level ?? initialLevel;
   const name = storeUser?.username || username;
-  const { progress } = xpToNextLevel(xp);
+  const { current, next, progress } = xpToNextLevel(xp);
+
+  const filledSegments = Math.round(progress * TOTAL_SEGMENTS);
 
   return (
-    <div className="flex items-center gap-3">
-      {/* Level Badge */}
-      <div className="flex items-center gap-1.5 rounded-lg border border-quest-primary/30 bg-quest-primary/10 px-2.5 py-1">
-        <span className="text-xs font-bold text-quest-primary-light">Lv.{level}</span>
-      </div>
+    <div className="rpg-hud font-dot-gothic">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Username + Level */}
+        <span className="text-xs sm:text-sm text-rpg-gold font-bold tracking-wider">
+          {name}
+        </span>
+        <span className="text-xs sm:text-sm font-bold text-white">
+          Lv.{level}
+        </span>
 
-      {/* XP Bar */}
-      <div className="hidden sm:flex items-center gap-2">
-        <div className="h-2 w-20 overflow-hidden rounded-full bg-card-border">
-          <div
-            className="h-full rounded-full xp-bar-gradient transition-all duration-500"
-            style={{ width: `${Math.round(progress * 100)}%` }}
-          />
+        {/* XP Bar - Segment style */}
+        <div className="hidden sm:flex items-center gap-1.5">
+          <span className="text-[10px] text-blue-300">XP</span>
+          <div className="rpg-bar-segments w-20">
+            {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+              <div
+                key={i}
+                className={`rpg-bar-segment ${
+                  i < filledSegments ? 'rpg-bar-segment-filled text-quest-primary-light' : ''
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] text-muted">
+            {current}/{next}
+          </span>
         </div>
-        <span className="text-xs text-muted">{xp}XP</span>
       </div>
-
-      {/* Username */}
-      <span className="text-xs text-muted hidden sm:inline">{name}</span>
     </div>
   );
 }

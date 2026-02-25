@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Lock, Star, ChevronRight } from 'lucide-react';
 import type { PresetQuest } from '@/types';
 import { cn } from '@/lib/utils/cn';
+import { playSound } from '@/lib/sound';
 
 interface Props {
   quest: PresetQuest;
@@ -11,65 +12,72 @@ interface Props {
 }
 
 export function QuestCard({ quest, locked }: Props) {
-  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
-    locked ? (
-      <div className="cursor-not-allowed">{children}</div>
-    ) : (
-      <Link href={`/quest/${quest.id}`}>{children}</Link>
-    );
+  const handleClick = () => {
+    if (!locked) {
+      playSound('confirm');
+    }
+  };
 
-  return (
-    <Wrapper>
-      <div
-        className={cn(
-          'group relative rounded-xl border transition-all duration-200 parchment-card',
-          locked
-            ? 'opacity-50 border-card-border'
-            : 'hover:shadow-lg hover:shadow-quest-primary/10 hover:-translate-y-0.5 hover:border-quest-primary/40'
-        )}
-      >
-        {locked && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl fog-locked">
-            <div className="relative z-20 flex items-center gap-2 rounded-md border border-card-border bg-card-bg px-3 py-1 text-sm text-muted">
-              <Lock className="h-4 w-4" /> Locked
-            </div>
+  const content = (
+    <div
+      className={cn(
+        'group relative border transition-all duration-200',
+        locked
+          ? 'opacity-50 border-blue-200/10 bg-blue-900/20'
+          : 'border-blue-200/20 bg-blue-900/30 hover:border-blue-200/40 hover:bg-blue-900/50 hover:shadow-[0_0_12px_rgba(99,102,241,0.15)]'
+      )}
+    >
+      {locked && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center fog-locked">
+          <div className="relative z-20 flex items-center gap-1.5 border border-blue-200/20 bg-blue-900/60 px-2.5 py-0.5 text-[10px] text-blue-200/60 font-dot-gothic">
+            <Lock className="h-3 w-3" /> Locked
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-card-border bg-background text-foreground">
-              <span aria-hidden className="text-lg">{quest.icon}</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate text-base font-semibold text-foreground">
-                {quest.title}
-              </h3>
-              <p className="mt-1 line-clamp-2 text-sm text-muted">{quest.description}</p>
+      <div className="p-3 sm:p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-blue-200/20 bg-blue-900/50 text-foreground">
+            <span aria-hidden className="text-base">{quest.icon}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-bold text-white font-dot-gothic">
+              {quest.title}
+            </h3>
+            <p className="mt-0.5 line-clamp-2 text-xs text-blue-200/60">{quest.description}</p>
 
-              <div className="mt-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Difficulty stars */}
-                  <div className="flex items-center gap-0.5" aria-label={`難易度 ${quest.difficulty}`}>
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Star key={i} className={cn('h-3.5 w-3.5', i < quest.difficulty ? 'fill-rpg-gold text-rpg-gold' : 'text-card-border')} />
-                    ))}
-                  </div>
-                  {/* XP reward - gold coin style */}
-                  <span className="flex items-center gap-1 rounded-full bg-quest-accent/10 px-2 py-0.5 text-xs font-bold text-quest-accent">
-                    +{quest.xp_reward} XP
-                  </span>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {/* Difficulty stars */}
+                <div className="flex items-center gap-0.5" aria-label={`難易度 ${quest.difficulty}`}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Star key={i} className={cn('h-3 w-3', i < quest.difficulty ? 'fill-rpg-gold text-rpg-gold' : 'text-blue-200/20')} />
+                  ))}
                 </div>
-                {!locked && (
-                  <span className="flex items-center gap-1 text-xs font-medium text-quest-primary opacity-0 transition-opacity group-hover:opacity-100">
-                    受注する <ChevronRight className="h-3.5 w-3.5" />
-                  </span>
-                )}
+                {/* XP reward */}
+                <span className="font-dot-gothic text-[10px] font-bold text-rpg-gold">
+                  +{quest.xp_reward}XP
+                </span>
               </div>
+              {!locked && (
+                <span className="flex items-center gap-0.5 text-[10px] font-dot-gothic text-blue-200/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  &#x25B6; 受注 <ChevronRight className="h-3 w-3" />
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </Wrapper>
+    </div>
+  );
+
+  if (locked) {
+    return <div className="cursor-not-allowed">{content}</div>;
+  }
+
+  return (
+    <Link href={`/quest/${quest.id}`} onClick={handleClick}>
+      {content}
+    </Link>
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { CheckCircle2, Lock, MapPin } from 'lucide-react';
 import type { Chapter } from '@/features/adventure/types';
 import { cn } from '@/lib/utils/cn';
+import { playSound } from '@/lib/sound';
 
 interface ChapterNodeData {
   chapter: Chapter;
@@ -19,78 +20,80 @@ interface Props {
   chapters: ChapterNodeData[];
 }
 
+const TOTAL_SEGMENTS = 8;
+
 export function WorldMap({ chapters }: Props) {
   return (
     <div className="relative">
-      {/* Map path line */}
-      <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-quest-primary/40 via-quest-primary/20 to-card-border" />
+      {/* Dotted path line (pixel art style) */}
+      <div className="absolute left-6 sm:left-8 top-0 bottom-0 rpg-map-path" />
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {chapters.map((data, index) => (
-          <WorldMapNode key={data.chapter.number} data={data} isLast={index === chapters.length - 1} />
+          <WorldMapNode key={data.chapter.number} data={data} />
         ))}
       </div>
     </div>
   );
 }
 
-function WorldMapNode({ data, isLast }: { data: ChapterNodeData; isLast: boolean }) {
+function WorldMapNode({ data }: { data: ChapterNodeData }) {
   const { chapter, locked, current, completed, href, totalQuests, completedQuests } = data;
   const progressPct = totalQuests > 0 ? Math.round((completedQuests / totalQuests) * 100) : 0;
+  const filledSegments = totalQuests > 0 ? Math.round((completedQuests / totalQuests) * TOTAL_SEGMENTS) : 0;
 
   const content = (
     <div
       className={cn(
-        'group relative flex items-start gap-4 rounded-xl border p-4 sm:p-5 transition-all duration-300 ml-12 sm:ml-14',
-        locked
-          ? 'border-card-border bg-card-bg/30 opacity-60'
-          : completed
-          ? 'border-quest-success/30 bg-card-bg hover:border-quest-success/50'
-          : current
-          ? 'border-quest-primary/50 bg-card-bg hover:border-quest-primary hover:shadow-lg hover:shadow-quest-primary/10'
-          : 'border-card-border bg-card-bg hover:border-quest-primary/40 hover:shadow-lg'
+        'group relative ml-12 sm:ml-14 rpg-window !p-3 sm:!p-4 transition-all duration-300',
+        locked && 'opacity-50',
+        current && !completed && 'shadow-[inset_0_0_0_1px_var(--rpg-window-border-inner),0_0_0_3px_var(--rpg-window-bg-to),0_0_0_5px_var(--rpg-window-border),0_0_16px_rgba(99,102,241,0.3)]',
+        completed && '!border-quest-success/50'
       )}
     >
       {/* Fog overlay for locked */}
       {locked && (
-        <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-background/60 to-background/40" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/60 to-background/40" />
       )}
 
       {/* Chapter info */}
-      <div className="min-w-0 flex-1 relative z-10">
+      <div className="min-w-0 flex-1 relative z-10 font-dot-gothic">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xl sm:text-2xl">{chapter.icon}</span>
           <h3 className={cn(
-            'text-base sm:text-lg font-bold',
-            locked ? 'text-muted' : 'text-foreground'
+            'text-sm sm:text-base font-bold',
+            locked ? 'text-blue-200/40' : 'text-white'
           )}>
             第{chapter.number}章: {chapter.title}
           </h3>
-          <span className="rounded-md bg-muted-bg px-2 py-0.5 text-xs text-muted">
+          <span className="border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-[10px] text-blue-200/50">
             {chapter.subtitle}
           </span>
         </div>
-        <p className={cn('mt-1 text-sm', locked ? 'text-muted/60' : 'text-muted')}>
+        <p className={cn('mt-1 text-xs', locked ? 'text-blue-200/30' : 'text-blue-200/60')}>
           {chapter.description}
         </p>
 
-        {/* Progress bar (not locked) */}
+        {/* Progress bar - Segment style */}
         {totalQuests > 0 && !locked && (
-          <div className="mt-3">
-            <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-muted">進捗</span>
-              <span className={cn('font-medium', completed ? 'text-quest-success' : 'text-foreground')}>
+          <div className="mt-2">
+            <div className="mb-1 flex items-center justify-between text-[10px]">
+              <span className="text-blue-200/50">進捗</span>
+              <span className={cn('font-bold', completed ? 'text-quest-success' : 'text-white')}>
                 {completedQuests} / {totalQuests}
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-background">
-              <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-500',
-                  completed ? 'bg-quest-success' : 'xp-bar-gradient'
-                )}
-                style={{ width: `${progressPct}%` }}
-              />
+            <div className="rpg-bar-segments w-full">
+              {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'rpg-bar-segment',
+                    i < filledSegments && 'rpg-bar-segment-filled',
+                    i < filledSegments && (completed ? 'text-quest-success' : 'text-quest-primary-light')
+                  )}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -98,18 +101,18 @@ function WorldMapNode({ data, isLast }: { data: ChapterNodeData; isLast: boolean
         {/* Status badges */}
         <div className="mt-2 flex items-center gap-2">
           {completed && (
-            <span className="flex items-center gap-1 rounded-full bg-quest-success/10 px-2.5 py-0.5 text-xs font-medium text-quest-success">
-              <CheckCircle2 className="h-3.5 w-3.5" /> 完了
+            <span className="flex items-center gap-1 border border-quest-success/30 bg-quest-success/10 px-2 py-0.5 text-[10px] font-bold text-quest-success">
+              <CheckCircle2 className="h-3 w-3" /> 完了
             </span>
           )}
           {current && !completed && (
-            <span className="flex items-center gap-1 rounded-full bg-quest-primary/10 px-2.5 py-0.5 text-xs font-medium text-quest-primary">
-              <MapPin className="h-3.5 w-3.5" /> 現在地
+            <span className="flex items-center gap-1 border border-quest-primary/30 bg-quest-primary/10 px-2 py-0.5 text-[10px] font-bold text-quest-primary">
+              <MapPin className="h-3 w-3" /> 現在地
             </span>
           )}
           {locked && (
-            <span className="relative z-10 flex items-center gap-1 rounded-full bg-muted-bg px-2.5 py-0.5 text-xs text-muted">
-              <Lock className="h-3.5 w-3.5" /> 要 Lv.{chapter.requiredLevel}
+            <span className="relative z-10 flex items-center gap-1 border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-[10px] text-blue-200/50">
+              <Lock className="h-3 w-3" /> 要 Lv.{chapter.requiredLevel}
             </span>
           )}
         </div>
@@ -122,22 +125,24 @@ function WorldMapNode({ data, isLast }: { data: ChapterNodeData; isLast: boolean
       {/* Map node dot */}
       <div
         className={cn(
-          'absolute left-4 sm:left-6 top-6 z-10 flex h-5 w-5 items-center justify-center rounded-full border-2',
+          'absolute left-4 sm:left-6 top-5 z-10 flex h-5 w-5 items-center justify-center border-2 rpg-map-node-dot',
           locked
-            ? 'border-card-border bg-background'
+            ? 'border-blue-200/20 bg-background'
             : completed
             ? 'border-quest-success bg-quest-success'
             : current
             ? 'border-quest-primary bg-quest-primary map-node-current'
-            : 'border-card-border bg-card-bg'
+            : 'border-blue-200/30 bg-card-bg'
         )}
       >
         {completed && <CheckCircle2 className="h-3 w-3 text-background" />}
-        {current && !completed && <div className="h-2 w-2 rounded-full bg-background" />}
+        {current && !completed && <div className="h-2 w-2 bg-background" />}
       </div>
 
       {!locked && href ? (
-        <Link href={href}>{content}</Link>
+        <Link href={href} onClick={() => playSound('confirm')}>
+          {content}
+        </Link>
       ) : (
         content
       )}
