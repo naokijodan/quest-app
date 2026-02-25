@@ -19,7 +19,7 @@ export function mapCliCommand(cli: 'claude' | 'codex' | 'gemini', prompt: string
     case 'claude':
       return { command: 'claude', args: ['--print', prompt] };
     case 'codex':
-      return { command: 'codex', args: ['exec', prompt, '--full-auto'] };
+      return { command: 'codex', args: ['exec', prompt, '--full-auto', '--skip-git-repo-check'] };
     case 'gemini':
       return { command: 'gemini', args: [prompt] };
     default:

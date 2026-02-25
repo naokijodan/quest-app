@@ -18,7 +18,7 @@ export function StoryDialog({ open, text, onNext, title, typingSpeed = 20 }: Pro
     if (!open) return;
     setDisplayed('');
     let i = 0;
-    const chars = text ?? '';
+    const chars = (text ?? '').replace(/\\n/g, '\n');
     let cancelled = false;
     const step = () => {
       if (cancelled) return;

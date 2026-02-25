@@ -20,11 +20,15 @@ export function ensureSandboxDir(): string {
   return SANDBOX_DIR;
 }
 
-// Create a per-request sandbox subdirectory
+// Create a per-request sandbox subdirectory (git-initialized for codex compatibility)
 export function createRequestSandbox(requestId: string): string {
   const sanitized = requestId.replace(/[^a-zA-Z0-9_-]/g, '_');
   const dir = path.join(SANDBOX_DIR, sanitized);
   fs.mkdirSync(dir, { recursive: true });
+  const gitDir = path.join(dir, '.git');
+  if (!fs.existsSync(gitDir)) {
+    spawnSync('git', ['init', '--quiet'], { cwd: dir, stdio: 'ignore' });
+  }
   return dir;
 }
 
