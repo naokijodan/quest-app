@@ -1,8 +1,8 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** 実装Phase 1（Agent基盤）完了 → Phase 2（通常クエストのCLI化）着手前
-**現在のSprint:** Sprint 5 Phase 1 完了
+**現在のPhase:** 実装Phase 2（通常クエストのCLI化）完了 → Phase 2残タスク or Phase 3着手
+**現在のSprint:** Sprint 6 Phase 2 主要タスク完了
 
 ---
 
@@ -78,7 +78,17 @@
    - renderTemplate は `src/lib/utils/template.ts` に移動
    - API Route `/api/quest/execute/` 削除
 
-### ファイル構成（Phase 1完了時点）
+#### Sprint 6 Phase 2: 通常クエストのCLI化（主要完了）
+1. [x] `supabase/migrations/00002_phase2_cli_columns.sql` — CLI列追加 + レベル上限10
+2. [x] `supabase/seed_phase2.sql` — 10クエストのcli_prompt_template設定
+3. [x] `src/types/index.ts` — PresetQuestにCLIフィールド追加
+4. [x] `src/features/gamification/types/index.ts` — Lv.1-10対応
+5. [x] `src/features/quest/actions/complete-quest.ts` — completeQuestRun Server Action
+6. [x] `src/features/quest/hooks/useQuestExecution.ts` — cli_prompt_template + XP計算統合
+7. [x] `src/features/quest/components/AgentStatusBanner.tsx` — 接続状態バナー
+8. [x] `src/app/(main)/quest/[id]/page.tsx` — AgentStatusBanner統合
+
+### ファイル構成（Phase 2完了時点）
 ```
 quest-app/
 ├── packages/
@@ -152,12 +162,15 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 ## 次のタスク
 
-### 実装Phase 2: 通常クエストのCLI化（最優先）
-1. [ ] 既存10クエストをCLI実行版に変換（cli_prompt_template）
+### 実装Phase 2: 通常クエストのCLI化（主要タスク完了）
+1. [x] 既存10クエストをCLI実行版に変換（cli_prompt_template）
 2. [ ] サンドボックスディレクトリ実装
-3. [ ] Agent未接続時のフォールバックUI
+3. [x] Agent未接続時のフォールバックUI（AgentStatusBanner）
 4. [ ] CLIインストールガイド画面
-5. [ ] XP計算・DB更新のServer Action（Agent完了時に呼び出す）
+5. [x] XP計算・DB更新のServer Action（completeQuestRun）
+6. [x] DB: preset_questsにCLI列追加 + users.level上限10に拡張
+7. [x] ゲーミフィケーション: Lv.1-10対応（LEVEL_THRESHOLDS, calculateLevel等）
+8. [x] useQuestExecution: cli_prompt_template + XP Server Action統合
 
 ### 実装Phase 3: 冒険ルート
 6. [ ] DB追加マイグレーション（adventure_progress、preset_quests拡張、users拡張）
@@ -181,7 +194,7 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | npm audit warnings | next依存、実害なし | 定期チェック |
 | Supabaseローカルのみ | 本番接続なし | Vercelデプロイ時にリモートSupabase設定 |
 | Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
-| XP計算がPhase 1では仮値（10XP固定） | DB更新なし | Phase 2でServer Action実装 |
+| XP計算がPhase 1では仮値（10XP固定） | **解決済み** | Phase 2で completeQuestRun Server Action実装 |
 
 ---
 
@@ -201,6 +214,8 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | Agent Server | `packages/quest-agent/src/server.ts` |
 | Agent Client | `src/lib/agent/client.ts` |
 | Agent Hooks | `src/features/quest/hooks/useAgentConnection.ts`, `useQuestExecution.ts` |
+| XP Server Action | `src/features/quest/actions/complete-quest.ts` |
+| Phase 2 Migration | `supabase/migrations/00002_phase2_cli_columns.sql` |
 
 ---
 
