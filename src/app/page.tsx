@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Sparkles, Zap, Shield, Trophy, Lock, History } from 'lucide-react';
+import { Sparkles, Zap, Shield, Trophy, Lock, History, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
 import { CATEGORY_LABELS } from '@/features/quest/constants/category';
@@ -74,6 +74,23 @@ export default async function RootPage() {
             </div>
             <DailyQuota used={quota.used} limit={quota.limit} />
           </div>
+
+          {level >= 4 && (
+            <Link href="/adventure">
+              <Card padding="lg" className="border-quest-primary/50 hover:border-quest-primary transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">⚔️</span>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">冒険ルート</h2>
+                      <p className="text-sm text-muted">ターミナルの魔王を倒す旅に出よう</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-quest-primary" />
+                </div>
+              </Card>
+            </Link>
+          )}
 
           <div className="space-y-6">
             {grouped.map(({ category, quests }) => {

@@ -2,9 +2,10 @@
 
 export type AvatarType = 'planner' | 'explorer' | 'crafter';
 export type MascotType = 'cat' | 'dog';
-export type QuestCategory = 'basic' | 'business' | 'life' | 'creative' | 'analysis';
+export type QuestCategory = 'basic' | 'business' | 'life' | 'creative' | 'analysis' | 'adventure';
 export type QuestDifficulty = 1 | 2 | 3;
 export type QuestRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type QuestType = 'normal' | 'adventure';
 export type OutputType = 'markdown' | 'json' | 'text' | 'csv';
 
 export interface User {
@@ -17,6 +18,7 @@ export interface User {
   unlocked_categories: QuestCategory[];
   quest_count: number;
   onboarding_completed: boolean;
+  adventure_chapter: number;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +48,13 @@ export interface PresetQuest {
   is_active: boolean;
   version: number;
   sort_order: number;
+  // Adventure fields (Phase 3)
+  quest_type: QuestType;
+  adventure_chapter: number | null;
+  adventure_order: number | null;
+  story_intro: string | null;
+  story_complete: string | null;
+  terminal_command: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -87,6 +96,17 @@ export interface UserDailyQuota {
   api_calls_made: number;
   tokens_used: number;
   last_reset_at: string;
+}
+
+export type AdventureQuestStatus = 'locked' | 'available' | 'completed';
+
+export interface AdventureProgress {
+  id: string;
+  user_id: string;
+  chapter: number;
+  quest_identifier: string;
+  status: AdventureQuestStatus;
+  completed_at: string | null;
 }
 
 // SSE Event types for quest execution
