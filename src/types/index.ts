@@ -32,6 +32,13 @@ export interface PresetQuest {
   category: QuestCategory;
   xp_reward: number;
   prompt_template: string;
+  // CLI execution fields (Phase 2)
+  cli_tool: 'claude' | 'codex' | 'gemini';
+  cli_prompt_template: string | null;
+  allowed_commands: string[];
+  working_directory: 'sandbox' | 'user_specified';
+  requires_approval: boolean;
+  max_execution_time: number;
   output_type: OutputType;
   required_inputs: QuestInput[];
   max_tokens_limit: number;

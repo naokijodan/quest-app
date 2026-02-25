@@ -1,258 +1,155 @@
-# Task: Phase1-AgentHook-and-QuestExecution
+# Task: Phase2-Fallback-UI
 # AI: Codex CLI
 # Priority: High
-# Risk Level: High
+# Risk Level: Medium
 
 ## 1. Objective
-1. `useAgentConnection` フック: Agent接続状態をReactコンポーネントに提供するフック
-2. `useQuestExecution` 書き換え: 既存のSSE/fetch方式をWebSocket Agent経由に変更
+Create an Agent connection status banner component that shows when the Quest Agent is not connected. Also integrate it into the quest detail page so users see a clear message instead of just an error.
 
 ## 2. Target Files
 
-### Create（新規作成）
-- src/features/quest/hooks/useAgentConnection.ts — Agent接続状態管理フック
+### Create
+- src/features/quest/components/AgentStatusBanner.tsx
 
-### Modify（変更）
-- src/features/quest/hooks/useQuestExecution.ts — SSE→WebSocket版に書き換え
+### Modify
+- src/app/(main)/quest/[id]/page.tsx — Add AgentStatusBanner above QuestInputForm
 
-## 3. Dependencies（読んでおくファイル）
-
-### Agent接続クライアント（src/lib/agent/client.ts）
-```typescript
-import type { AgentClientOptions, AgentEventHandler, StatusChangeHandler } from './client';
-
-export class AgentClient {
-  connect(): void;
-  disconnect(): void;
-  execute(options: {
-    cli_tool: 'claude' | 'codex' | 'gemini';
-    prompt: string;
-    working_directory?: string;
-    allowed_commands?: string[];
-    max_execution_time?: number;
-    requires_approval?: boolean;
-    onEvent: AgentEventHandler;
-  }): { requestId: string; cancel: () => void };
-  ping(timeoutMs?: number): Promise<AgentPongEvent>;
-  async checkHealth(): Promise<AgentHealthResponse | null>;
-  getStatus(): AgentConnectionStatus;
-  onStatusChange(handler: StatusChangeHandler): () => void;
-}
-export function getAgentClient(options?: AgentClientOptions): AgentClient;
-```
-
-### Agent型定義（src/lib/agent/types.ts）
-```typescript
-export type AgentConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
-export type AgentResponse = AgentStartEvent | AgentStdoutEvent | AgentStderrEvent | AgentProgressEvent | AgentCompleteEvent | AgentErrorEvent | AgentPongEvent;
-export interface AgentStdoutEvent { type: 'stdout'; request_id: string; content: string; }
-export interface AgentCompleteEvent { type: 'complete'; request_id: string; exit_code: number; output: string; }
-export interface AgentErrorEvent { type: 'error'; request_id: string; message: string; retryable: boolean; }
-export interface AgentProgressEvent { type: 'progress'; request_id: string; message: string; }
-export interface AgentHealthResponse { status: 'ok'; version: string; available_tools: string[]; uptime: number; }
-```
-
-### Zustand stores
-- useQuestStore: startExecution(runId), appendContent(text), addProgressMessage(msg), completeExecution(), failExecution(err), reset()
-- useUIStore: showXPGainAnimation(amount), setLevelUpModal(show), showToast(msg, type)
-- useUserStore: updateXP(gained, newLevel), incrementQuestCount()
+## 3. Dependencies (READ these files first)
+- src/features/quest/hooks/useAgentConnection.ts (connection hook)
+- src/app/(main)/quest/[id]/page.tsx (current page)
+- src/features/quest/components/QuestInputForm.tsx (form component)
+- src/components/ui/Button.tsx (Button component pattern)
+- src/components/ui/Card.tsx (Card component pattern)
 
 ## 4. Requirements
 
-### 4.1 useAgentConnection.ts
+### 4.1 src/features/quest/components/AgentStatusBanner.tsx
+
+Create a client component that:
+- Uses `useAgentConnection` hook to get connection status
+- When `status === 'connected'`: renders nothing (null)
+- When `status === 'disconnected'`: renders a yellow warning banner with instructions
+- When `status === 'connecting'`: renders a blue info banner with spinner
+- When `status === 'error'`: renders a red error banner with retry button
 
 ```typescript
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { getAgentClient } from '@/lib/agent';
-import type { AgentConnectionStatus, AgentHealthResponse } from '@/lib/agent';
+import { useAgentConnection } from '@/features/quest/hooks/useAgentConnection';
+import { Button } from '@/components/ui/Button';
 
-interface UseAgentConnectionReturn {
-  status: AgentConnectionStatus;
-  availableTools: string[];
-  agentVersion: string | null;
-  connect: () => void;
-  disconnect: () => void;
-  isConnected: boolean;
-}
+export function AgentStatusBanner() {
+  const { status, connect, agentVersion, availableTools } = useAgentConnection();
 
-export function useAgentConnection(options?: {
-  autoConnect?: boolean; // デフォルト true
-  token?: string;
-}): UseAgentConnectionReturn {
-  // 1. getAgentClient() でシングルトン取得
-  // 2. useEffect で autoConnect なら自動接続
-  //    - 初回マウント時に checkHealth() してAgentが起動しているか確認
-  //    - 起動していれば connect()
-  //    - 起動していなければ status = 'disconnected' のまま
-  // 3. onStatusChange でステータスを同期
-  // 4. connect時にping()で利用可能なCLIとバージョンを取得
-  // 5. クリーンアップでdisconnect
-  // 6. isConnected = status === 'connected'
+  if (status === 'connected') {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-quest-success/30 bg-quest-success/10 px-4 py-3 text-sm text-quest-success">
+        <span className="inline-block h-2 w-2 rounded-full bg-quest-success" />
+        Agent接続中{agentVersion ? ` (v${agentVersion})` : ''}
+        {availableTools.length > 0 && (
+          <span className="ml-auto text-xs text-muted">
+            {availableTools.join(', ')}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (status === 'connecting') {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-quest-primary/30 bg-quest-primary/10 px-4 py-3 text-sm text-quest-primary">
+        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-quest-primary" />
+        Quest Agentに接続中...
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="rounded-lg border border-quest-danger/30 bg-quest-danger/10 px-4 py-3 text-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-quest-danger">
+            <span className="inline-block h-2 w-2 rounded-full bg-quest-danger" />
+            Agent接続エラー
+          </div>
+          <Button variant="secondary" size="sm" onClick={connect}>
+            再接続
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted">
+          Quest Agentが起動していることを確認してください。
+        </p>
+      </div>
+    );
+  }
+
+  // disconnected
+  return (
+    <div className="rounded-lg border border-quest-accent/30 bg-quest-accent/10 px-4 py-3 text-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-quest-accent">
+          <span className="inline-block h-2 w-2 rounded-full bg-quest-accent" />
+          Quest Agentが未接続です
+        </div>
+        <Button variant="secondary" size="sm" onClick={connect}>
+          接続
+        </Button>
+      </div>
+      <div className="mt-2 space-y-1 text-xs text-muted">
+        <p>クエストを実行するにはQuest Agentの起動が必要です。</p>
+        <p>ターミナルで以下を実行してください:</p>
+        <code className="mt-1 block rounded bg-card-bg px-2 py-1 font-mono text-foreground">
+          cd packages/quest-agent && npm run dev
+        </code>
+      </div>
+    </div>
+  );
 }
 ```
 
-### 4.2 useQuestExecution.ts（書き換え）
+### 4.2 src/app/(main)/quest/[id]/page.tsx
 
-既存のSSE/fetch方式を完全にWebSocket Agent経由に変更する。
+Add the AgentStatusBanner below the quest title/description and above QuestInputForm:
 
 ```typescript
-'use client';
+import { notFound } from 'next/navigation';
+import { getPresetQuestById, getUserProfile } from '@/features/quest/actions';
+import { QuestInputForm } from '@/features/quest/components/QuestInputForm';
+import { AgentStatusBanner } from '@/features/quest/components/AgentStatusBanner';
 
-import { useCallback, useRef, useState } from 'react';
-import { getAgentClient } from '@/lib/agent';
-import type { AgentResponse } from '@/lib/agent';
-import { useQuestStore } from '@/stores/questStore';
-import { useUIStore } from '@/stores/uiStore';
-import { useUserStore } from '@/stores/userStore';
+export default async function QuestDetailPage({ params }: { params: { id: string } }) {
+  const [quest, user] = await Promise.all([
+    getPresetQuestById(params.id),
+    getUserProfile(),
+  ]);
+  if (!quest) return notFound();
+  if (!user) return notFound();
 
-type Phase = 'idle' | 'executing' | 'completed' | 'error';
-
-interface ExecuteResult {
-  execute: (questId: string, inputs: Record<string, string>) => Promise<void>;
-  cancel: () => void;
-  phase: Phase;
-  questRunId: string | null;
-  xpGained: number;
-  levelUp: boolean;
-  error: string | null;
-}
-
-export function useQuestExecution(): ExecuteResult {
-  // 状態管理は既存と同じ
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [questRunId, setQuestRunId] = useState<string | null>(null);
-  const [xpGained, setXPGained] = useState(0);
-  const [levelUp, setLevelUp] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const cancelRef = useRef<(() => void) | null>(null);
-
-  // store selectors（既存と同じ）
-  const startExecution = useQuestStore((s) => s.startExecution);
-  const appendContent = useQuestStore((s) => s.appendContent);
-  const addProgressMessage = useQuestStore((s) => s.addProgressMessage);
-  const completeExecution = useQuestStore((s) => s.completeExecution);
-  const failExecution = useQuestStore((s) => s.failExecution);
-  const resetStore = useQuestStore((s) => s.reset);
-  const showXPGainAnimation = useUIStore((s) => s.showXPGainAnimation);
-  const setLevelUpModal = useUIStore((s) => s.setLevelUpModal);
-  const showToast = useUIStore((s) => s.showToast);
-  const incrementQuestCount = useUserStore((s) => s.incrementQuestCount);
-
-  const cancel = useCallback(() => {
-    cancelRef.current?.();
-    cancelRef.current = null;
-    failExecution('キャンセルしました');
-    setError('キャンセルしました');
-    setPhase('error');
-  }, [failExecution]);
-
-  const execute = useCallback(async (questId: string, inputs: Record<string, string>) => {
-    resetStore();
-    setError(null);
-    setPhase('executing');
-    setQuestRunId(null);
-    setXPGained(0);
-    setLevelUp(false);
-
-    const client = getAgentClient();
-    if (client.getStatus() !== 'connected') {
-      const msg = 'Quest Agentに接続されていません。Agentを起動してください。';
-      failExecution(msg);
-      setError(msg);
-      setPhase('error');
-      showToast(msg, 'error');
-      return;
-    }
-
-    // Server Action でクエスト情報を取得（prompt_template, difficulty等）
-    // ここではAgent経由の実行に集中する
-    // 実際のXP計算・DB更新はServer Action側で行う（後でPhase 2で実装）
-    // Phase 1ではCLI実行とストリーミング表示のみ
-
-    // プロンプトを構築（inputsのキーバリューをテンプレートに埋め込む）
-    const inputText = Object.entries(inputs)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join('\n');
-
-    const prompt = `以下のユーザー入力に基づいて、クエスト「${questId}」を実行してください。\n\n${inputText}`;
-
-    try {
-      const { requestId, cancel: agentCancel } = client.execute({
-        cli_tool: 'claude',  // デフォルトでClaude CLI
-        prompt,
-        max_execution_time: 120,
-        onEvent: (event: AgentResponse) => {
-          switch (event.type) {
-            case 'start':
-              setQuestRunId(requestId);
-              startExecution(requestId);
-              break;
-            case 'stdout':
-              appendContent(event.content);
-              break;
-            case 'stderr':
-              // stderr は進捗メッセージとして表示
-              addProgressMessage(event.content);
-              break;
-            case 'progress':
-              addProgressMessage(event.message);
-              break;
-            case 'complete': {
-              completeExecution();
-              incrementQuestCount();
-              // Phase 1では仮のXP（10XP固定）
-              const xp = 10;
-              setXPGained(xp);
-              showXPGainAnimation(xp);
-              setPhase('completed');
-              cancelRef.current = null;
-              break;
-            }
-            case 'error':
-              failExecution(event.message);
-              setError(event.message);
-              showToast(event.message, 'error');
-              setPhase('error');
-              cancelRef.current = null;
-              break;
-          }
-        },
-      });
-      cancelRef.current = agentCancel;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : '実行エラーが発生しました';
-      failExecution(msg);
-      setError(msg);
-      setPhase('error');
-    }
-  }, [resetStore, failExecution, startExecution, appendContent, addProgressMessage, completeExecution, incrementQuestCount, showXPGainAnimation, setLevelUpModal, showToast]);
-
-  return { execute, cancel, phase, questRunId, xpGained, levelUp, error };
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{quest.title}</h1>
+        <p className="mt-1 text-sm text-muted">{quest.description}</p>
+      </div>
+      <AgentStatusBanner />
+      <QuestInputForm quest={quest} />
+    </div>
+  );
 }
 ```
-
-**重要**: executeの引数インターフェースは完全に同じにする（questId, inputs）。呼び出し側のコンポーネントは変更不要にする。
 
 ## 5. Constraints
-- `'use client'` ディレクティブ必須
-- React 19 のhooks API
-- Zustandストアのセレクタパターン（既存と同じ）
-- immutableパターン
-- セミコロンあり、シングルクォート
-- ファイル200-400行
-- `console.log` 禁止
+- 'use client' directive for AgentStatusBanner
+- Use existing TailwindCSS color tokens (quest-success, quest-danger, quest-accent, quest-primary)
+- Use existing Button component
+- No console.log
+- No new dependencies
 
-## 6. Forbidden
-- fetch/SSE 方式のコード（完全にWebSocketに移行）
-- console.log
-- ハードコードされたシークレット
-- dangerouslySetInnerHTML
-
-## 7. Acceptance Criteria
-- [ ] TypeScript型エラーなし（npm run build 成功）
-- [ ] useAgentConnection が接続状態・利用可能ツール・接続/切断メソッドを返す
-- [ ] useQuestExecution のインターフェース（execute, cancel, phase等）が既存と完全互換
-- [ ] Agent未接続時にエラーメッセージを表示
-- [ ] Agent stdout をリアルタイムでstreamして表示
+## 6. Acceptance Criteria
+- [ ] AgentStatusBanner.tsx created
+- [ ] Shows green indicator when connected
+- [ ] Shows yellow banner with instructions when disconnected
+- [ ] Shows blue spinner when connecting
+- [ ] Shows red error with retry button on error
+- [ ] Integrated into quest detail page
+- [ ] TypeScript compiles without errors

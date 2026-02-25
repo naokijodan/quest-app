@@ -46,7 +46,7 @@ export function QuestInputForm({ quest }: Props) {
     if (hasError) return;
 
     setPhase('executing');
-    await execute(quest.id, values);
+    await execute(quest, values);
     // phase transitions will be handled by execPhase effect below
   }, [quest.id, quest.required_inputs, updateError, values, execute]);
 
@@ -149,4 +149,3 @@ export function QuestInputForm({ quest }: Props) {
     </Card>
   );
 }
-
