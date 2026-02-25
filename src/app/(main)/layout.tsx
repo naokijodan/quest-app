@@ -5,6 +5,7 @@ import { calculateLevel } from '@/features/gamification/types';
 import { XpProgressBar } from '@/components/ui/XpProgressBar';
 import { SignOutButton } from '@/features/auth/components/SignOutButton';
 import { History, Settings, Sword } from 'lucide-react';
+import { NavLink } from '@/components/ui/NavLink';
 import { XpGainOverlay } from '@/features/gamification/components/XpGainOverlay';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
@@ -33,18 +34,9 @@ export default async function MainLayout({
             <Link href="/" className="flex items-center gap-2 text-foreground">
               <span className="text-lg font-bold text-quest-primary">Quest App</span>
             </Link>
-            <Link href="/history" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline">履歴</span>
-            </Link>
-            <Link href="/adventure" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-              <Sword className="h-4 w-4" />
-              <span className="hidden sm:inline">冒険</span>
-            </Link>
-            <Link href="/setup" className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">セットアップ</span>
-            </Link>
+            <NavLink href="/history" icon={<History className="h-4 w-4" />} label="履歴" />
+            <NavLink href="/adventure" icon={<Sword className="h-4 w-4" />} label="冒険" />
+            <NavLink href="/setup" icon={<Settings className="h-4 w-4" />} label="セットアップ" />
           </nav>
           <div className="flex items-center gap-3 text-sm">
             <XpProgressBar xp={user.experience_points} level={level} />

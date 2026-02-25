@@ -26,9 +26,9 @@ export function ChapterCard({ chapter, locked, current, completed, href }: Props
       <Card
         padding="lg"
         className={cn(
-          'relative h-full transition-colors',
-          locked ? 'opacity-60' : 'hover:border-quest-primary/40',
-          current && !locked ? 'border-quest-primary/50' : ''
+          'relative h-full transition-all duration-200',
+          locked ? 'opacity-60' : 'hover:shadow-lg hover:-translate-y-0.5 hover:border-quest-primary/40',
+          current && !locked ? 'border-quest-primary/50 glow-primary' : ''
         )}
       >
         <div className="flex items-start gap-4">

@@ -5,6 +5,7 @@ import { Lock, Star } from 'lucide-react';
 import type { PresetQuest } from '@/types';
 import { Card } from '@/components/ui';
 import { CATEGORY_LABELS } from '@/features/quest/constants/category';
+import { cn } from '@/lib/utils/cn';
 
 interface Props {
   quest: PresetQuest;
@@ -23,10 +24,12 @@ export function QuestCard({ quest, locked }: Props) {
     <Wrapper>
       <Card
         padding="md"
-        className={
-          'relative h-full transition-shadow hover:shadow-md ' +
-          (locked ? 'opacity-50' : 'hover:border-quest-primary/40')
-        }
+        className={cn(
+          'relative h-full transition-all duration-200',
+          locked
+            ? 'opacity-50'
+            : 'card-glow hover:shadow-lg hover:-translate-y-0.5 hover:border-quest-primary/40'
+        )}
       >
         {locked && (
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-black/10">

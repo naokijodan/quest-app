@@ -29,7 +29,7 @@ export default async function AdventurePage() {
         <p className="mt-1 text-sm text-muted">ターミナルの魔王を倒す旅へ。章を選んで進もう。</p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 stagger-children">
         {CHAPTERS.map((c) => {
           const locked = level < c.requiredLevel;
           const chapterProgress = progress.filter((p) => p.chapter === c.number);

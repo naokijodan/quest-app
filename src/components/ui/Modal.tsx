@@ -35,7 +35,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
 
   return (
     <div
-      className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

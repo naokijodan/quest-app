@@ -77,7 +77,7 @@ export default async function RootPage() {
 
           {level >= 4 && (
             <Link href="/adventure">
-              <Card padding="lg" className="border-quest-primary/50 hover:border-quest-primary transition-colors">
+              <Card padding="lg" className="border-quest-primary/50 hover:border-quest-primary hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">⚔️</span>
@@ -112,7 +112,7 @@ export default async function RootPage() {
                       </CardDescription>
                     </CardHeader>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2 stagger-children">
                       {quests.length === 0 && (
                         <p className="text-sm text-muted">クエストがありません。</p>
                       )}
@@ -137,7 +137,14 @@ function LandingContent() {
       <main className="w-full max-w-2xl text-center">
         <div className="mb-8 flex items-center justify-center gap-3 text-quest-primary">
           <Sparkles className="h-10 w-10" />
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1
+            className="text-4xl font-bold tracking-tight sm:text-5xl"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #a78bfa, #f59e0b)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
             Quest App
           </h1>
         </div>
@@ -148,7 +155,7 @@ function LandingContent() {
           誰でも使える、ゲーム風AIワークフロー。
         </p>
 
-        <div className="mb-12 grid gap-6 sm:grid-cols-3">
+        <div className="mb-12 grid gap-6 sm:grid-cols-3 stagger-children">
           <FeatureCard
             icon={<Zap className="h-6 w-6 text-quest-accent" />}
             title="30秒で完成"
@@ -193,7 +200,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-xl border border-card-border bg-card-bg p-5 text-left">
+    <div className="rounded-xl border border-card-border bg-card-bg p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:border-quest-primary/30">
       <div className="mb-3">{icon}</div>
       <h3 className="mb-1 font-semibold text-foreground">{title}</h3>
       <p className="text-sm text-muted">{description}</p>

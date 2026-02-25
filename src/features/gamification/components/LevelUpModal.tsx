@@ -47,8 +47,8 @@ export function LevelUpModal({ newLevel }: Props) {
         </div>
 
         <div className={showContent ? 'level-up-bounce' : ''}>
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-quest-primary/10">
-            <span className="text-3xl font-bold text-quest-primary">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-quest-primary/10 glow-primary">
+            <span className="text-3xl font-bold text-quest-primary count-pop">
               {newLevel}
             </span>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui';
 import { StatusBadge } from './StatusBadge';
@@ -28,9 +28,15 @@ export function HistoryList({ runs }: Props) {
 
   if (runs.length === 0) {
     return (
-      <div className="rounded-xl border border-card-border bg-card-bg p-8 text-center">
-        <p className="text-muted">まだクエストを実行していません。</p>
+      <div className="rounded-xl border border-dashed border-card-border bg-card-bg p-12 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted-bg float-gentle">
+          <Sparkles className="h-8 w-8 text-quest-primary/40" />
+        </div>
+        <p className="text-lg font-medium text-foreground">まだクエストを実行していません</p>
         <p className="mt-1 text-sm text-muted">ホームからクエストに挑戦しましょう！</p>
+        <a href="/" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quest-primary hover:underline">
+          クエスト一覧へ →
+        </a>
       </div>
     );
   }
