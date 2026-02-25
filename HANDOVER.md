@@ -1,7 +1,7 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** Phase 4（PWA + デプロイ）— PWA設定完了、E2E検証完了、デプロイ待ち
+**現在のPhase:** Phase 4（PWA + デプロイ）— **全タスク完了、本番デプロイ済み**
 **現在のSprint:** Sprint 9 Phase 4 PWA + デプロイ
 
 ---
@@ -36,8 +36,10 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 61bfe73 feat: 冒険進捗表示・ローカルフォント移行・XPバーリアルタイム更新
+- **Latest commit:** 0e1a211 feat: PWAアイコンをプレースホルダから正式デザインに差し替え
 - **Status:** クリーン（コミット済み・プッシュ済み）
+- **Production URL:** https://quest-app-eight.vercel.app
+- **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
 
 ### 実装済み
 
@@ -99,8 +101,12 @@
 11. [x] E2E検証: 冒険ルートページ → 第1章 → プロローグモーダル
 12. [x] UI/アニメーション全面改善（ホバー、グラデーション、stagger、glow、NavLink等）
 13. [x] 冒険チャプター進捗バー + ローカルフォント移行 + XPバーリアルタイム更新
-14. [ ] **Vercelデプロイ（ユーザー操作必要）**
-15. [ ] **Supabaseリモート接続設定（ユーザー操作必要）**
+14. [x] PWAアイコン正式デザイン差し替え（DALL-E 3生成、巻物+星モチーフ）
+15. [x] Vercelデプロイ（quest-app-eight.vercel.app、hnd1リージョン）
+16. [x] Supabaseリモートプロジェクト作成（yabrrdonqlttzwrfpqdu、Tokyo）
+17. [x] マイグレーション3つ適用 + シードデータ24クエスト投入
+18. [x] Vercel環境変数4つ設定 + 再デプロイ
+19. [x] Supabase認証リダイレクトURL設定
 
 ### ファイル構成（Phase 4時点）
 ```
@@ -286,19 +292,20 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 - [x] DB更新確認: experience_points=10, quest_count=1, quest_run status=completed
 - **注意**: claude --printはネスト環境で動作不可のため出力空。実運用（ユーザー環境）では問題なし
 
-### ユーザー操作必要（対話的ログイン）
-1. [ ] Vercel CLIログイン + デプロイ（上記手順参照）
-2. [ ] Supabaseリモートプロジェクト作成 + マイグレーション適用
-3. [ ] Vercel環境変数設定
-4. [ ] Supabase認証リダイレクトURL設定
+### デプロイ完了（2026-02-25）
+1. [x] Vercelデプロイ — quest-app-eight.vercel.app
+2. [x] Supabaseリモートプロジェクト — yabrrdonqlttzwrfpqdu (Tokyo)
+3. [x] マイグレーション3つ + シードデータ24クエスト投入
+4. [x] Vercel環境変数4つ設定 + 再デプロイ
+5. [x] Supabase認証リダイレクトURL設定
+6. [x] PWAアイコン正式デザイン差し替え
 
-### 改善候補（優先度順）
-- [x] UI/アニメーション改善（ホバーエフェクト、グラデーションXPバー、ページ遷移、stagger-children等）
-- [x] 結果表示のスタイリング改善（result-output, glow-success）
-- [x] 冒険ルートのチャプター一覧UI改善（各クエストの進捗バー表示）
-- [x] Google Fonts → ローカルフォント移行（geistパッケージ、オフライン対応）
-- [x] XPバーのリアルタイム更新（XpProgressBarClient + LevelBadgeClient）
-- [ ] PWAアイコンを正式なデザインに差し替え（現在はプレースホルダ）
+### Phase 5 候補（今後）
+- [ ] Google認証プロバイダ設定（Supabase + Google Cloud Console）
+- [ ] カスタムドメイン設定
+- [ ] Upstash Redis（レート制限）
+- [ ] Stripe課金連携
+- [ ] カスタムクエスト作成機能
 
 ---
 
@@ -309,11 +316,11 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 | middleware.ts非推奨 | ビルド警告のみ | Phase 5でproxy移行 |
 | Zod v4 breaking changes | 現行動作に影響なし | このまま |
 | npm audit warnings | next依存、実害なし | 定期チェック |
-| Supabaseローカルのみ | 本番接続なし | ユーザーがリモートSupabase設定 |
+| Supabaseリモート接続済み | — | 解決済み |
 | Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
 | BossVictory.tsx uses style jsx | Next.js styled-jsx設定必要かも | 要確認 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| PWAアイコンがプレースホルダ | 紫色の単色アイコン | 正式デザイン後に差し替え |
+| PWAアイコン差し替え済み | — | 解決済み |
 
 ---
 
