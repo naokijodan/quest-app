@@ -1,5 +1,15 @@
 -- Phase 5: 第0章「旅の準備」 - CLIセットアップを冒険に統合
--- 3つのセットアップクエストを冒険の第0章として追加
+-- 制約を変更して chapter 0 を許可 + 3つのセットアップクエストを追加
+
+-- preset_quests の adventure_chapter 制約を 0始まりに変更
+ALTER TABLE preset_quests DROP CONSTRAINT IF EXISTS preset_quests_adventure_chapter_check;
+ALTER TABLE preset_quests ADD CONSTRAINT preset_quests_adventure_chapter_check
+  CHECK (adventure_chapter IS NULL OR adventure_chapter BETWEEN 0 AND 5);
+
+-- adventure_progress の chapter 制約を 0始まりに変更
+ALTER TABLE adventure_progress DROP CONSTRAINT IF EXISTS adventure_progress_chapter_check;
+ALTER TABLE adventure_progress ADD CONSTRAINT adventure_progress_chapter_check
+  CHECK (chapter BETWEEN 0 AND 5);
 
 INSERT INTO preset_quests (
   quest_identifier, title, title_en, description, description_en,
