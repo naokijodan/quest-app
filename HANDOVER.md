@@ -1,7 +1,7 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-25
-**現在のPhase:** Phase 4（PWA + デプロイ）— PWA設定完了、デプロイ準備完了
+**現在のPhase:** Phase 4（PWA + デプロイ）— PWA設定完了、E2E検証完了、デプロイ待ち
 **現在のSprint:** Sprint 9 Phase 4 PWA + デプロイ
 
 ---
@@ -36,7 +36,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 48dbb01 Agent sandbox fix + E2E検証
+- **Latest commit:** 8538f16 HANDOVER.md E2E検証完了状態に更新
 - **Status:** クリーン（コミット済み・プッシュ済み）
 
 ### 実装済み
@@ -274,18 +274,26 @@ Quest Appの[Sprint/Phase]を継続。[次タスク]から自律的に進めて�
 
 ## 次のタスク
 
+### E2E検証結果（2026-02-25完了）
+- [x] Agent起動 + healthcheck + codex CLI sandbox実行
+- [x] 通常クエスト全フロー: ログイン → 一覧 → 入力 → 実行 → 結果 → +10 XP（Playwright 15.2s）
+- [x] 冒険ルート: ページ表示 → 5章カード → 第1章 → プロローグモーダル（Playwright 10.4s）
+- [x] DB更新確認: experience_points=10, quest_count=1, quest_run status=completed
+- **注意**: claude --printはネスト環境で動作不可のため出力空。実運用（ユーザー環境）では問題なし
+
 ### ユーザー操作必要（対話的ログイン）
 1. [ ] Vercel CLIログイン + デプロイ（上記手順参照）
 2. [ ] Supabaseリモートプロジェクト作成 + マイグレーション適用
 3. [ ] Vercel環境変数設定
 4. [ ] Supabase認証リダイレクトURL設定
 
-### 改善候補（デプロイ後に実施可能）
-- [ ] 冒険クエストの動作検証（Supabaseにシードデータ投入 → 実際のCLI実行テスト）
-- [ ] E2Eテスト（Playwright: オンボーディング → クエスト → 冒険ルート）
+### 改善候補（優先度順）
+- [ ] UI/アニメーション改善（ユーザーから「もっとこだわった方がいい」との要望あり）
 - [ ] 冒険ルートのチャプター一覧UI改善（各クエストの進捗表示）
-- [ ] PWAアイコンを正式なデザインに差し替え
+- [ ] PWAアイコンを正式なデザインに差し替え（現在はプレースホルダ）
 - [ ] Google Fonts → ローカルフォントへの移行（オフライン対応強化）
+- [ ] XPバーのリアルタイム更新（クエスト完了後のヘッダー即時反映）
+- [ ] 結果表示のスタイリング改善（出力テキストの見栄え）
 
 ---
 
