@@ -8,9 +8,10 @@
     "quest-agent": "dist/index.js"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT tsx watch src/index.ts -- --no-auth",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT node dist/index.js",
+    "start:noauth": "env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT node dist/index.js --no-auth"
   },
   "dependencies": {
     "ws": "^8.18.0"

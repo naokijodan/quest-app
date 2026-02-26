@@ -106,6 +106,17 @@ export function useQuestExecution(): ExecuteResult {
                 appendContent(completeEvent.output);
               }
 
+              // Check for non-zero exit code with empty output (CLI failure)
+              if (completeEvent.exit_code !== 0 && !outputRef.current) {
+                const msg = `CLIがエラーで終了しました (exit code: ${completeEvent.exit_code})`;
+                failExecution(msg);
+                setError(msg);
+                showToast(msg, 'error');
+                setPhase('error');
+                cancelRef.current = null;
+                break;
+              }
+
               completeExecution();
 
               // Call Server Action for XP calculation and DB update

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { AvatarType, MascotType } from '@/types';
 import { StepName } from './StepName';
 import { StepAvatar } from './StepAvatar';
@@ -13,6 +14,12 @@ type FormState = {
   username: string;
   avatar_type?: AvatarType;
   mascot_type?: MascotType;
+};
+
+const stepVariants = {
+  enter: { opacity: 0, x: 40 },
+  center: { opacity: 1, x: 0, transition: { duration: 0.25, ease: 'easeOut' as const } },
+  exit: { opacity: 0, x: -40, transition: { duration: 0.15, ease: 'easeIn' as const } },
 };
 
 export function OnboardingWizard() {
@@ -73,51 +80,53 @@ export function OnboardingWizard() {
         </div>
       </RPGWindow>
 
-      {/* Steps container */}
-      <div className="relative">
-        {currentStep === 1 && (
-          <div className="transition-all duration-300">
-            <StepName
-              value={form.username}
-              onChange={(v) => update('username', v)}
-              onNext={next}
-            />
-          </div>
-        )}
+      {/* Steps container with AnimatePresence */}
+      <div className="relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {currentStep === 1 && (
+            <motion.div key="step-1" variants={stepVariants} initial="enter" animate="center" exit="exit">
+              <StepName
+                value={form.username}
+                onChange={(v) => update('username', v)}
+                onNext={next}
+              />
+            </motion.div>
+          )}
 
-        {currentStep === 2 && (
-          <div className="transition-all duration-300">
-            <StepAvatar
-              selected={form.avatar_type}
-              onSelect={(v) => update('avatar_type', v)}
-              onNext={next}
-              onBack={back}
-            />
-          </div>
-        )}
+          {currentStep === 2 && (
+            <motion.div key="step-2" variants={stepVariants} initial="enter" animate="center" exit="exit">
+              <StepAvatar
+                selected={form.avatar_type}
+                onSelect={(v) => update('avatar_type', v)}
+                onNext={next}
+                onBack={back}
+              />
+            </motion.div>
+          )}
 
-        {currentStep === 3 && (
-          <div className="transition-all duration-300">
-            <StepMascot
-              selected={form.mascot_type}
-              onSelect={(v) => update('mascot_type', v)}
-              onBack={back}
-              onComplete={handleComplete}
-              loading={submitting}
-              error={serverError}
-            />
-          </div>
-        )}
+          {currentStep === 3 && (
+            <motion.div key="step-3" variants={stepVariants} initial="enter" animate="center" exit="exit">
+              <StepMascot
+                selected={form.mascot_type}
+                onSelect={(v) => update('mascot_type', v)}
+                onBack={back}
+                onComplete={handleComplete}
+                loading={submitting}
+                error={serverError}
+              />
+            </motion.div>
+          )}
 
-        {currentStep === 4 && form.avatar_type && form.mascot_type && (
-          <div className="transition-all duration-300">
-            <StepComplete
-              username={form.username}
-              avatar_type={form.avatar_type}
-              mascot_type={form.mascot_type}
-            />
-          </div>
-        )}
+          {currentStep === 4 && form.avatar_type && form.mascot_type && (
+            <motion.div key="step-4" variants={stepVariants} initial="enter" animate="center" exit="exit">
+              <StepComplete
+                username={form.username}
+                avatar_type={form.avatar_type}
+                mascot_type={form.mascot_type}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
