@@ -184,8 +184,8 @@ function LoginForm() {
           className="w-full text-center font-dot-gothic text-xs text-blue-200/50 hover:text-white transition-colors"
         >
           {mode === 'magic-link'
-            ? '&#x25B6; パスワードでログイン'
-            : '&#x25B6; マジックリンクでログイン'}
+            ? '\u25B6 パスワードでログイン'
+            : '\u25B6 マジックリンクでログイン'}
         </button>
       </div>
 

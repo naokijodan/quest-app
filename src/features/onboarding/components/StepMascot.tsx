@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui';
 import { RPGWindow } from '@/components/ui/RPGWindow';
 import { TypewriterText } from '@/components/ui/TypewriterText';
@@ -16,9 +17,9 @@ interface StepMascotProps {
   error?: string | null;
 }
 
-const MASCOTS: { key: MascotType; title: string; desc: string; emoji: string }[] = [
-  { key: 'cat', title: 'ネコ', desc: '気まぐれだけど賢い', emoji: '\u{1F431}' },
-  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', emoji: '\u{1F436}' },
+const MASCOTS: { key: MascotType; title: string; desc: string; sprite: string }[] = [
+  { key: 'cat', title: 'ネコ', desc: '気まぐれだけど賢い', sprite: '/sprites/mascot-cat.png' },
+  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', sprite: '/sprites/mascot-cat-mage.png' },
 ];
 
 export function StepMascot({ selected, onSelect, onBack, onComplete, loading, error }: StepMascotProps) {
@@ -68,17 +69,26 @@ export function StepMascot({ selected, onSelect, onBack, onComplete, loading, er
                 type="button"
                 onClick={() => handleSelect(m.key)}
                 className={
-                  'rounded-lg border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 ' +
+                  'rounded-lg border-2 p-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 ' +
                   (active
                     ? 'border-rpg-gold bg-rpg-gold/10 shadow-[0_0_12px_rgba(255,215,0,0.2)]'
                     : 'border-blue-200/20 hover:border-rpg-gold/50 bg-blue-900/20')
                 }
               >
-                <div className="mb-2 text-4xl">{m.emoji}</div>
+                <div className="relative mx-auto mb-2 h-28 w-20">
+                  <Image
+                    src={m.sprite}
+                    alt={m.title}
+                    fill
+                    className="object-contain"
+                    style={{ imageRendering: 'pixelated' }}
+                    sizes="80px"
+                  />
+                </div>
                 <div className="font-dot-gothic font-bold text-white">{m.title}</div>
                 <div className="font-dot-gothic text-xs text-blue-200/60">{m.desc}</div>
                 {active && (
-                  <span className="mt-2 inline-block font-dot-gothic text-[10px] text-rpg-gold">
+                  <span className="mt-1 inline-block font-dot-gothic text-[10px] text-rpg-gold">
                     &#x25B6; 選択中
                   </span>
                 )}

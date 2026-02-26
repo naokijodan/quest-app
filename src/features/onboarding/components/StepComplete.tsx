@@ -1,12 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui';
 import { RPGWindow } from '@/components/ui/RPGWindow';
 import { TypewriterText } from '@/components/ui/TypewriterText';
 import { playSound } from '@/lib/sound';
 import type { AvatarType, MascotType } from '@/types';
 import { useRouter } from 'next/navigation';
+
+const AVATAR_SPRITES: Record<AvatarType, string> = {
+  planner: '/sprites/avatar-planner.png',
+  explorer: '/sprites/avatar-explorer.png',
+  crafter: '/sprites/avatar-crafter.png',
+};
+const MASCOT_SPRITES: Record<MascotType, string> = {
+  cat: '/sprites/mascot-cat.png',
+  dog: '/sprites/mascot-cat-mage.png',
+};
 
 interface StepCompleteProps {
   username: string;
@@ -50,7 +61,22 @@ export function StepComplete({ username, avatar_type, mascot_type }: StepComplet
           />
         </div>
 
-        <RPGWindow variant="status" className="mx-auto my-4 w-full max-w-md text-left">
+        <div className="my-4 flex items-center justify-center gap-4">
+          <div className="text-center">
+            <div className="relative mx-auto h-20 w-14">
+              <Image src={AVATAR_SPRITES[avatar_type]} alt={mapAvatarLabel(avatar_type)} fill className="object-contain" style={{ imageRendering: 'pixelated' }} sizes="56px" />
+            </div>
+            <span className="font-dot-gothic text-[10px] text-blue-200/50">アバター</span>
+          </div>
+          <div className="text-center">
+            <div className="relative mx-auto h-20 w-14">
+              <Image src={MASCOT_SPRITES[mascot_type]} alt={mapMascotLabel(mascot_type)} fill className="object-contain" style={{ imageRendering: 'pixelated' }} sizes="56px" />
+            </div>
+            <span className="font-dot-gothic text-[10px] text-blue-200/50">マスコット</span>
+          </div>
+        </div>
+
+        <RPGWindow variant="status" className="mx-auto w-full max-w-md text-left">
           <div className="space-y-2 font-dot-gothic text-sm">
             <div className="flex items-center justify-between">
               <span className="text-blue-200/50">名前</span>

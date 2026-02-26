@@ -141,7 +141,7 @@ export function CliSetupGuide() {
           <h2 className="text-sm font-bold text-rpg-gold">Step 3: 準備完了！</h2>
           <p className="mt-1 text-xs text-blue-200/50">Agent接続とCLI装備が整えば冒険開始。</p>
         </div>
-        <div className="flex items-center justify-between rounded-lg border-2 p-4 transition-all ${isConnected && hasAnyCli ? 'border-green-400/30 bg-green-900/10' : 'border-blue-200/10 bg-blue-900/20'}">
+        <div className={`flex items-center justify-between rounded-lg border-2 p-4 transition-all ${isConnected && hasAnyCli ? 'border-green-400/30 bg-green-900/10' : 'border-blue-200/10 bg-blue-900/20'}`}>
           <div className="flex items-center gap-3 font-dot-gothic">
             {isConnected && hasAnyCli ? (
               <CheckCircle className="h-5 w-5 text-green-400" />
