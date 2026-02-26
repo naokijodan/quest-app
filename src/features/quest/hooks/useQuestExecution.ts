@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { getAgentClient } from '@/lib/agent';
-import type { AgentResponse } from '@/lib/agent';
+import type { AgentResponse, AgentCompleteEvent } from '@/lib/agent';
 import { renderTemplate } from '@/lib/utils/template';
 import { completeQuestRun } from '@/features/quest/actions/complete-quest';
 import type { PresetQuest } from '@/types';
@@ -99,6 +99,13 @@ export function useQuestExecution(): ExecuteResult {
               addProgressMessage(event.message);
               break;
             case 'complete': {
+              // Use complete event's output as fallback when stdout streaming missed data
+              const completeEvent = event as AgentCompleteEvent;
+              if (!outputRef.current && completeEvent.output) {
+                outputRef.current = completeEvent.output;
+                appendContent(completeEvent.output);
+              }
+
               completeExecution();
 
               // Call Server Action for XP calculation and DB update

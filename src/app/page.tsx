@@ -13,6 +13,7 @@ import { calculateLevel, getUnlockedCategories } from '@/features/gamification/t
 import { QuestCard } from '@/features/quest/components/QuestCard';
 import { GuildBoardNPC } from '@/features/quest/components/GuildBoardNPC';
 import { StaggerList, StaggerItem } from '@/components/ui/StaggerList';
+import { UserStoreInitializer } from '@/components/ui/UserStoreInitializer';
 import type { QuestCategory } from '@/types';
 
 const CATEGORY_ORDER: QuestCategory[] = ['basic', 'business', 'life', 'creative', 'analysis'];
@@ -43,6 +44,7 @@ export default async function RootPage() {
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0 relative">
+      <UserStoreInitializer user={profile} />
       {/* Guild hall background */}
       <div
         className="pointer-events-none fixed inset-0 z-0 opacity-[0.07]"

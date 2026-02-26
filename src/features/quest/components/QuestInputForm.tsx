@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PresetQuest, QuestInput as QuestInputType } from '@/types';
 import { Button, Input, Textarea } from '@/components/ui';
 import { RPGWindow } from '@/components/ui/RPGWindow';
@@ -52,7 +52,7 @@ export function QuestInputForm({ quest }: Props) {
     await execute(quest, values);
   }, [quest.id, quest.required_inputs, updateError, values, execute]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (execPhase === 'executing') setPhase('executing');
     if (execPhase === 'completed') setPhase('completed');
     if (execPhase === 'error') setPhase('error');

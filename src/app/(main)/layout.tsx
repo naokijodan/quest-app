@@ -11,6 +11,7 @@ import { GameNav } from '@/components/ui/GameNav';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { ScreenTransition } from '@/components/ui/ScreenTransition';
 import { SoundToggle } from '@/components/ui/SoundToggle';
+import { UserStoreInitializer } from '@/components/ui/UserStoreInitializer';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default async function MainLayout({
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
+      <UserStoreInitializer user={user} />
       {/* RPG HUD Header */}
       <header className="sticky top-0 z-40">
         <div className="rpg-window !rounded-none" style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>

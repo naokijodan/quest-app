@@ -49,9 +49,14 @@ export function executeCommand(
   }
 
   const { command, args } = mapCliCommand(payload.cli_tool, payload.prompt);
+  // Strip CLAUDECODE env vars to prevent "nested session" errors when spawning CLI tools
+  const cleanEnv = { ...process.env };
+  delete cleanEnv.CLAUDECODE;
+  delete cleanEnv.CLAUDE_CODE_ENTRYPOINT;
+
   const child = spawn(command, args, {
     cwd: runtime.cwd,
-    env: process.env,
+    env: cleanEnv,
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: false,
   });
