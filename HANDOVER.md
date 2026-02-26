@@ -1,24 +1,25 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-27
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了**
-**現在のSprint:** Sprint 11 RPG UI本格リデザイン
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + インフラ整備**
+**現在のSprint:** Sprint 12 インフラ・品質整備
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-27に残り5画面（auth/onboarding/quest実行/history/setup）を全てRPG UIに統一。**
+**2026-02-27にFramer Motion導入、E2Eテスト整備、Vercel環境変数確認、Google OAuth手順書作成。**
 
 #### コミット履歴（今セッション）
 | コミット | 内容 |
 |----------|------|
-| `f3287a1` | 残り5画面のRPG UI化（auth/onboarding/quest実行/history/setup） |
-| `55c0c1d` | スプライト個別切り出し + SE改善 + バグ修正 |
+| `9f62db4` | Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書 |
 
 #### 前セッション
 | コミット | 内容 |
 |----------|------|
+| `f3287a1` | 残り5画面のRPG UI化（auth/onboarding/quest実行/history/setup） |
+| `55c0c1d` | スプライト個別切り出し + SE改善 + バグ修正 |
 | `e7ed34c` | Phase 1-2: デザインシステム基盤 + 各画面RPG化 |
 | `df91ec3` | Phase 3: SE素材6種 + ピクセルアートスプライト3種 |
 | `214af51` | ギルドホール背景 + NPCスプライト組み込み |
@@ -43,7 +44,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `55c0c1d` feat: スプライト個別切り出し + SE改善 + バグ修正
+- **Latest commit:** `9f62db4` feat: Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -56,7 +57,7 @@
 
 ## Phase 6 で追加・変更したもの
 
-### 新規ファイル（14件）
+### 新規ファイル（18件）
 
 | ファイル | 説明 |
 |---------|------|
@@ -77,6 +78,11 @@
 | `public/sprites/rpg-sprites.png` | キャラクタースプライトシート（DALL-E生成） |
 | `public/sprites/rpg-icons.png` | RPG UIアイコンセット（DALL-E生成） |
 | `public/sprites/guild-hall-bg.png` | ギルドホール背景（DALL-E生成） |
+| `src/components/ui/StaggerList.tsx` | Framer Motion staggerアニメーションラッパー |
+| `playwright.config.ts` | Playwright E2Eテスト設定（.env.local自動読み込み） |
+| `tests/e2e/onboarding-flow.spec.ts` | オンボーディング→第0章→ホームE2Eテスト |
+| `tests/e2e/helpers/supabase-admin.ts` | Supabaseアドミンヘルパー（テストユーザー管理） |
+| `docs/GOOGLE_OAUTH_SETUP.md` | Google OAuth設定手順書 |
 
 ### 変更ファイル（12件）
 
@@ -124,6 +130,7 @@
 | サウンド | Howler.js | 低遅延SE再生、プリロード対応 |
 | SE素材 | 効果音ラボ | フリー商用利用可、帰属不要 |
 | スプライト | DALL-E生成 | プロジェクト専用の統一感あるアセット |
+| アニメーション | Framer Motion v12 | AnimatePresence/stagger/motion.div |
 | レトロCSS | 独自実装 | NES.css等はチープになるため不使用 |
 
 ---
@@ -145,20 +152,30 @@
    - StepAvatar/StepMascot/StepCompleteにnext/image組み込み
    - imageRendering: 'pixelated'でドット感維持
 
-7. **[ ] Framer Motion導入**（オプション）
-   - より滑らかな画面遷移、メニュー開閉アニメーション
-   - 現在のCSS animationで十分なら不要
+7. **[x] Framer Motion導入** — `9f62db4`
+   - LevelUpModal: AnimatePresence + motion.divフェーズ制御
+   - ScreenTransition: motion.divフェード遷移
+   - StaggerList/StaggerItem: 動的staggerアニメーション
+   - ホームクエストリストに適用
 
 8. **[x] レベルアップSEの選定し直し** — `55c0c1d`
    - 効果音ラボの`levelup1.mp3`（テッテレー音）に差し替え完了
    - xp-gainも`item-get2.mp3`（お宝ザクザク音）に差し替え
 
-### インフラ関連（前セッションから継続）
+### インフラ関連
 
-9. **[ ] Vercel環境変数にリモートSupabaseキーを設定**
-10. **[ ] Google認証プロバイダ設定**
-11. **[ ] オンボーディング → 第0章 → ホームのE2Eフロー確認**
-12. **[ ] カスタムドメイン設定**
+9. **[x] Vercel環境変数にリモートSupabaseキーを設定** — 既に設定済み確認
+10. **[x] Google認証プロバイダ設定** — コード側対応済み、ダッシュボード設定手順書 `docs/GOOGLE_OAUTH_SETUP.md`
+11. **[x] オンボーディング → 第0章 → ホームのE2Eフロー確認** — `9f62db4`
+    - playwright.config.ts作成、3テスト全パス
+12. **[ ] カスタムドメイン設定** — ドメイン未購入、決定後に設定
+
+### 次セッションのタスク
+
+13. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
+14. **[ ] カスタムドメイン購入・設定**
+15. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
+16. **[ ] Framer Motion追加適用**（OnboardingWizardステップ遷移、BossVictoryパーティクル）
 
 ---
 
