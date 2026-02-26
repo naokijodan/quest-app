@@ -14,6 +14,7 @@
 | コミット | 内容 |
 |----------|------|
 | `f3287a1` | 残り5画面のRPG UI化（auth/onboarding/quest実行/history/setup） |
+| `55c0c1d` | スプライト個別切り出し + SE改善 + バグ修正 |
 
 #### 前セッション
 | コミット | 内容 |
@@ -42,7 +43,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `f3287a1` feat: 残り5画面のRPG UI化
+- **Latest commit:** `55c0c1d` feat: スプライト個別切り出し + SE改善 + バグ修正
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -139,18 +140,18 @@
 
 ### 品質改善
 
-6. **[ ] スプライトの個別切り出し**
-   - rpg-sprites.pngから個別キャラPNGに分離
-   - アバター選択画面（StepAvatar）で使用可能にする
-   - CSS object-positionのハードコードを個別ファイルに置換
+6. **[x] スプライトの個別切り出し** — `55c0c1d`
+   - rpg-sprites.pngから8個の個別PNG切り出し（sharp使用）
+   - StepAvatar/StepMascot/StepCompleteにnext/image組み込み
+   - imageRendering: 'pixelated'でドット感維持
 
 7. **[ ] Framer Motion導入**（オプション）
    - より滑らかな画面遷移、メニュー開閉アニメーション
    - 現在のCSS animationで十分なら不要
 
-8. **[ ] レベルアップSEの選定し直し**
-   - 現在のtrumpet1.mp3はラッパ音。RPGファンファーレに近い音を探す
-   - 効果音ラボの`levelup1.mp3`（テッテレー音）の方が良い可能性
+8. **[x] レベルアップSEの選定し直し** — `55c0c1d`
+   - 効果音ラボの`levelup1.mp3`（テッテレー音）に差し替え完了
+   - xp-gainも`item-get2.mp3`（お宝ザクザク音）に差し替え
 
 ### インフラ関連（前セッションから継続）
 
