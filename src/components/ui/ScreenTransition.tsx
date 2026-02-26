@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils/cn';
 
 type TransitionType = 'fade' | 'wipe-left' | 'wipe-down';
@@ -15,45 +16,36 @@ interface Props {
 export function ScreenTransition({ type = 'fade', duration = 300, children }: Props) {
   const pathname = usePathname();
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showContent, setShowContent] = useState(true);
+  const durationSec = duration / 1000;
 
   useEffect(() => {
     setIsTransitioning(true);
-    setShowContent(false);
-
-    const showTimer = setTimeout(() => {
-      setShowContent(true);
-    }, duration / 2);
-
-    const endTimer = setTimeout(() => {
-      setIsTransitioning(false);
-    }, duration);
-
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(endTimer);
-    };
+    const timer = setTimeout(() => setIsTransitioning(false), duration);
+    return () => clearTimeout(timer);
   }, [pathname, duration]);
 
   return (
     <>
-      {/* Transition overlay */}
-      {isTransitioning && (
-        <div
-          className={cn('rpg-transition-overlay', `rpg-transition-${type}`)}
-          style={{ animationDuration: `${duration}ms` }}
-        />
-      )}
-      {/* Content */}
-      <div
-        className={cn(
-          'transition-opacity',
-          showContent ? 'opacity-100' : 'opacity-0'
+      <AnimatePresence>
+        {isTransitioning && (
+          <motion.div
+            className={cn('rpg-transition-overlay', `rpg-transition-${type}`)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: durationSec / 2 }}
+            style={{ animationDuration: `${duration}ms` }}
+          />
         )}
-        style={{ transitionDuration: `${duration / 2}ms` }}
+      </AnimatePresence>
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: durationSec / 2, delay: durationSec / 4 }}
       >
         {children}
-      </div>
+      </motion.div>
     </>
   );
 }

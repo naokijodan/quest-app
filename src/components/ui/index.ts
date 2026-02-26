@@ -9,3 +9,4 @@ export { TypewriterText } from './TypewriterText';
 export { ScreenTransition } from './ScreenTransition';
 export { SoundToggle } from './SoundToggle';
 export { AudioUnlocker } from './AudioUnlocker';
+export { StaggerList, StaggerItem } from './StaggerList';

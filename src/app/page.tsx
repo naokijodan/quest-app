@@ -12,6 +12,7 @@ import { getPresetQuests, getUserProfile } from '@/features/quest/actions';
 import { calculateLevel, getUnlockedCategories } from '@/features/gamification/types';
 import { QuestCard } from '@/features/quest/components/QuestCard';
 import { GuildBoardNPC } from '@/features/quest/components/GuildBoardNPC';
+import { StaggerList, StaggerItem } from '@/components/ui/StaggerList';
 import type { QuestCategory } from '@/types';
 
 const CATEGORY_ORDER: QuestCategory[] = ['basic', 'business', 'life', 'creative', 'analysis'];
@@ -123,14 +124,16 @@ export default async function RootPage() {
                       </span>
                     </div>
 
-                    <div className="grid gap-2 sm:grid-cols-2 stagger-children">
+                    <StaggerList className="grid gap-2 sm:grid-cols-2">
                       {catQuests.length === 0 && (
                         <p className="text-xs text-blue-200/40 font-dot-gothic">依頼なし</p>
                       )}
                       {catQuests.map((q) => (
-                        <QuestCard key={q.id} quest={q} locked={isLocked} />
+                        <StaggerItem key={q.id}>
+                          <QuestCard quest={q} locked={isLocked} />
+                        </StaggerItem>
                       ))}
-                    </div>
+                    </StaggerList>
                   </div>
                 </section>
               );
