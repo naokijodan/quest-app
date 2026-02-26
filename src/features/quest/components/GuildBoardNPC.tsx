@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { TypewriterText } from '@/components/ui/TypewriterText';
 import { RPGWindow } from '@/components/ui/RPGWindow';
 
@@ -35,23 +36,39 @@ export function GuildBoardNPC({ username, level }: Props) {
   const message = getNPCMessage(level);
 
   return (
-    <div className="relative">
-      {/* NPC icon */}
-      <div className="absolute -left-1 -top-3 z-10 text-2xl" aria-hidden="true">
-        &#x1F9D9;
+    <div className="relative flex items-start gap-3">
+      {/* NPC sprite - old sage from sprite sheet */}
+      <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14">
+        <div className="absolute inset-0 overflow-hidden border-2 border-rpg-gold/40 bg-blue-900/50" style={{ imageRendering: 'pixelated' }}>
+          <Image
+            src="/sprites/rpg-sprites.png"
+            alt="ギルドマスター"
+            width={1024}
+            height={1024}
+            className="absolute"
+            style={{
+              imageRendering: 'pixelated',
+              width: '500%',
+              height: '500%',
+              objectFit: 'none',
+              objectPosition: '-5% -52%',
+              transform: 'scale(0.42)',
+              transformOrigin: 'top left',
+            }}
+            priority
+          />
+        </div>
+        {/* Breathing glow */}
+        <div className="absolute inset-0 border-2 border-rpg-gold/20 rpg-border-glow pointer-events-none" />
       </div>
 
-      <RPGWindow variant="message" className="ml-8">
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <span className="font-dot-gothic text-[10px] text-rpg-gold block mb-1">ギルドマスター</span>
-            <TypewriterText
-              text={message}
-              speed={35}
-              className="text-sm text-blue-100"
-            />
-          </div>
-        </div>
+      <RPGWindow variant="message" className="flex-1">
+        <span className="font-dot-gothic text-[10px] text-rpg-gold block mb-1">ギルドマスター</span>
+        <TypewriterText
+          text={message}
+          speed={35}
+          className="text-sm text-blue-100"
+        />
       </RPGWindow>
     </div>
   );

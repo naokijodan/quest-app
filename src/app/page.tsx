@@ -41,9 +41,21 @@ export default async function RootPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-background pb-16 sm:pb-0">
+    <div className="min-h-screen bg-background pb-16 sm:pb-0 relative">
+      {/* Guild hall background */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.07]"
+        style={{
+          backgroundImage: 'url(/sprites/guild-hall-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+        }}
+      />
+
       {/* RPG HUD Header */}
-      <header className="sticky top-0 z-40">
+      <header className="sticky top-0 z-40 relative">
         <div className="rpg-window !rounded-none" style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
           <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2 sm:px-5">
             <div className="flex items-center gap-4">
@@ -67,7 +79,7 @@ export default async function RootPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+      <main className="relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <div className="space-y-5">
           {/* NPC Message */}
           <GuildBoardNPC username={profile.username} level={level} />
