@@ -1,16 +1,21 @@
 # Quest App - HANDOVER
 
-**最終更新:** 2026-02-26
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **Phase 1-3完了、アセット組み込み済み**
+**最終更新:** 2026-02-27
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了**
 **現在のSprint:** Sprint 11 RPG UI本格リデザイン
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-26に3者協議の結論「ゲームっぽさは操作の文法で決まる」に基づき、UIを本格RPGスタイルにリデザイン。**
+**2026-02-27に残り5画面（auth/onboarding/quest実行/history/setup）を全てRPG UIに統一。**
 
 #### コミット履歴（今セッション）
+| コミット | 内容 |
+|----------|------|
+| `f3287a1` | 残り5画面のRPG UI化（auth/onboarding/quest実行/history/setup） |
+
+#### 前セッション
 | コミット | 内容 |
 |----------|------|
 | `e7ed34c` | Phase 1-2: デザインシステム基盤 + 各画面RPG化 |
@@ -37,7 +42,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `214af51` feat: ギルドホール背景画像 + NPCスプライト組み込み
+- **Latest commit:** `f3287a1` feat: 残り5画面のRPG UI化
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -88,6 +93,29 @@
 | `src/features/adventure/components/WorldMap.tsx` | ドットパスライン、RPGウインドウノード、セグメント進捗 |
 | `src/features/gamification/components/LevelUpModal.tsx` | フラッシュ→タイプライター→ステータス段階表示→カテゴリ解放の演出 |
 
+### RPG化追加変更ファイル（18件、2026-02-27）
+
+| ファイル | 変更内容 |
+|---------|----------|
+| `src/app/(auth)/layout.tsx` | ギルドホール背景追加 |
+| `src/app/(auth)/login/page.tsx` | Card→RPGWindow、DotGothic16、TypewriterText、効果音 |
+| `src/app/(auth)/register/page.tsx` | Card→RPGWindow、DotGothic16、TypewriterText、効果音 |
+| `src/app/onboarding/page.tsx` | ギルドホール背景追加 |
+| `src/features/onboarding/components/OnboardingWizard.tsx` | RPGセグメント進捗バー、RPGWindow |
+| `src/features/onboarding/components/StepName.tsx` | RPGWindow、TypewriterText |
+| `src/features/onboarding/components/StepAvatar.tsx` | RPG選択カード（ゴールドボーダー）、効果音 |
+| `src/features/onboarding/components/StepMascot.tsx` | RPG選択カード、効果音 |
+| `src/features/onboarding/components/StepComplete.tsx` | RPGWindow、完了SE、ステータス表示 |
+| `src/app/(main)/quest/[id]/page.tsx` | RPGWindow、難易度★表示、報酬表示 |
+| `src/features/quest/components/QuestInputForm.tsx` | RPGWindow、TypewriterText、RPG select |
+| `src/features/quest/components/QuestExecution.tsx` | RPGWindow、魔法詠唱演出 |
+| `src/features/quest/components/QuestResult.tsx` | RPGWindow、完了SE、RPGスタイル結果 |
+| `src/features/quest/components/AgentStatusBanner.tsx` | RPGWindow variant=status |
+| `src/app/(main)/history/page.tsx` | RPGWindowヘッダー |
+| `src/features/quest/components/HistoryList.tsx` | RPGWindowアイテム、効果音 |
+| `src/app/(main)/setup/page.tsx` | RPGWindowヘッダー |
+| `src/features/setup/components/CliSetupGuide.tsx` | RPGWindowステップカード、装備テーマ |
+
 ### 技術選定
 | 要素 | 選定 | 理由 |
 |------|------|------|
@@ -101,26 +129,13 @@
 
 ## 次のタスク（優先度順）
 
-### 即座にやるべき
+### 完了（2026-02-27）
 
-1. **[ ] Auth画面（login/register）のRPG化**
-   - 現在は旧スタイルのまま（ダークカード風）
-   - RPGウインドウ枠 + DotGothic16への統一が必要
-   - `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`
-
-2. **[ ] Onboarding画面のRPG化**
-   - ステップウィザードをRPGメニュー風に
-   - `src/features/onboarding/components/` 内の4ファイル
-
-3. **[ ] Quest実行画面（quest/[id]/page.tsx）のRPG化**
-   - QuestInputForm、QuestExecution、QuestResultをRPGウインドウに統一
-   - 実行中のタイプライター演出追加
-
-4. **[ ] history/page.tsx のRPG化**
-   - 冒険の記録一覧をRPGウインドウスタイルに
-
-5. **[ ] setup/page.tsx のRPG化**
-   - 装備ページをRPGメニュースタイルに
+1. **[x] Auth画面（login/register）のRPG化** — `f3287a1`
+2. **[x] Onboarding画面のRPG化** — `f3287a1`
+3. **[x] Quest実行画面（quest/[id]/page.tsx）のRPG化** — `f3287a1`
+4. **[x] history/page.tsx のRPG化** — `f3287a1`
+5. **[x] setup/page.tsx のRPG化** — `f3287a1`
 
 ### 品質改善
 
@@ -240,16 +255,16 @@ quest-app/
 │   └── icons/
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/login, register      — ★未RPG化（次セッションで対応）
+│   │   ├── (auth)/login, register      — RPG化済み（RPGWindow + TypewriterText）
 │   │   ├── (main)/
 │   │   │   ├── layout.tsx             — RPG HUD + ScreenTransition + SoundToggle
-│   │   │   ├── quest/[id]/page.tsx    — ★未RPG化
-│   │   │   ├── history/page.tsx       — ★未RPG化
-│   │   │   ├── setup/page.tsx         — ★未RPG化
+│   │   │   ├── quest/[id]/page.tsx    — RPG化済み（RPGWindow + 難易度★ + 報酬表示）
+│   │   │   ├── history/page.tsx       — RPG化済み（冒険の記録）
+│   │   │   ├── setup/page.tsx         — RPG化済み（装備ガイド）
 │   │   │   └── adventure/
 │   │   │       ├── page.tsx           — WorldMap（RPG化済み）
 │   │   │       └── [chapter]/[questId]/page.tsx
-│   │   ├── onboarding/page.tsx        — ★未RPG化
+│   │   ├── onboarding/page.tsx        — RPG化済み（セグメント進捗 + ギルドホール背景）
 │   │   ├── page.tsx                   — ギルド掲示板（RPG化済み）+ ギルドホール背景
 │   │   ├── globals.css                — RPGウインドウ/メニュー/タイプライター/HUD等
 │   │   └── layout.tsx                 — DotGothic16 + AudioUnlocker
