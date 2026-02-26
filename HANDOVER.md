@@ -1,18 +1,21 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-27
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + インフラ整備**
-**現在のSprint:** Sprint 12 インフラ・品質整備
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + クエスト実行フロー完全動作確認済み**
+**現在のSprint:** Sprint 13 クエスト実行バグ修正・品質整備
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-27にFramer Motion導入、E2Eテスト整備、Vercel環境変数確認、Google OAuth手順書作成。**
+**2026-02-27: クエスト実行結果が空表示になるバグを特定・修正。UserStore初期化バグも修正。E2Eテスト9件全パス。**
+
+**根本原因:** quest-agentがClaude Codeセッション内で起動された場合、`CLAUDECODE=1`環境変数が子プロセスに継承され、`claude --print`が「ネストセッション」エラーで失敗していた。stdoutが空のまま「完了」扱いになり、結果表示が空になっていた。
 
 #### コミット履歴（今セッション）
 | コミット | 内容 |
 |----------|------|
+| `86d1d66` | fix: クエスト実行結果が空表示になるバグを修正 + XP更新の安定化 |
 | `9f62db4` | Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書 |
 
 #### 前セッション
@@ -44,7 +47,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `9f62db4` feat: Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書
+- **Latest commit:** `86d1d66` fix: クエスト実行結果が空表示になるバグを修正 + XP更新の安定化
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -170,12 +173,28 @@
     - playwright.config.ts作成、3テスト全パス
 12. **[ ] カスタムドメイン設定** — ドメイン未購入、決定後に設定
 
+### バグ修正（2026-02-27）
+
+13. **[x] クエスト実行結果の空表示バグ修正** — `86d1d66`
+    - executor.ts: CLAUDECODE環境変数を子プロセスから除去
+    - useQuestExecution: complete eventのoutputをフォールバック追加
+    - QuestInputForm: useMemo→useEffect修正（React副作用ルール違反）
+14. **[x] XP更新が反映されないバグ修正** — `86d1d66`
+    - UserStoreInitializer作成、(main)/layout.tsxとpage.tsxに配置
+    - Zustandストアがnullのまま → updateXP()が無視される問題を解決
+15. **[x] E2Eテスト整備** — `86d1d66`
+    - quest-execution.spec.ts（実行フロー完全テスト）追加
+    - animation-check.spec.ts（RPGアニメーション4テスト）追加
+    - 旧quest-flow.spec.ts削除（UIテキスト不一致で失敗、新テストでカバー済み）
+    - **9テスト全パス**
+
 ### 次セッションのタスク
 
-13. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
-14. **[ ] カスタムドメイン購入・設定**
-15. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
-16. **[ ] Framer Motion追加適用**（OnboardingWizardステップ遷移、BossVictoryパーティクル）
+16. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
+17. **[ ] カスタムドメイン購入・設定**
+18. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
+19. **[ ] Framer Motion追加適用**（OnboardingWizardステップ遷移、BossVictoryパーティクル）
+20. **[ ] quest-agent起動スクリプト整備**（`env -u CLAUDECODE`で起動するnpmスクリプト）
 
 ---
 
@@ -329,10 +348,10 @@ quest-app/
 |------|------|------|
 | middleware.ts非推奨 | ビルド警告のみ | proxy移行検討 |
 | manifest.webmanifest Syntax Error | コンソール警告のみ | serwist既知問題 |
-| Vercel環境変数未設定 | 本番がリモートDB未接続の可能性 | Vercelダッシュボードで設定 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| auth画面が旧スタイル | UI不統一 | 次セッションで対応 |
 | NPCスプライト切り出しがCSS依存 | 保守性低い | 個別PNG分離を推奨 |
+| quest-agent起動時のCLAUDECODE継承 | claude --printが失敗する | executor.tsで除去済み。起動時も`env -u CLAUDECODE`推奨 |
+| レート制限未実装 | Upstash env空、実行制限なし | Phase 2で対応 |
 
 ---
 
