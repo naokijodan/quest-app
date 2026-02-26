@@ -15,6 +15,7 @@
 #### コミット履歴（今セッション）
 | コミット | 内容 |
 |----------|------|
+| `82a8696` | feat: Framer Motion追加適用 + exit_codeチェック + コード整理 |
 | `86d1d66` | fix: クエスト実行結果が空表示になるバグを修正 + XP更新の安定化 |
 | `9f62db4` | Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書 |
 
@@ -47,7 +48,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `86d1d66` fix: クエスト実行結果が空表示になるバグを修正 + XP更新の安定化
+- **Latest commit:** `82a8696` feat: Framer Motion追加適用 + exit_codeチェック + コード整理
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -188,13 +189,24 @@
     - 旧quest-flow.spec.ts削除（UIテキスト不一致で失敗、新テストでカバー済み）
     - **9テスト全パス**
 
+### コード品質改善（2026-02-27）
+
+16. **[x] Framer Motion追加適用** — `82a8696`
+    - OnboardingWizard: AnimatePresenceでステップ遷移スライドアニメーション
+    - QuestInputForm: AnimatePresenceでフェーズ遷移フェード+スライド
+17. **[x] exit_codeチェック追加** — `82a8696`
+    - CLI非正常終了（exit_code != 0 + 空output）をエラー扱い
+18. **[x] quest-agent起動スクリプト整備** — `82a8696`
+    - npm scripts: `npm run agent` / `npm run agent:dev` / `npm run agent:build`
+19. **[x] 未使用コンポーネント削除** — `82a8696`
+    - XpProgressBar, XpProgressBarClient, LevelBadgeClient
+
 ### 次セッションのタスク
 
-16. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
-17. **[ ] カスタムドメイン購入・設定**
-18. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
-19. **[ ] Framer Motion追加適用**（OnboardingWizardステップ遷移、BossVictoryパーティクル）
-20. **[ ] quest-agent起動スクリプト整備**（`env -u CLAUDECODE`で起動するnpmスクリプト）
+20. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
+21. **[ ] カスタムドメイン購入・設定**
+22. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
+23. **[ ] BossVictoryパーティクルアニメーション（Framer Motion）**
 
 ---
 
