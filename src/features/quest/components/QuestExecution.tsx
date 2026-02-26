@@ -2,18 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
 import { useQuestStore } from '@/stores/questStore';
-import { Loader2 } from 'lucide-react';
 
 interface Props {
   onCancel: () => void;
 }
 
 const MASCOT_MESSAGES = [
-  'マスコットが応援中',
-  'AIが考え中',
-  'もうすぐ完成',
-  'がんばれ～',
+  'マスコットが応援中…',
+  'AIが魔法を詠唱中…',
+  'もうすぐ完成するぞ…',
+  'がんばれ～！',
 ];
 
 export function QuestExecution({ onCancel }: Props) {
@@ -43,41 +44,46 @@ export function QuestExecution({ onCancel }: Props) {
 
   return (
     <div className="page-enter space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between font-dot-gothic">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-quest-primary" />
-          <h3 className="text-sm font-semibold text-foreground">実行中…</h3>
+          <span className="inline-block h-3 w-3 animate-pulse rounded-full bg-rpg-gold" />
+          <h3 className="text-sm font-bold text-rpg-gold">クエスト実行中…</h3>
         </div>
-        <Button variant="ghost" size="sm" onClick={onCancel} className="text-quest-danger">
+        <Button variant="ghost" size="sm" onClick={onCancel} className="font-dot-gothic text-red-300">
           キャンセル
         </Button>
       </div>
 
-      <div className="relative overflow-hidden rounded-lg border border-quest-primary/20 bg-card-bg">
-        <div className="border-b border-card-border bg-muted-bg/50 px-4 py-2">
-          <span className="text-sm text-quest-primary font-medium">
-            {MASCOT_MESSAGES[msgIdx]}{dots}
-          </span>
+      <RPGWindow variant="message">
+        <div className="border-b border-blue-200/10 pb-2 mb-2">
+          <TypewriterText
+            text={MASCOT_MESSAGES[msgIdx]}
+            speed={40}
+            className="text-sm text-blue-200/70"
+            showCursor={false}
+            key={msgIdx}
+          />
         </div>
-        <div className="max-h-80 overflow-auto p-4" ref={scrollRef}>
+        <div className="max-h-80 overflow-auto" ref={scrollRef}>
           {progress.map((m, i) => (
-            <div key={i} className="mb-3">
-              <div className="inline-block rounded-2xl bg-quest-info/10 px-3 py-1.5 text-xs text-quest-info">
-                {m}
-              </div>
+            <div key={i} className="mb-2">
+              <span className="font-dot-gothic text-xs text-rpg-gold">
+                &#x25B6; {m}
+              </span>
             </div>
           ))}
 
-          <pre className="whitespace-pre-wrap text-sm text-foreground">{streamed || ''}</pre>
+          <pre className="whitespace-pre-wrap font-dot-gothic text-sm text-blue-100">{streamed || ''}</pre>
           {!streamed && (
-            <div className="flex items-center gap-2 py-4">
-              <div className="h-2 w-2 rounded-full bg-quest-primary/60 animate-pulse" />
-              <div className="h-2 w-2 rounded-full bg-quest-primary/40 animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <div className="h-2 w-2 rounded-full bg-quest-primary/20 animate-pulse" style={{ animationDelay: '0.4s' }} />
+            <div className="flex items-center gap-2 py-4 font-dot-gothic text-xs text-blue-200/40">
+              <span className="animate-pulse">&#x25CF;</span>
+              <span className="animate-pulse" style={{ animationDelay: '0.2s' }}>&#x25CF;</span>
+              <span className="animate-pulse" style={{ animationDelay: '0.4s' }}>&#x25CF;</span>
+              <span className="ml-1">詠唱中{dots}</span>
             </div>
           )}
         </div>
-      </div>
+      </RPGWindow>
     </div>
   );
 }

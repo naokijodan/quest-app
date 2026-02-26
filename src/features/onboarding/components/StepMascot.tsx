@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 import type { MascotType } from '@/types';
 
 interface StepMascotProps {
@@ -14,12 +17,17 @@ interface StepMascotProps {
 }
 
 const MASCOTS: { key: MascotType; title: string; desc: string; emoji: string }[] = [
-  { key: 'cat', title: 'ネコ', desc: '気まぐれだけど賢い', emoji: '🐱' },
-  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', emoji: '🐶' },
+  { key: 'cat', title: 'ネコ', desc: '気まぐれだけど賢い', emoji: '\u{1F431}' },
+  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', emoji: '\u{1F436}' },
 ];
 
 export function StepMascot({ selected, onSelect, onBack, onComplete, loading, error }: StepMascotProps) {
   const [localError, setLocalError] = useState<string | null>(null);
+
+  function handleSelect(key: MascotType) {
+    playSound('cursor');
+    onSelect(key);
+  }
 
   async function handleComplete() {
     setLocalError(null);
@@ -27,16 +35,29 @@ export function StepMascot({ selected, onSelect, onBack, onComplete, loading, er
       setLocalError('相棒を選択してください。');
       return;
     }
+    playSound('confirm');
     await onComplete();
+  }
+
+  function handleBack() {
+    playSound('cancel');
+    onBack();
   }
 
   return (
     <div className="w-full">
-      <Card className="mb-4 bg-card-bg">
-        <CardHeader className="mb-4">
-          <CardTitle>相棒を選ぼう！</CardTitle>
-          <CardDescription>一緒に冒険する仲間を選んでください。</CardDescription>
-        </CardHeader>
+      <RPGWindow className="mb-4">
+        <div className="mb-4">
+          <h2 className="font-dot-gothic text-base font-bold text-rpg-gold">
+            相棒を選ぼう！
+          </h2>
+          <TypewriterText
+            text="一緒に冒険する仲間を選んでください。"
+            speed={30}
+            className="mt-1 text-xs text-blue-200/60"
+            showCursor={false}
+          />
+        </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {MASCOTS.map((m) => {
@@ -45,38 +66,42 @@ export function StepMascot({ selected, onSelect, onBack, onComplete, loading, er
               <button
                 key={m.key}
                 type="button"
-                onClick={() => onSelect(m.key)}
+                onClick={() => handleSelect(m.key)}
                 className={
-                  'rounded-xl border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 ' +
+                  'rounded-lg border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 ' +
                   (active
-                    ? 'border-quest-primary ring-quest-primary/50'
-                    : 'border-card-border hover:border-quest-primary/60')
+                    ? 'border-rpg-gold bg-rpg-gold/10 shadow-[0_0_12px_rgba(255,215,0,0.2)]'
+                    : 'border-blue-200/20 hover:border-rpg-gold/50 bg-blue-900/20')
                 }
               >
-                <div className="mb-2 text-3xl">{m.emoji}</div>
-                <div className="font-semibold text-foreground">{m.title}</div>
-                <div className="text-sm text-muted">{m.desc}</div>
+                <div className="mb-2 text-4xl">{m.emoji}</div>
+                <div className="font-dot-gothic font-bold text-white">{m.title}</div>
+                <div className="font-dot-gothic text-xs text-blue-200/60">{m.desc}</div>
+                {active && (
+                  <span className="mt-2 inline-block font-dot-gothic text-[10px] text-rpg-gold">
+                    &#x25B6; 選択中
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
         {(error || localError) && (
-          <div className="mt-4 rounded-lg border border-quest-danger/30 bg-quest-danger/10 px-3 py-2 text-sm text-quest-danger">
+          <div className="rpg-window mt-4 !p-2 text-sm text-red-300 font-dot-gothic">
             {error || localError}
           </div>
         )}
 
         <div className="mt-6 flex justify-between">
-          <Button variant="secondary" onClick={onBack} disabled={!!loading}>
-            戻る
+          <Button variant="secondary" onClick={handleBack} disabled={!!loading} className="font-dot-gothic">
+            &#x25C0; 戻る
           </Button>
-          <Button onClick={handleComplete} loading={loading} disabled={!selected} aria-disabled={!selected}>
-            完了
+          <Button onClick={handleComplete} loading={loading} disabled={!selected} aria-disabled={!selected} className="font-dot-gothic">
+            &#x25B6; 完了
           </Button>
         </div>
-      </Card>
+      </RPGWindow>
     </div>
   );
 }
-

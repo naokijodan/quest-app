@@ -3,10 +3,12 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Mail, KeyRound, Sparkles } from 'lucide-react';
+import { Mail, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 import {
   signInWithEmail,
   signInWithMagicLink,
@@ -65,6 +67,7 @@ function LoginForm() {
   async function handleGoogleLogin() {
     setLoading(true);
     setError(null);
+    playSound('confirm');
     const result = await signInWithGoogle();
     if (result?.error) {
       setError(result.error);
@@ -73,23 +76,26 @@ function LoginForm() {
   }
 
   return (
-    <Card padding="lg">
-      <div className="mb-6 text-center">
-        <div className="mb-3 flex items-center justify-center gap-2 text-quest-primary">
-          <Sparkles className="h-7 w-7" />
-          <h1 className="text-2xl font-bold">Quest App</h1>
-        </div>
-        <p className="text-sm text-muted">冒険を始めよう</p>
+    <RPGWindow>
+      <div className="mb-6 text-center font-dot-gothic">
+        <span className="mb-2 block text-3xl">&#x2694;&#xFE0F;</span>
+        <h1 className="text-xl font-bold tracking-wider text-rpg-gold">Quest App</h1>
+        <TypewriterText
+          text="冒険の書を開く"
+          speed={50}
+          className="mt-1 text-sm text-blue-200/70"
+          showCursor={false}
+        />
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-quest-danger/30 bg-quest-danger/10 px-3 py-2 text-sm text-quest-danger">
+        <div className="rpg-window mb-4 !p-2 text-sm text-red-300">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-4 rounded-lg border border-quest-success/30 bg-quest-success/10 px-3 py-2 text-sm text-quest-success">
+        <div className="rpg-window mb-4 !p-2 text-sm text-green-300">
           {success}
         </div>
       )}
@@ -98,7 +104,7 @@ function LoginForm() {
         <Button
           variant="secondary"
           size="lg"
-          className="w-full"
+          className="w-full font-dot-gothic"
           onClick={handleGoogleLogin}
           disabled={loading}
           icon={<GoogleIcon />}
@@ -108,10 +114,10 @@ function LoginForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-card-border" />
+            <div className="w-full border-t border-blue-200/20" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-card-bg px-3 text-xs text-muted">
+            <span className="bg-[var(--rpg-window-bg-from,#1a1a3e)] px-3 font-dot-gothic text-xs text-blue-200/50">
               または
             </span>
           </div>
@@ -130,7 +136,7 @@ function LoginForm() {
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="w-full font-dot-gothic"
               loading={loading}
               icon={<Mail className="h-4 w-4" />}
             >
@@ -158,7 +164,7 @@ function LoginForm() {
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="w-full font-dot-gothic"
               loading={loading}
               icon={<KeyRound className="h-4 w-4" />}
             >
@@ -170,28 +176,29 @@ function LoginForm() {
         <button
           type="button"
           onClick={() => {
+            playSound('cursor');
             setMode(mode === 'magic-link' ? 'password' : 'magic-link');
             setError(null);
             setSuccess(null);
           }}
-          className="w-full text-center text-xs text-muted hover:text-foreground transition-colors"
+          className="w-full text-center font-dot-gothic text-xs text-blue-200/50 hover:text-white transition-colors"
         >
           {mode === 'magic-link'
-            ? 'パスワードでログイン'
-            : 'マジックリンクでログイン'}
+            ? '&#x25B6; パスワードでログイン'
+            : '&#x25B6; マジックリンクでログイン'}
         </button>
       </div>
 
-      <div className="mt-6 text-center text-sm text-muted">
+      <div className="mt-6 text-center font-dot-gothic text-sm text-blue-200/50">
         アカウントがない方は{' '}
         <Link
           href="/register"
-          className="font-medium text-quest-primary hover:text-quest-primary-hover transition-colors"
+          className="font-bold text-rpg-gold hover:text-white transition-colors"
         >
           新規登録
         </Link>
       </div>
-    </Card>
+    </RPGWindow>
   );
 }
 

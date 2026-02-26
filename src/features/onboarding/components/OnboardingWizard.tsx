@@ -7,6 +7,7 @@ import { StepAvatar } from './StepAvatar';
 import { StepMascot } from './StepMascot';
 import { StepComplete } from './StepComplete';
 import { completeOnboarding } from '@/features/onboarding/actions';
+import { RPGWindow } from '@/components/ui/RPGWindow';
 
 type FormState = {
   username: string;
@@ -21,7 +22,6 @@ export function OnboardingWizard() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const stepForProgress = useMemo(() => (currentStep > 3 ? 3 : currentStep), [currentStep]);
-  const progressPct = useMemo(() => (stepForProgress / 3) * 100, [stepForProgress]);
 
   function next() {
     setCurrentStep((s) => (s < 4 ? ((s + 1) as typeof s) : s));
@@ -54,23 +54,26 @@ export function OnboardingWizard() {
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      {/* Progress */}
-      <div className="mb-4">
-        <div className="mb-1 flex items-center justify-between text-xs text-muted">
-          <span>
-            ステップ {stepForProgress}/3
-          </span>
-          <span>{Math.round(progressPct)}%</span>
+      {/* RPG Progress Bar */}
+      <RPGWindow variant="status" className="mb-4">
+        <div className="flex items-center justify-between font-dot-gothic text-xs text-blue-200/70">
+          <span>冒険者登録 ステップ {stepForProgress}/3</span>
+          <div className="flex gap-1.5">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`h-2.5 w-8 rounded-sm border ${
+                  s <= stepForProgress
+                    ? 'border-rpg-gold/60 bg-rpg-gold/80'
+                    : 'border-blue-200/20 bg-blue-900/30'
+                } transition-all duration-300`}
+              />
+            ))}
+          </div>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full border border-card-border bg-muted-bg">
-          <div
-            className="h-full bg-quest-primary transition-all duration-300"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-      </div>
+      </RPGWindow>
 
-      {/* Steps container with basic transition context */}
+      {/* Steps container */}
       <div className="relative">
         {currentStep === 1 && (
           <div className="transition-all duration-300">

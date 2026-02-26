@@ -1,8 +1,10 @@
 'use client';
 
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
-import { Terminal, CheckCircle, Circle, Download, ArrowRight, RefreshCw } from 'lucide-react';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
+import { Terminal, CheckCircle, Circle, ArrowRight, RefreshCw } from 'lucide-react';
 import { useAgentConnection } from '@/features/quest/hooks/useAgentConnection';
 import { useCliDetection } from '@/features/setup/hooks/useCliDetection';
 
@@ -17,6 +19,7 @@ export function CliSetupGuide() {
   );
 
   const handleRecheck = async () => {
+    playSound('cursor');
     await refreshHealth();
     if (status !== 'connected') {
       connect();
@@ -24,88 +27,88 @@ export function CliSetupGuide() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Step 1 */}
-      <Card>
-        <CardHeader className="flex items-start justify-between">
-          <div>
-            <CardTitle>Step 1: CLIツールのインストール</CardTitle>
-            <CardDescription>
-              少なくとも1つのCLIツールをインストールしてください。
-            </CardDescription>
+      <RPGWindow>
+        <div className="flex items-start justify-between mb-4">
+          <div className="font-dot-gothic">
+            <h2 className="text-sm font-bold text-rpg-gold">Step 1: CLIツールのインストール</h2>
+            <TypewriterText
+              text="少なくとも1つのCLIツールを装備してください。"
+              speed={25}
+              className="mt-1 text-xs text-blue-200/50"
+              showCursor={false}
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={checking}
-              onClick={handleRecheck}
-              icon={<RefreshCw className="h-4 w-4" />}
-            >
-              再チェック
-            </Button>
-          </div>
-        </CardHeader>
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={checking}
+            onClick={handleRecheck}
+            icon={<RefreshCw className="h-4 w-4" />}
+            className="font-dot-gothic shrink-0"
+          >
+            再チェック
+          </Button>
+        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {cliList.map((cli) => (
-            <div key={cli.command} className="rounded-lg border border-card-border bg-card-bg p-4">
+            <div key={cli.command} className={`rounded-lg border-2 p-4 transition-all ${cli.available ? 'border-green-400/30 bg-green-900/10' : 'border-blue-200/10 bg-blue-900/20'}`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 font-dot-gothic">
                   {cli.available ? (
-                    <CheckCircle className="h-4 w-4 text-quest-success" />
+                    <CheckCircle className="h-4 w-4 text-green-400" />
                   ) : (
-                    <Circle className="h-4 w-4 text-muted" />
+                    <Circle className="h-4 w-4 text-blue-200/30" />
                   )}
-                  <span className="font-medium text-foreground">{cli.name}</span>
+                  <span className="font-bold text-white text-sm">{cli.name}</span>
                 </div>
-                <span className={cli.available ? 'text-xs text-quest-success' : 'text-xs text-muted'}>
-                  {cli.available ? 'インストール済み' : '未インストール'}
+                <span className={`font-dot-gothic text-[10px] ${cli.available ? 'text-green-300' : 'text-blue-200/40'}`}>
+                  {cli.available ? '装備済み' : '未装備'}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-muted">{cli.description}</p>
+              <p className="mt-2 font-dot-gothic text-xs text-blue-200/40">{cli.description}</p>
               <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted">
-                  <Terminal className="h-4 w-4" />
-                  <span>インストールコマンド</span>
+                <div className="flex items-center gap-2 font-dot-gothic text-xs text-blue-200/50">
+                  <Terminal className="h-3 w-3" />
+                  <span>コマンド</span>
                 </div>
-                <code className="block rounded bg-card-bg px-3 py-2 font-mono text-sm text-foreground border border-card-border">
+                <code className="block rounded border border-blue-200/10 bg-blue-900/30 px-2 py-1.5 font-mono text-xs text-blue-100">
                   {cli.installCommand}
                 </code>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="mt-1"
-                    icon={<Download className="h-4 w-4" />}
-                    onClick={() => {
-                      navigator?.clipboard?.writeText(cli.installCommand).catch(() => {});
-                    }}
-                  >
-                    コマンドをコピー
-                  </Button>
-                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="mt-1 font-dot-gothic"
+                  onClick={() => {
+                    playSound('confirm');
+                    navigator?.clipboard?.writeText(cli.installCommand).catch(() => {});
+                  }}
+                >
+                  コピー
+                </Button>
               </div>
             </div>
           ))}
         </div>
         {!hasAnyCli && (
-          <p className="mt-3 text-xs text-muted">
-            いずれかのCLIをインストールすると自動的に検出されます（再チェックを押してください）。
+          <p className="mt-3 font-dot-gothic text-xs text-blue-200/30">
+            いずれかのCLIを装備すると自動的に検出されます。
           </p>
         )}
-      </Card>
+      </RPGWindow>
 
       {/* Step 2 */}
-      <Card>
-        <CardHeader className="flex items-start justify-between">
-          <div>
-            <CardTitle>Step 2: Quest Agentの起動</CardTitle>
-            <CardDescription>ターミナルでAgentを起動し、接続状態を確認します。</CardDescription>
+      <RPGWindow>
+        <div className="flex items-start justify-between mb-4">
+          <div className="font-dot-gothic">
+            <h2 className="text-sm font-bold text-rpg-gold">Step 2: Quest Agentの起動</h2>
+            <p className="mt-1 text-xs text-blue-200/50">ターミナルでAgentを起動し、接続状態を確認します。</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={isConnected ? 'text-xs text-quest-success' : status === 'error' ? 'text-xs text-quest-danger' : 'text-xs text-muted'}>
-              {isConnected ? '接続済み' : `ステータス: ${statusLabel}`}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`font-dot-gothic text-[10px] ${isConnected ? 'text-green-300' : status === 'error' ? 'text-red-300' : 'text-blue-200/40'}`}>
+              {isConnected ? '接続済み' : `${statusLabel}`}
               {isConnected && agentVersion ? ` (v${agentVersion})` : ''}
             </span>
             <Button
@@ -114,63 +117,65 @@ export function CliSetupGuide() {
               loading={checking}
               onClick={handleRecheck}
               icon={<RefreshCw className="h-4 w-4" />}
+              className="font-dot-gothic"
             >
               再チェック
             </Button>
           </div>
-        </CardHeader>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Terminal className="h-4 w-4" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 font-dot-gothic text-xs text-blue-200/50">
+            <Terminal className="h-3 w-3" />
             <span>起動コマンド</span>
           </div>
-          <code className="block rounded bg-card-bg px-3 py-2 font-mono text-sm text-foreground border border-card-border">
+          <code className="block rounded border border-blue-200/10 bg-blue-900/30 px-3 py-2 font-mono text-sm text-blue-100">
             cd packages/quest-agent && npm run dev
           </code>
-          <p className="text-xs text-muted">Agentが起動すると自動的に接続されます。</p>
+          <p className="font-dot-gothic text-xs text-blue-200/30">Agentが起動すると自動的に接続されます。</p>
         </div>
-      </Card>
+      </RPGWindow>
 
       {/* Step 3 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Step 3: 準備完了！</CardTitle>
-          <CardDescription>Agent接続とCLI準備が整えばスタートできます。</CardDescription>
-        </CardHeader>
-        <div className="flex items-center justify-between rounded-lg border border-card-border bg-card-bg p-4">
-          <div className="flex items-center gap-3">
+      <RPGWindow>
+        <div className="font-dot-gothic mb-4">
+          <h2 className="text-sm font-bold text-rpg-gold">Step 3: 準備完了！</h2>
+          <p className="mt-1 text-xs text-blue-200/50">Agent接続とCLI装備が整えば冒険開始。</p>
+        </div>
+        <div className="flex items-center justify-between rounded-lg border-2 p-4 transition-all ${isConnected && hasAnyCli ? 'border-green-400/30 bg-green-900/10' : 'border-blue-200/10 bg-blue-900/20'}">
+          <div className="flex items-center gap-3 font-dot-gothic">
             {isConnected && hasAnyCli ? (
-              <CheckCircle className="h-5 w-5 text-quest-success" />
+              <CheckCircle className="h-5 w-5 text-green-400" />
             ) : (
-              <Circle className="h-5 w-5 text-muted" />
+              <Circle className="h-5 w-5 text-blue-200/30" />
             )}
             <div>
-              <div className={isConnected && hasAnyCli ? 'font-medium text-quest-success' : 'font-medium text-foreground'}>
-                {isConnected && hasAnyCli ? '準備OK！クエストを開始できます。' : 'まだ準備中です。' }
+              <div className={`text-sm font-bold ${isConnected && hasAnyCli ? 'text-green-300' : 'text-white'}`}>
+                {isConnected && hasAnyCli ? '準備OK！冒険を開始できます。' : 'まだ準備中…'}
               </div>
               {!isConnected && (
-                <p className="text-xs text-muted">Quest Agentが未接続です。Step 2を確認してください。</p>
+                <p className="text-xs text-blue-200/30">Quest Agentが未接続です。Step 2を確認してください。</p>
               )}
               {!hasAnyCli && (
-                <p className="text-xs text-muted">CLIツールが検出されません。Step 1で少なくとも1つをインストールしてください。</p>
+                <p className="text-xs text-blue-200/30">CLIツールが検出されません。Step 1で装備してください。</p>
               )}
             </div>
           </div>
           <Button
             variant="primary"
             size="md"
-            className="shrink-0"
+            className="shrink-0 font-dot-gothic"
             disabled={!(isConnected && hasAnyCli)}
             icon={<ArrowRight className="h-4 w-4" />}
             onClick={() => {
               if (!(isConnected && hasAnyCli)) return;
+              playSound('confirm');
               window.location.href = '/';
             }}
           >
-            ホームへ
+            &#x25B6; ギルドへ
           </Button>
         </div>
-      </Card>
+      </RPGWindow>
     </div>
   );
 }

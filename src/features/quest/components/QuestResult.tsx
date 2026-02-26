@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, Home, Sparkles, ArrowLeft } from 'lucide-react';
+import { Copy, Home, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 import { useQuestStore } from '@/stores/questStore';
 import { useUIStore } from '@/stores/uiStore';
 import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';
@@ -23,6 +26,7 @@ export function QuestResult({ questRunId, xpGained, levelUp, newLevel = 2, onRet
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    playSound('questComplete');
     if (levelUp) setLevelUpModal(true);
   }, [levelUp, setLevelUpModal]);
 
@@ -30,39 +34,46 @@ export function QuestResult({ questRunId, xpGained, levelUp, newLevel = 2, onRet
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
+      playSound('confirm');
       setTimeout(() => setCopied(false), 1500);
     } catch {}
   }, [content]);
 
   return (
     <div className="page-enter space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-foreground">
-          <ArrowLeft className="h-4 w-4 text-muted" />
-          <span className="text-sm">結果</span>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 font-dot-gothic">
+        <TypewriterText
+          text="クエスト完了！"
+          speed={60}
+          className="text-sm font-bold text-rpg-gold"
+          showCursor={false}
+        />
         <div className="flex items-center gap-2">
-          <span className="rounded-md bg-quest-success/10 px-2.5 py-1 text-xs font-bold text-quest-success glow-success">
+          <span className="rounded border border-green-400/30 bg-green-900/30 px-2.5 py-1 text-xs font-bold text-green-300 glow-success">
             +{xpGained} XP
           </span>
-          <Button variant="secondary" size="sm" onClick={handleCopy} icon={<Copy className="h-4 w-4" />}>
-            {copied ? 'コピー済み' : '結果をコピー'}
+          <Button variant="secondary" size="sm" onClick={handleCopy} icon={<Copy className="h-4 w-4" />} className="font-dot-gothic">
+            {copied ? 'コピー済み' : 'コピー'}
           </Button>
         </div>
       </div>
 
-      <div className="rounded-lg border border-card-border bg-card-bg p-5">
-        <div className="result-output whitespace-pre-wrap text-sm text-foreground">
+      <RPGWindow variant="message">
+        <div className="result-output whitespace-pre-wrap font-dot-gothic text-sm text-blue-100">
           {content}
         </div>
-      </div>
+      </RPGWindow>
 
       <div className="flex flex-wrap items-center gap-3">
         {onRetry && (
-          <Button onClick={onRetry} icon={<Sparkles className="h-4 w-4" />}>もう一度実行</Button>
+          <Button onClick={() => { playSound('confirm'); onRetry(); }} icon={<Sparkles className="h-4 w-4" />} className="font-dot-gothic">
+            &#x25B6; もう一度実行
+          </Button>
         )}
         <Link href="/">
-          <Button variant="ghost" icon={<Home className="h-4 w-4" />}>ホームに戻る</Button>
+          <Button variant="ghost" icon={<Home className="h-4 w-4" />} className="font-dot-gothic">
+            ギルドに戻る
+          </Button>
         </Link>
       </div>
 

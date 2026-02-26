@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button, Card, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 import type { AvatarType, MascotType } from '@/types';
 import { useRouter } from 'next/navigation';
 
@@ -16,35 +19,60 @@ export function StepComplete({ username, avatar_type, mascot_type }: StepComplet
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    playSound('questComplete');
     const t = setTimeout(() => setMounted(true), 20);
     return () => clearTimeout(t);
   }, []);
 
+  function handleStart() {
+    playSound('confirm');
+    router.push('/adventure/0/ch0-weapon-check');
+  }
+
   return (
     <div className="w-full">
-      <Card
+      <RPGWindow
         className={
-          'mx-auto max-w-xl bg-card-bg text-center transition-all duration-500 ' +
+          'mx-auto max-w-xl text-center transition-all duration-500 ' +
           (mounted ? 'scale-100 opacity-100' : 'scale-95 opacity-0')
         }
-        padding="lg"
       >
-        <CardHeader className="mb-4">
-          <CardTitle>プロフィール作成完了！</CardTitle>
-          <CardDescription>次は旅の準備（第0章）へ進みましょう。</CardDescription>
-        </CardHeader>
-
-        <div className="mx-auto my-4 w-full max-w-md rounded-lg border border-card-border bg-card-bg p-4 text-left">
-          <div className="mb-2 text-sm text-muted">名前</div>
-          <div className="mb-3 text-foreground">{username}</div>
-          <div className="mb-2 text-sm text-muted">アバター</div>
-          <div className="mb-3 text-foreground">{mapAvatarLabel(avatar_type)}</div>
-          <div className="mb-2 text-sm text-muted">マスコット</div>
-          <div className="text-foreground">{mapMascotLabel(mascot_type)}</div>
+        <div className="mb-4">
+          <span className="mb-2 block text-4xl">&#x2728;</span>
+          <h2 className="font-dot-gothic text-base font-bold text-rpg-gold">
+            プロフィール作成完了！
+          </h2>
+          <TypewriterText
+            text="次は旅の準備（第0章）へ進みましょう。"
+            speed={35}
+            className="mt-1 text-xs text-blue-200/60"
+            showCursor={false}
+          />
         </div>
 
-        <Button size="lg" onClick={() => router.push('/adventure/0/ch0-weapon-check')}>旅の準備を始める</Button>
-      </Card>
+        <RPGWindow variant="status" className="mx-auto my-4 w-full max-w-md text-left">
+          <div className="space-y-2 font-dot-gothic text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-blue-200/50">名前</span>
+              <span className="text-white">{username}</span>
+            </div>
+            <div className="h-px bg-blue-200/10" />
+            <div className="flex items-center justify-between">
+              <span className="text-blue-200/50">アバター</span>
+              <span className="text-white">{mapAvatarLabel(avatar_type)}</span>
+            </div>
+            <div className="h-px bg-blue-200/10" />
+            <div className="flex items-center justify-between">
+              <span className="text-blue-200/50">マスコット</span>
+              <span className="text-white">{mapMascotLabel(mascot_type)}</span>
+            </div>
+          </div>
+        </RPGWindow>
+
+        <Button size="lg" onClick={handleStart} className="font-dot-gothic tracking-wider">
+          &#x25B6; 旅の準備を始める
+        </Button>
+      </RPGWindow>
     </div>
   );
 }
@@ -52,20 +80,19 @@ export function StepComplete({ username, avatar_type, mascot_type }: StepComplet
 function mapAvatarLabel(a: AvatarType) {
   switch (a) {
     case 'planner':
-      return 'プランナー 🧙‍♂️';
+      return '\u{1F9D9}\u200D\u2642\uFE0F プランナー';
     case 'explorer':
-      return 'エクスプローラー ⚔️';
+      return '\u2694\uFE0F エクスプローラー';
     case 'crafter':
-      return 'クラフター 🛠️';
+      return '\u{1F6E0}\uFE0F クラフター';
   }
 }
 
 function mapMascotLabel(m: MascotType) {
   switch (m) {
     case 'cat':
-      return 'ネコ 🐱';
+      return '\u{1F431} ネコ';
     case 'dog':
-      return 'イヌ 🐶';
+      return '\u{1F436} イヌ';
   }
 }
-

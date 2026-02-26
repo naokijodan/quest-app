@@ -27,8 +27,21 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-4 sm:p-6">
-      <OnboardingWizard />
+    <div className="relative min-h-screen bg-background">
+      {/* Guild hall background */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.07]"
+        style={{
+          backgroundImage: 'url(/sprites/guild-hall-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+        }}
+      />
+      <div className="relative z-10 mx-auto max-w-3xl p-4 sm:p-6">
+        <OnboardingWizard />
+      </div>
     </div>
   );
 }

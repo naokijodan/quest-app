@@ -2,7 +2,10 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { PresetQuest, QuestInput as QuestInputType } from '@/types';
-import { Button, Card, CardHeader, CardTitle, CardDescription, Input, Textarea } from '@/components/ui';
+import { Button, Input, Textarea } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 import { useQuestExecution } from '@/features/quest/hooks/useQuestExecution';
 import { QuestExecution } from './QuestExecution';
 import { QuestResult } from './QuestResult';
@@ -36,7 +39,6 @@ export function QuestInputForm({ quest }: Props) {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    // final validation
     const newErrors: Record<string, string> = {};
     for (const f of quest.required_inputs) {
       newErrors[f.name] = updateError(f, values[f.name] ?? '');
@@ -45,12 +47,11 @@ export function QuestInputForm({ quest }: Props) {
     const hasError = Object.values(newErrors).some(Boolean);
     if (hasError) return;
 
+    playSound('confirm');
     setPhase('executing');
     await execute(quest, values);
-    // phase transitions will be handled by execPhase effect below
   }, [quest.id, quest.required_inputs, updateError, values, execute]);
 
-  // reflect internal exec phase from hook
   useMemo(() => {
     if (execPhase === 'executing') setPhase('executing');
     if (execPhase === 'completed') setPhase('completed');
@@ -64,11 +65,16 @@ export function QuestInputForm({ quest }: Props) {
   }, [quest.required_inputs]);
 
   return (
-    <Card padding="lg">
-      <CardHeader className="mb-6">
-        <CardTitle>入力</CardTitle>
-        <CardDescription>必要な情報を入力して「クエスト実行！」を押してください。</CardDescription>
-      </CardHeader>
+    <RPGWindow>
+      <div className="mb-4 font-dot-gothic">
+        <h2 className="text-sm font-bold text-rpg-gold">入力</h2>
+        <TypewriterText
+          text="必要な情報を入力して「クエスト実行！」を押してください。"
+          speed={25}
+          className="mt-1 text-xs text-blue-200/60"
+          showCursor={false}
+        />
+      </div>
 
       {phase === 'input' && (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -98,9 +104,9 @@ export function QuestInputForm({ quest }: Props) {
               )}
               {field.type === 'select' && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-foreground">{field.label}</label>
+                  <label className="font-dot-gothic text-sm font-medium text-blue-100">{field.label}</label>
                   <select
-                    className="w-full rounded-lg border border-input-border bg-card-bg px-3 py-2 text-sm text-foreground focus:border-input-focus focus:outline-none focus:ring-2 focus:ring-input-focus/20"
+                    className="w-full rounded-lg border border-blue-200/20 bg-blue-900/30 px-3 py-2 font-dot-gothic text-sm text-white focus:border-rpg-gold focus:outline-none focus:ring-2 focus:ring-rpg-gold/20"
                     value={values[field.name] || ''}
                     onChange={(e) => handleChange(field, e.target.value)}
                   >
@@ -114,19 +120,19 @@ export function QuestInputForm({ quest }: Props) {
                     ))}
                   </select>
                   {errors[field.name] && (
-                    <p className="text-xs text-quest-danger">{errors[field.name]}</p>
+                    <p className="font-dot-gothic text-xs text-red-300">{errors[field.name]}</p>
                   )}
                 </div>
               )}
               {field.description && (
-                <p className="text-xs text-muted">{field.description}</p>
+                <p className="font-dot-gothic text-xs text-blue-200/40">{field.description}</p>
               )}
             </div>
           ))}
 
           <div className="pt-2">
-            <Button type="submit" size="lg" disabled={disabled}>
-              クエスト実行！
+            <Button type="submit" size="lg" disabled={disabled} className="font-dot-gothic tracking-wider">
+              &#x25B6; クエスト実行！
             </Button>
           </div>
         </form>
@@ -139,13 +145,13 @@ export function QuestInputForm({ quest }: Props) {
       )}
 
       {phase === 'error' && (
-        <div className="rounded-lg border border-quest-danger/30 bg-quest-danger/10 px-4 py-3 text-sm text-quest-danger">
+        <div className="rpg-window !p-3 text-sm text-red-300 font-dot-gothic">
           {error || 'エラーが発生しました'}
           <div className="mt-3">
-            <Button variant="secondary" onClick={resetAll}>戻る</Button>
+            <Button variant="secondary" onClick={resetAll} className="font-dot-gothic">&#x25C0; 戻る</Button>
           </div>
         </div>
       )}
-    </Card>
+    </RPGWindow>
   );
 }

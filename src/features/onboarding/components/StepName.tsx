@@ -1,7 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Button, Card, CardHeader, CardTitle, CardDescription, Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
 
 interface StepNameProps {
   value: string;
@@ -19,13 +22,27 @@ export function StepName({ value, onChange, onNext }: StepNameProps) {
     return { error: undefined, valid: true };
   }, [value]);
 
+  function handleNext() {
+    if (valid) {
+      playSound('confirm');
+      onNext();
+    }
+  }
+
   return (
     <div className="w-full">
-      <Card className="mb-4 bg-card-bg">
-        <CardHeader className="mb-2">
-          <CardTitle>冒険者の名前を決めよう！</CardTitle>
-          <CardDescription>後から変更できます。ユニークな名前を選びましょう。</CardDescription>
-        </CardHeader>
+      <RPGWindow className="mb-4">
+        <div className="mb-4">
+          <h2 className="font-dot-gothic text-base font-bold text-rpg-gold">
+            冒険者の名前を決めよう！
+          </h2>
+          <TypewriterText
+            text="後から変更できます。ユニークな名前を選びましょう。"
+            speed={30}
+            className="mt-1 text-xs text-blue-200/60"
+            showCursor={false}
+          />
+        </div>
         <div className="space-y-4">
           <Input
             label="ユーザー名"
@@ -37,16 +54,16 @@ export function StepName({ value, onChange, onNext }: StepNameProps) {
           />
           <div className="flex justify-end">
             <Button
-              onClick={onNext}
+              onClick={handleNext}
               disabled={!valid}
               aria-disabled={!valid}
+              className="font-dot-gothic"
             >
-              次へ
+              &#x25B6; 次へ
             </Button>
           </div>
         </div>
-      </Card>
+      </RPGWindow>
     </div>
   );
 }
-
