@@ -1,34 +1,35 @@
 # Quest App - HANDOVER
 
-**最終更新:** 2026-02-25
-**現在のPhase:** Phase 5（RPG化リデザイン）— **UI全面改修完了、DB seed未適用**
-**現在のSprint:** Sprint 10 Phase 5 RPG化リデザイン
+**最終更新:** 2026-02-26
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **Phase 1-3完了、アセット組み込み済み**
+**現在のSprint:** Sprint 11 RPG UI本格リデザイン
 
 ---
 
-### 重要: アーキテクチャ変更
+### 重要: 今回のセッションで何をしたか
 
-**2026-02-25に3者協議（Claude + GPT + Gemini）+ ユーザーフィードバックにより、根本的なアーキテクチャ変更が決定。**
+**2026-02-26に3者協議の結論「ゲームっぽさは操作の文法で決まる」に基づき、UIを本格RPGスタイルにリデザイン。**
+
+#### コミット履歴（今セッション）
+| コミット | 内容 |
+|----------|------|
+| `e7ed34c` | Phase 1-2: デザインシステム基盤 + 各画面RPG化 |
+| `df91ec3` | Phase 3: SE素材6種 + ピクセルアートスプライト3種 |
+| `214af51` | ギルドホール背景 + NPCスプライト組み込み |
+
+---
+
+### アーキテクチャ変更（前セッションから継続）
 
 - **旧**: Anthropic API直接呼び出し（従量課金）
 - **新**: ローカルCLI（Claude Code / Codex CLI / Gemini CLI）経由（ユーザーの既存サブスク内）
 
 **詳細設計書: `/Users/naokijodan/Desktop/quest-app/REDESIGN.md`**
 
-### 変更の要点
-1. Quest AppはローカルCLIのフロントエンドになる
-2. Quest Agent（Node.jsローカルデーモン）を新規追加し、WebSocketでPWAと通信
-3. 通常クエスト（CLI裏実行）+ 冒険ルート（ターミナル克服の旅）の二層構造
-4. レベル上限をLv.3→Lv.10に拡張
-5. `src/lib/anthropic/` と `@anthropic-ai/sdk` は **廃止済み** → Agent経由に置換完了
-
----
-
 ### 役割分担
 - **Claude**: オーケストレーター（指示・統合・Git・Obsidian）
 - **Codex CLI**: コード生成（TypeScript/TSXファイルの作成・編集）
 - **Gemini CLI**: 補助（複雑なロジック調査・レビュー）
-- **Claudeはコードを自分で書かない。必ずCodex CLIまたはGemini CLIに委託する。**
 
 ---
 
@@ -36,156 +37,255 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** 41d8aab fix: 第0章マイグレーションにchapter制約変更を追加
+- **Latest commit:** `214af51` feat: ギルドホール背景画像 + NPCスプライト組み込み
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
 
-### Phase 5 で変更したもの（RPG化リデザイン）
+### ビルド状態
+- `npm run build` — **成功**（エラーなし）
+- `npm run dev` — **動作確認済み**（ランディングページ、ログインページ目視確認OK）
 
-#### 削除
-- `src/features/gamification/components/DailyQuota.tsx` — 旧API時代の残骸、CLI経由では無意味
-- `getDailyQuota()` 関数（`src/features/quest/actions/index.ts`）
-- `page.tsx` の DailyQuota インポート・表示
+---
 
-#### 全面改修
-- `src/app/globals.css` — ダークRPGテーマ（`#0f172a`）、RPGアニメーション12種追加
-- `src/app/page.tsx` — ギルド掲示板レイアウト + RPGランディング
-- `src/app/(main)/layout.tsx` — ゲームメニューナビ（冒険の記録/冒険に出る/装備）
-- `src/app/(main)/adventure/page.tsx` — ワールドマップ風レイアウト
-- `src/app/(main)/adventure/[chapter]/[questId]/page.tsx` — 第0章分岐追加
-- `src/features/quest/components/QuestCard.tsx` — 依頼書風デザイン
-- `src/features/quest/constants/category.ts` — RPG風カテゴリ名
-- `src/features/adventure/types/index.ts` — 第0章追加
-- `src/features/onboarding/components/StepComplete.tsx` — 遷移先を第0章に変更
-- `src/features/setup/components/CliSetupGuide.tsx` — useCliDetection フック使用に変更
+## Phase 6 で追加・変更したもの
 
-#### 新規ファイル
+### 新規ファイル（14件）
+
 | ファイル | 説明 |
 |---------|------|
-| `src/components/ui/StatusBar.tsx` | RPG風ステータスバー（Lv + XP + ユーザー名） |
-| `src/components/ui/GameNav.tsx` | モバイル底部固定ゲームメニュー |
-| `src/features/adventure/components/WorldMap.tsx` | ワールドマップレイアウト（縦拠点連結） |
-| `src/features/adventure/components/SetupChapterRunner.tsx` | 第0章ルーティング用クライアントラッパー |
-| `src/features/adventure/components/SetupQuestWeaponCheck.tsx` | 第0章: CLI検出（武器確認） |
-| `src/features/adventure/components/SetupQuestWeaponForge.tsx` | 第0章: インストールガイド（鍛冶屋） |
-| `src/features/adventure/components/SetupQuestSummonAlly.tsx` | 第0章: Agent起動（仲間召喚） |
-| `src/features/setup/hooks/useCliDetection.ts` | CLI検出ロジック共通フック |
-| `supabase/migrations/00004_phase5_setup_adventure.sql` | 第0章シードデータ（3クエスト） |
+| `src/components/ui/RPGWindow.tsx` | DQ風青グラデーション＋白二重枠線ウインドウ |
+| `src/components/ui/RPGMenu.tsx` | ▶カーソル選択メニュー（↑↓Enter/Escape＋タッチ） |
+| `src/components/ui/TypewriterText.tsx` | 1文字ずつ表示＋▼インジケータ＋スキップ |
+| `src/components/ui/ScreenTransition.tsx` | ページ遷移フェード/ワイプ演出 |
+| `src/components/ui/SoundToggle.tsx` | ミュート切替ボタン |
+| `src/components/ui/AudioUnlocker.tsx` | ブラウザ初回インタラクション音声アンロック |
+| `src/features/quest/components/GuildBoardNPC.tsx` | ギルドマスターNPC（スプライト＋タイプライター台詞） |
+| `src/lib/sound/index.ts` | Howler.jsサウンドシステム（6種SE） |
+| `public/sounds/cursor.mp3` | カーソル移動音（効果音ラボ） |
+| `public/sounds/confirm.mp3` | 決定音（効果音ラボ） |
+| `public/sounds/cancel.mp3` | キャンセル音（効果音ラボ） |
+| `public/sounds/level-up.mp3` | レベルアップファンファーレ（効果音ラボ） |
+| `public/sounds/quest-complete.mp3` | クエスト完了ジングル（効果音ラボ） |
+| `public/sounds/xp-gain.mp3` | 経験値獲得音（効果音ラボ） |
+| `public/sprites/rpg-sprites.png` | キャラクタースプライトシート（DALL-E生成） |
+| `public/sprites/rpg-icons.png` | RPG UIアイコンセット（DALL-E生成） |
+| `public/sprites/guild-hall-bg.png` | ギルドホール背景（DALL-E生成） |
 
-### 実装済み（Phase 1-4）
+### 変更ファイル（12件）
 
-#### Sprint 1-2（完了）
-プロジェクト初期化、認証、UIコンポーネント、Supabase接続、オンボーディング、クエスト実行MVP
+| ファイル | 変更内容 |
+|---------|----------|
+| `package.json` | `howler` + `@types/howler` 追加 |
+| `src/app/globals.css` | RPGウインドウCSS、メニュー、タイプライター、画面遷移、HUD、セグメントバー等の大量追加 |
+| `src/app/layout.tsx` | DotGothic16フォント、AudioUnlocker追加 |
+| `src/app/page.tsx` | ランディング＋ホーム画面RPG化、ギルドホール背景、NPC表示 |
+| `src/app/(main)/layout.tsx` | RPG HUDヘッダー、ScreenTransition、SoundToggle追加 |
+| `src/components/ui/StatusBar.tsx` | セグメント式XPバー、DotGothic16、ゴールド文字 |
+| `src/components/ui/GameNav.tsx` | RPGウインドウ枠、絵文字アイコン、▶アクティブ表示 |
+| `src/components/ui/index.ts` | 新コンポーネント6件のexport追加 |
+| `src/features/quest/components/QuestCard.tsx` | RPGスタイル枠、決定音、ピクセル感UI |
+| `src/features/adventure/components/WorldMap.tsx` | ドットパスライン、RPGウインドウノード、セグメント進捗 |
+| `src/features/gamification/components/LevelUpModal.tsx` | フラッシュ→タイプライター→ステータス段階表示→カテゴリ解放の演出 |
 
-#### Sprint 3（完了）
-XPプログレスバー、履歴画面、レベルアップ演出、デイリークォータ
-
-#### Sprint 5-6（完了）
-Quest Agent基盤、通常クエストCLI化、サンドボックス、CLIインストールガイド
-
-#### Sprint 7（完了）
-冒険ルート全14種シードデータ、Terminal.tsx、StoryDialog、AdventureQuestRunner、BossVictory
-
-#### Sprint 9（完了）
-PWA設定、E2E検証、UI/アニメーション改善、Vercelデプロイ、Supabaseリモート
-
----
-
-## 完了タスク（2026-02-26）
-
-### 1. Supabaseリモートに第0章マイグレーション適用 ✅
-- `adventure_chapter` CHECK制約を `BETWEEN 1 AND 5` → `BETWEEN 0 AND 5` に変更
-- 第0章の3クエスト（武器確認・武器鍛造・仲間召喚）をリモートDBに投入済み
-- マイグレーションファイルも制約変更を含むように更新・コミット済み
-
-### 2. 本番環境UI確認 ✅
-- ダークRPGテーマ正常表示
-- ランディングページ、ログイン画面確認済み
-- manifest.webmanifest Syntax Error（serwist既知問題）
-
-### 3. 冒険入口Lv.4+問題 → 問題なしと判定 ✅
-- ホーム画面CTA、GameNav、ナビリンクすべてレベル制限なし
-- 第0章・第1章はLv.1で解放済み
-- 第2章以降の段階ロックは設計通り
-
-### 4. .env.local をリモートSupabase向けに更新 ✅
-- NEXT_PUBLIC_SUPABASE_URL → `https://yabrrdonqlttzwrfpqdu.supabase.co`
-- ANON_KEY / SERVICE_ROLE_KEY → リモートプロジェクトのキーに変更
+### 技術選定
+| 要素 | 選定 | 理由 |
+|------|------|------|
+| フォント | DotGothic16 (next/font/google) | 日本語対応ピクセルフォント |
+| サウンド | Howler.js | 低遅延SE再生、プリロード対応 |
+| SE素材 | 効果音ラボ | フリー商用利用可、帰属不要 |
+| スプライト | DALL-E生成 | プロジェクト専用の統一感あるアセット |
+| レトロCSS | 独自実装 | NES.css等はチープになるため不使用 |
 
 ---
 
-## 次のタスク
+## 次のタスク（優先度順）
 
-### Phase 5 残り候補
-- [ ] Vercel環境変数にリモートSupabaseキーを設定（本番DBとの接続）
-- [ ] Google認証プロバイダ設定（Supabase + Google Cloud Console）
-- [ ] オンボーディング → 第0章 → ホームのE2Eフロー確認
-- [ ] カスタムドメイン設定
-- [ ] Upstash Redis（レート制限）
-- [ ] Stripe課金連携
-- [ ] カスタムクエスト作成機能
+### 即座にやるべき
+
+1. **[ ] Auth画面（login/register）のRPG化**
+   - 現在は旧スタイルのまま（ダークカード風）
+   - RPGウインドウ枠 + DotGothic16への統一が必要
+   - `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`
+
+2. **[ ] Onboarding画面のRPG化**
+   - ステップウィザードをRPGメニュー風に
+   - `src/features/onboarding/components/` 内の4ファイル
+
+3. **[ ] Quest実行画面（quest/[id]/page.tsx）のRPG化**
+   - QuestInputForm、QuestExecution、QuestResultをRPGウインドウに統一
+   - 実行中のタイプライター演出追加
+
+4. **[ ] history/page.tsx のRPG化**
+   - 冒険の記録一覧をRPGウインドウスタイルに
+
+5. **[ ] setup/page.tsx のRPG化**
+   - 装備ページをRPGメニュースタイルに
+
+### 品質改善
+
+6. **[ ] スプライトの個別切り出し**
+   - rpg-sprites.pngから個別キャラPNGに分離
+   - アバター選択画面（StepAvatar）で使用可能にする
+   - CSS object-positionのハードコードを個別ファイルに置換
+
+7. **[ ] Framer Motion導入**（オプション）
+   - より滑らかな画面遷移、メニュー開閉アニメーション
+   - 現在のCSS animationで十分なら不要
+
+8. **[ ] レベルアップSEの選定し直し**
+   - 現在のtrumpet1.mp3はラッパ音。RPGファンファーレに近い音を探す
+   - 効果音ラボの`levelup1.mp3`（テッテレー音）の方が良い可能性
+
+### インフラ関連（前セッションから継続）
+
+9. **[ ] Vercel環境変数にリモートSupabaseキーを設定**
+10. **[ ] Google認証プロバイダ設定**
+11. **[ ] オンボーディング → 第0章 → ホームのE2Eフロー確認**
+12. **[ ] カスタムドメイン設定**
 
 ---
 
-## ファイル構成（Phase 5時点）
+## RPGコンポーネント使い方ガイド
+
+### RPGWindow
+```tsx
+import { RPGWindow } from '@/components/ui/RPGWindow';
+
+// 基本
+<RPGWindow>コンテンツ</RPGWindow>
+
+// バリエーション
+<RPGWindow variant="message">メッセージ窓</RPGWindow>
+<RPGWindow variant="menu">メニュー窓</RPGWindow>
+<RPGWindow variant="status">ステータス窓</RPGWindow>
+
+// タイトル付き
+<RPGWindow title="装備">内容</RPGWindow>
+```
+
+### RPGMenu
+```tsx
+import { RPGMenu } from '@/components/ui/RPGMenu';
+
+<RPGMenu
+  items={[
+    { id: 'accept', label: '受注する' },
+    { id: 'cancel', label: 'やめる' },
+  ]}
+  onSelect={(id) => handleSelect(id)}
+  onCancel={() => router.back()}
+/>
+```
+- ↑↓キー、Enter/Escapeに自動対応
+- タッチ/クリックにも対応
+- `playSound('cursor')`/`playSound('confirm')`自動再生
+
+### TypewriterText
+```tsx
+import { TypewriterText } from '@/components/ui/TypewriterText';
+
+<TypewriterText
+  text="冒険者よ、依頼を選ぶのじゃ。"
+  speed={35}        // ミリ秒/文字
+  showCursor={true}
+  onComplete={() => console.log('表示完了')}
+/>
+```
+- クリック/タップで即時全文表示（スキップ）
+- 表示完了時▼インジケータ
+
+### サウンドシステム
+```tsx
+import { playSound } from '@/lib/sound';
+
+playSound('cursor');        // カーソル移動
+playSound('confirm');       // 決定
+playSound('cancel');        // キャンセル
+playSound('levelUp');       // レベルアップ
+playSound('questComplete'); // クエスト完了
+playSound('xpGain');        // XP獲得
+```
+- 音声ファイルが見つからなくても silent fallback
+- `toggleMute()` でミュート切替
+- 初回ユーザーインタラクションで自動アンロック（AudioUnlocker.tsx）
+
+### CSS クラス
+```css
+.rpg-window          /* DQ風ウインドウ枠 */
+.rpg-menu            /* カーソルメニュー */
+.rpg-hud             /* HUDステータス */
+.rpg-bar-segments    /* セグメント式バー */
+.rpg-map-path        /* ドット式マップパス */
+.font-dot-gothic     /* DotGothic16フォント */
+.typewriter-*        /* タイプライター系 */
+.rpg-transition-*    /* 画面遷移オーバーレイ */
+.level-up-flash      /* レベルアップ全画面フラッシュ */
+.stat-reveal         /* ステータス段階表示アニメーション */
+```
+
+---
+
+## ファイル構成（Phase 6時点）
 ```
 quest-app/
 ├── packages/
-│   └── quest-agent/                    — ローカルAgent（WebSocket + child_process.spawn）
+│   └── quest-agent/                    — ローカルAgent
+├── public/
+│   ├── sounds/                         ← NEW Phase 6
+│   │   ├── cursor.mp3, confirm.mp3, cancel.mp3
+│   │   ├── level-up.mp3, quest-complete.mp3, xp-gain.mp3
+│   ├── sprites/                        ← NEW Phase 6
+│   │   ├── rpg-sprites.png, rpg-icons.png, guild-hall-bg.png
+│   └── icons/
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/login, register
+│   │   ├── (auth)/login, register      — ★未RPG化（次セッションで対応）
 │   │   ├── (main)/
-│   │   │   ├── layout.tsx             — ゲームメニューナビ + StatusBar + GameNav
-│   │   │   ├── quest/[id]/page.tsx
-│   │   │   ├── history/page.tsx
-│   │   │   ├── setup/page.tsx         — 装備（CLIセットアップ独立ページ）
+│   │   │   ├── layout.tsx             — RPG HUD + ScreenTransition + SoundToggle
+│   │   │   ├── quest/[id]/page.tsx    — ★未RPG化
+│   │   │   ├── history/page.tsx       — ★未RPG化
+│   │   │   ├── setup/page.tsx         — ★未RPG化
 │   │   │   └── adventure/
-│   │   │       ├── page.tsx           — ワールドマップ
-│   │   │       └── [chapter]/[questId]/page.tsx — 第0章分岐対応
-│   │   ├── onboarding/page.tsx
-│   │   ├── page.tsx                   — ギルド掲示板 + RPGランディング
-│   │   ├── globals.css                — ダークRPGテーマ + RPGアニメーション
-│   │   ├── manifest.ts, sw.ts
-│   │   └── layout.tsx
+│   │   │       ├── page.tsx           — WorldMap（RPG化済み）
+│   │   │       └── [chapter]/[questId]/page.tsx
+│   │   ├── onboarding/page.tsx        — ★未RPG化
+│   │   ├── page.tsx                   — ギルド掲示板（RPG化済み）+ ギルドホール背景
+│   │   ├── globals.css                — RPGウインドウ/メニュー/タイプライター/HUD等
+│   │   └── layout.tsx                 — DotGothic16 + AudioUnlocker
 │   ├── components/ui/
-│   │   ├── StatusBar.tsx              ← NEW Phase 5
-│   │   ├── GameNav.tsx                ← NEW Phase 5
-│   │   └── (既存: Button, Card, Terminal, NavLink, etc.)
+│   │   ├── RPGWindow.tsx              ← NEW Phase 6
+│   │   ├── RPGMenu.tsx                ← NEW Phase 6
+│   │   ├── TypewriterText.tsx         ← NEW Phase 6
+│   │   ├── ScreenTransition.tsx       ← NEW Phase 6
+│   │   ├── SoundToggle.tsx            ← NEW Phase 6
+│   │   ├── AudioUnlocker.tsx          ← NEW Phase 6
+│   │   ├── StatusBar.tsx              — RPG HUD化
+│   │   ├── GameNav.tsx                — RPGウインドウ化
+│   │   └── (既存: Button, Card, Terminal, NavLink, Modal, Toast, etc.)
 │   ├── features/
+│   │   ├── quest/
+│   │   │   ├── components/
+│   │   │   │   ├── GuildBoardNPC.tsx  ← NEW Phase 6（スプライト付きNPC）
+│   │   │   │   ├── QuestCard.tsx      — RPGスタイル化
+│   │   │   │   └── (既存)
+│   │   │   └── ...
 │   │   ├── adventure/
 │   │   │   ├── components/
-│   │   │   │   ├── WorldMap.tsx           ← NEW Phase 5
-│   │   │   │   ├── SetupChapterRunner.tsx ← NEW Phase 5
-│   │   │   │   ├── SetupQuestWeaponCheck.tsx ← NEW Phase 5
-│   │   │   │   ├── SetupQuestWeaponForge.tsx ← NEW Phase 5
-│   │   │   │   ├── SetupQuestSummonAlly.tsx  ← NEW Phase 5
-│   │   │   │   └── (既存: ChapterCard, StoryDialog, AdventureQuestRunner, etc.)
-│   │   │   ├── actions/index.ts
-│   │   │   └── types/index.ts         — 第0章追加
-│   │   ├── setup/
-│   │   │   ├── components/CliSetupGuide.tsx — useCliDetection使用に変更
-│   │   │   └── hooks/useCliDetection.ts    ← NEW Phase 5
-│   │   ├── quest/
-│   │   │   ├── components/QuestCard.tsx    — 依頼書風リデザイン
-│   │   │   └── constants/category.ts      — RPG風カテゴリ名
+│   │   │   │   ├── WorldMap.tsx       — ドットパス + RPGノード化
+│   │   │   │   └── (既存)
+│   │   │   └── ...
 │   │   ├── gamification/
 │   │   │   └── components/
-│   │   │       ├── LevelUpModal.tsx
+│   │   │       ├── LevelUpModal.tsx   — 全面演出化（フラッシュ＋段階表示）
 │   │   │       └── XpGainOverlay.tsx
-│   │   │       (DailyQuota.tsx は削除)
-│   │   └── onboarding/
-│   │       └── components/StepComplete.tsx — 遷移先を第0章に変更
-│   └── (lib/, stores/, types/, hooks/)
-├── supabase/
-│   └── migrations/
-│       ├── 00001_initial_schema.sql
-│       ├── 00002_phase2_cli_columns.sql
-│       ├── 00003_phase3_adventure.sql
-│       └── 00004_phase5_setup_adventure.sql  ← Phase 5（適用済み 2026-02-26）
-├── vercel.json
-└── next.config.ts
+│   │   └── ...
+│   ├── lib/
+│   │   ├── sound/index.ts             ← NEW Phase 6（Howler.js）
+│   │   └── ...
+│   └── ...
+├── supabase/migrations/
+└── CLAUDE.md, HANDOVER.md, REDESIGN.md
 ```
 
 ---
@@ -194,11 +294,12 @@ quest-app/
 
 | 問題 | 影響 | 対応 |
 |------|------|------|
-| middleware.ts非推奨 | ビルド警告のみ | Phase 5+でproxy移行 |
-| 00004マイグレーション | **適用済み**（2026-02-26） | 制約変更+データ投入完了 |
+| middleware.ts非推奨 | ビルド警告のみ | proxy移行検討 |
+| manifest.webmanifest Syntax Error | コンソール警告のみ | serwist既知問題 |
 | Vercel環境変数未設定 | 本番がリモートDB未接続の可能性 | Vercelダッシュボードで設定 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| Gemini CLI未インストール | `which gemini` → not found | 必要時にインストール |
+| auth画面が旧スタイル | UI不統一 | 次セッションで対応 |
+| NPCスプライト切り出しがCSS依存 | 保守性低い | 個別PNG分離を推奨 |
 
 ---
 
@@ -217,14 +318,12 @@ quest-app/
 | Middleware | `src/lib/supabase/middleware.ts` |
 | Quest Schemas | `src/features/quest/types/schema.ts` |
 | Gamification | `src/features/gamification/types/index.ts` |
+| Sound System | `src/lib/sound/index.ts` |
+| RPG Components | `src/components/ui/RPGWindow.tsx`, `RPGMenu.tsx`, `TypewriterText.tsx` |
 | Agent Server | `packages/quest-agent/src/server.ts` |
 | Agent Client | `src/lib/agent/client.ts` |
-| Agent Hooks | `src/features/quest/hooks/useAgentConnection.ts`, `useQuestExecution.ts` |
 | XP Server Action | `src/features/quest/actions/complete-quest.ts` |
 | Adventure Actions | `src/features/adventure/actions/index.ts` |
-| Adventure Types | `src/features/adventure/types/index.ts` |
-| Setup Chapter | `src/features/adventure/components/SetupChapterRunner.tsx` |
-| CLI Detection | `src/features/setup/hooks/useCliDetection.ts` |
 | PWA Config | `next.config.ts`, `src/app/sw.ts`, `src/app/manifest.ts` |
 | Vercel Config | `vercel.json` |
 
@@ -238,3 +337,4 @@ quest-app/
 - console.log の残置
 - ハードコードされたシークレット
 - Anthropic API直接呼び出しの追加（Agent経由に統一）
+- NES.css等の外部レトロCSSフレームワーク導入（独自実装を維持）
