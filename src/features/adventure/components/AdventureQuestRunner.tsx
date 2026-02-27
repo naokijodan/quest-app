@@ -4,6 +4,7 @@ import type { PresetQuest } from '@/types';
 import { Terminal } from '@/components/ui/Terminal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { NPCDialog } from '@/components/ui/NPCDialog';
 import { StoryDialog } from './StoryDialog';
 import { BossVictory } from './BossVictory';
 import { useQuestExecution } from '@/features/quest/hooks/useQuestExecution';
@@ -98,6 +99,17 @@ export function AdventureQuestRunner({ quest }: Props) {
           text={quest.story_complete ?? ''}
           title="エピローグ"
           onNext={() => setShowComplete(false)}
+        />
+      )}
+
+      {/* Wizard completion message */}
+      {phase === 'completed' && !showBossVictory && (
+        <NPCDialog
+          character="wizard"
+          message={levelUp
+            ? `見事じゃ！レベルアップしたぞ！+${xpGained} XP 獲得！`
+            : `よくやった！+${xpGained} XP 獲得じゃ。次の依頼に挑むがよい。`}
+          npcName="導きの魔法使い"
         />
       )}
 

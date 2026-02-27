@@ -19,7 +19,7 @@ interface StepMascotProps {
 
 const MASCOTS: { key: MascotType; title: string; desc: string; sprite: string }[] = [
   { key: 'cat', title: 'ネコ', desc: '気まぐれだけど賢い', sprite: '/sprites/mascot-cat.png' },
-  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', sprite: '/sprites/mascot-cat-mage.png' },
+  { key: 'dog', title: 'イヌ', desc: '忠実で元気いっぱい', sprite: '/sprites/mascot-dog.png' },
 ];
 
 export function StepMascot({ selected, onSelect, onBack, onComplete, loading, error }: StepMascotProps) {

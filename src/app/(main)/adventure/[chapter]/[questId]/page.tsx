@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AgentStatusBanner } from '@/features/quest/components/AgentStatusBanner';
 import { AdventureQuestRunner } from '@/features/adventure/components/AdventureQuestRunner';
 import { SetupChapterRunner } from '@/features/adventure/components/SetupChapterRunner';
+import { NPCDialog } from '@/components/ui/NPCDialog';
 import { startAdventureChapter } from '@/features/adventure/actions';
 
 export default async function AdventureQuestDetailPage({ params }: { params: Promise<{ chapter: string; questId: string }> }) {
@@ -53,12 +54,25 @@ export default async function AdventureQuestDetailPage({ params }: { params: Pro
     );
   }
 
+  const chapterMessages: Record<number, string> = {
+    1: 'この依頼はAIに任せるだけじゃ。結果を見届けるがよい。',
+    2: 'コマンドを使う依頼じゃ。ヒントをよく読んで挑むのじゃ。',
+    3: 'ファイル操作とGitの技を磨く時じゃ。慎重に進めよ。',
+    4: 'パッケージ管理の試練じゃ。ここを越えれば魔王城が見えるぞ。',
+    5: '最終決戦じゃ…全力で挑むのじゃ！',
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-foreground">{quest.title}</h1>
         <p className="mt-1 text-sm text-muted">{quest.description}</p>
       </div>
+      <NPCDialog
+        character="wizard"
+        message={chapterMessages[chapterNum] ?? 'この依頼を遂行するのじゃ。'}
+        npcName="導きの魔法使い"
+      />
       <AgentStatusBanner />
       <AdventureQuestRunner quest={quest as any} />
     </div>
