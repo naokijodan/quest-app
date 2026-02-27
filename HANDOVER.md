@@ -1,22 +1,29 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-27
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + NPCアニメーション + フォントサイズ改善**
-**現在のSprint:** Sprint 14 NPCDialog・UI可読性改善
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + NPCアニメーション + Adventure NPC統合**
+**現在のSprint:** Sprint 15 Adventure NPC・マスコット・BossVictory強化
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-27 (Sprint 14): NPCDialogアニメーションコンポーネント作成 + フォントサイズ全体1段階アップ**
+**2026-02-27 (Sprint 15): Adventure NPCDialog統合 + 犬マスコット + BossVictory Framer Motion**
 
 #### 変更概要
-1. **NPCDialogコンポーネント新規作成** — Framer Motionによるbounce-in + idle float + 吹き出しフェードイン
-2. **4画面にNPCDialog統合** — ホーム（GuildBoardNPC置き換え）/ クエスト詳細 / クエスト完了 / エラー時
-3. **GuildBoardNPC削除** — NPCDialogに完全移行
-4. **フォントサイズ1段階アップ** — 約20ファイル（text-[10px]→text-xs, text-xs→text-sm, text-sm→text-base, etc.）
+1. **AdventureモードにwizardNPCDialog追加** — WorldMap画面・クエスト詳細・完了時の3箇所
+2. **マスコット犬スプライト生成** — DALL-Eでピクセルアート柴犬を生成、mascot-dog.pngとして配置
+3. **StepMascotの犬参照先修正** — mascot-cat-mage.png → mascot-dog.png
+4. **BossVictoryをFramer Motionに完全移行** — CSSキーフレーム → motion.div + AnimatePresence
+5. **パーティクル3種類36個** — sparkle（光の粒）+ confetti（紙吹雪）+ star（星型）
+6. **wizardスプライト確認** — npc-wizard.png (226KB) は既に配置済みを確認
 
 #### コミット履歴（今セッション）
+| コミット | 内容 |
+|----------|------|
+| `c32f88a` | feat: Adventure NPCDialog統合・犬マスコット・BossVictory Framer Motion |
+
+#### 前セッション (Sprint 14)
 | コミット | 内容 |
 |----------|------|
 | `8c95133` | feat: NPCDialogアニメーション + フォントサイズ1段階アップ |
@@ -57,7 +64,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `8c95133` feat: NPCDialogアニメーション + フォントサイズ1段階アップ
+- **Latest commit:** `c32f88a` feat: Adventure NPCDialog統合・犬マスコット・BossVictory Framer Motion
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -225,14 +232,25 @@
     - text-[8px]→text-[10px], text-[10px]→text-xs, text-xs→text-sm, text-sm→text-base, text-base→text-lg, text-lg→text-xl
     - 対象: GameNav, StatusBar, Card, Input, Modal, page.tsx, quest/[id], layout, login, register, QuestCard, QuestExecution, QuestInputForm, HistoryList, OnboardingWizard, StepName, StepAvatar, StepMascot, WorldMap, ChapterCard
 
+### Sprint 15 で完了したタスク
+
+24. **[x] wizardスプライト画像確認** — `npc-wizard.png` (226KB) は既に配置済み
+25. **[x] NPCDialogをAdventureモード画面に追加** — `c32f88a`
+    - WorldMap: チャプター別ガイドメッセージ（導きの魔法使い）
+    - クエスト詳細: チャプター別エンカレッジメッセージ
+    - クエスト完了: XP獲得・レベルアップ報告
+26. **[x] マスコット犬スプライト作成** — `c32f88a`
+    - DALL-Eでピクセルアート柴犬（盾持ち・赤バンダナ）を生成
+    - StepMascotの参照先をmascot-dog.pngに変更
+27. **[x] BossVictoryパーティクルアニメーション** — `c32f88a`
+    - CSSキーフレーム → Framer Motion (motion.div + AnimatePresence)
+    - 3種パーティクル36個: sparkle, confetti, star
+28. **[x] Google OAuth コード検証** — コード側完全対応済み確認
+
 ### 次セッションのタスク
 
-24. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
-25. **[ ] カスタムドメイン購入・設定**
-26. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
-27. **[ ] BossVictoryパーティクルアニメーション（Framer Motion）**
-28. **[ ] NPCDialogの'wizard'スプライト用画像作成**（`/sprites/npc-wizard.png`未配置）
-29. **[ ] NPCDialogをAdventureモード画面にも追加**（ストーリー進行NPC）
+29. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書 `docs/GOOGLE_OAUTH_SETUP.md` 参照）
+30. **[ ] カスタムドメイン購入・設定**
 
 ---
 
@@ -349,7 +367,7 @@ quest-app/
 │   │   ├── cursor.mp3, confirm.mp3, cancel.mp3
 │   │   ├── level-up.mp3, quest-complete.mp3, xp-gain.mp3
 │   ├── sprites/                        ← NEW Phase 6
-│   │   ├── rpg-sprites.png, rpg-icons.png, guild-hall-bg.png
+│   │   ├── rpg-sprites.png, rpg-icons.png, guild-hall-bg.png, mascot-dog.png
 │   └── icons/
 ├── src/
 │   ├── app/
@@ -410,7 +428,7 @@ quest-app/
 | middleware.ts非推奨 | ビルド警告のみ | proxy移行検討 |
 | manifest.webmanifest Syntax Error | コンソール警告のみ | serwist既知問題 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| NPCDialog wizard用スプライト未配置 | character='wizard'時に画像なし | `/sprites/npc-wizard.png`を作成・配置 |
+| ~~NPCDialog wizard用スプライト未配置~~ | ~~解決済み~~ | `npc-wizard.png` (226KB) 配置確認済み |
 | quest-agent起動時のCLAUDECODE継承 | claude --printが失敗する | executor.tsで除去済み。起動時も`env -u CLAUDECODE`推奨 |
 | レート制限未実装 | Upstash env空、実行制限なし | Phase 2で対応 |
 
