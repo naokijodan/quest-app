@@ -1,25 +1,34 @@
 # Quest App - HANDOVER
 
 **最終更新:** 2026-02-27
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + クエスト実行フロー完全動作確認済み**
-**現在のSprint:** Sprint 13 クエスト実行バグ修正・品質整備
+**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + NPCアニメーション + フォントサイズ改善**
+**現在のSprint:** Sprint 14 NPCDialog・UI可読性改善
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-27: クエスト実行結果が空表示になるバグを特定・修正。UserStore初期化バグも修正。E2Eテスト9件全パス。**
+**2026-02-27 (Sprint 14): NPCDialogアニメーションコンポーネント作成 + フォントサイズ全体1段階アップ**
 
-**根本原因:** quest-agentがClaude Codeセッション内で起動された場合、`CLAUDECODE=1`環境変数が子プロセスに継承され、`claude --print`が「ネストセッション」エラーで失敗していた。stdoutが空のまま「完了」扱いになり、結果表示が空になっていた。
+#### 変更概要
+1. **NPCDialogコンポーネント新規作成** — Framer Motionによるbounce-in + idle float + 吹き出しフェードイン
+2. **4画面にNPCDialog統合** — ホーム（GuildBoardNPC置き換え）/ クエスト詳細 / クエスト完了 / エラー時
+3. **GuildBoardNPC削除** — NPCDialogに完全移行
+4. **フォントサイズ1段階アップ** — 約20ファイル（text-[10px]→text-xs, text-xs→text-sm, text-sm→text-base, etc.）
 
 #### コミット履歴（今セッション）
+| コミット | 内容 |
+|----------|------|
+| `8c95133` | feat: NPCDialogアニメーション + フォントサイズ1段階アップ |
+
+#### 前セッション (Sprint 13)
 | コミット | 内容 |
 |----------|------|
 | `82a8696` | feat: Framer Motion追加適用 + exit_codeチェック + コード整理 |
 | `86d1d66` | fix: クエスト実行結果が空表示になるバグを修正 + XP更新の安定化 |
 | `9f62db4` | Framer Motion導入 + E2Eテスト整備 + Google OAuth手順書 |
 
-#### 前セッション
+#### さらに前のセッション
 | コミット | 内容 |
 |----------|------|
 | `f3287a1` | 残り5画面のRPG UI化（auth/onboarding/quest実行/history/setup） |
@@ -48,7 +57,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `82a8696` feat: Framer Motion追加適用 + exit_codeチェック + コード整理
+- **Latest commit:** `8c95133` feat: NPCDialogアニメーション + フォントサイズ1段階アップ
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -201,12 +210,29 @@
 19. **[x] 未使用コンポーネント削除** — `82a8696`
     - XpProgressBar, XpProgressBarClient, LevelBadgeClient
 
+### Sprint 14 で完了したタスク
+
+20. **[x] NPCDialogコンポーネント作成** — `8c95133`
+    - Framer Motionアニメーション（bounce-in + idle float + 吹き出しフェードイン）
+    - Props: character('sage'|'wizard'), message, npcName, typingSpeed, onComplete
+21. **[x] NPCDialog 4画面統合** — `8c95133`
+    - ホーム: GuildBoardNPCを完全置き換え（レベル別メッセージロジック移管）
+    - クエスト詳細: 「この依頼を受けるのか？入力して実行じゃ！」
+    - クエスト完了: 「見事じゃ！クエスト完了！成果物を確認するがよい。」
+    - エラー時: 「むむ…何かうまくいかなかったようじゃ。もう一度やってみるか？」
+22. **[x] GuildBoardNPC.tsx 削除** — NPCDialogに完全移行
+23. **[x] フォントサイズ全体1段階アップ** — `8c95133`
+    - text-[8px]→text-[10px], text-[10px]→text-xs, text-xs→text-sm, text-sm→text-base, text-base→text-lg, text-lg→text-xl
+    - 対象: GameNav, StatusBar, Card, Input, Modal, page.tsx, quest/[id], layout, login, register, QuestCard, QuestExecution, QuestInputForm, HistoryList, OnboardingWizard, StepName, StepAvatar, StepMascot, WorldMap, ChapterCard
+
 ### 次セッションのタスク
 
-20. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
-21. **[ ] カスタムドメイン購入・設定**
-22. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
-23. **[ ] BossVictoryパーティクルアニメーション（Framer Motion）**
+24. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
+25. **[ ] カスタムドメイン購入・設定**
+26. **[ ] マスコット犬のスプライト作成**（現在は青猫画像で代用中）
+27. **[ ] BossVictoryパーティクルアニメーション（Framer Motion）**
+28. **[ ] NPCDialogの'wizard'スプライト用画像作成**（`/sprites/npc-wizard.png`未配置）
+29. **[ ] NPCDialogをAdventureモード画面にも追加**（ストーリー進行NPC）
 
 ---
 
@@ -244,6 +270,29 @@ import { RPGMenu } from '@/components/ui/RPGMenu';
 - ↑↓キー、Enter/Escapeに自動対応
 - タッチ/クリックにも対応
 - `playSound('cursor')`/`playSound('confirm')`自動再生
+
+### NPCDialog（Sprint 14 新規）
+```tsx
+import { NPCDialog } from '@/components/ui/NPCDialog';
+
+// 基本（ギルドマスター）
+<NPCDialog
+  character="sage"
+  message="ようこそ、新米冒険者よ。"
+/>
+
+// カスタム名 + 完了コールバック
+<NPCDialog
+  character="wizard"
+  message="魔法を教えてやろう。"
+  npcName="賢者"
+  typingSpeed={25}
+  onComplete={() => console.log('表示完了')}
+/>
+```
+- **アニメーション:** スプライトがbounce-inで出現 → idle floatで上下揺れ → 0.3秒後に吹き出しフェードイン
+- **スプライト:** `sage`はrpg-sprites.pngからクロップ、`wizard`は個別画像（要配置）
+- **内部でTypewriterText + RPGWindowを使用**
 
 ### TypewriterText
 ```tsx
@@ -324,14 +373,14 @@ quest-app/
 │   │   ├── ScreenTransition.tsx       ← NEW Phase 6
 │   │   ├── SoundToggle.tsx            ← NEW Phase 6
 │   │   ├── AudioUnlocker.tsx          ← NEW Phase 6
-│   │   ├── StatusBar.tsx              — RPG HUD化
+│   │   ├── NPCDialog.tsx             ← NEW Sprint 14（bounce-in + idle float NPC対話）
+│   │   ├── StatusBar.tsx              — RPG HUD化 + フォントサイズアップ
 │   │   ├── GameNav.tsx                — RPGウインドウ化
 │   │   └── (既存: Button, Card, Terminal, NavLink, Modal, Toast, etc.)
 │   ├── features/
 │   │   ├── quest/
 │   │   │   ├── components/
-│   │   │   │   ├── GuildBoardNPC.tsx  ← NEW Phase 6（スプライト付きNPC）
-│   │   │   │   ├── QuestCard.tsx      — RPGスタイル化
+│   │   │   │   │   ├── QuestCard.tsx      — RPGスタイル化
 │   │   │   │   └── (既存)
 │   │   │   └── ...
 │   │   ├── adventure/
@@ -361,7 +410,7 @@ quest-app/
 | middleware.ts非推奨 | ビルド警告のみ | proxy移行検討 |
 | manifest.webmanifest Syntax Error | コンソール警告のみ | serwist既知問題 |
 | serwist Turbopack非互換 | --webpack必須 | @serwist/turbopack移行検討 |
-| NPCスプライト切り出しがCSS依存 | 保守性低い | 個別PNG分離を推奨 |
+| NPCDialog wizard用スプライト未配置 | character='wizard'時に画像なし | `/sprites/npc-wizard.png`を作成・配置 |
 | quest-agent起動時のCLAUDECODE継承 | claude --printが失敗する | executor.tsで除去済み。起動時も`env -u CLAUDECODE`推奨 |
 | レート制限未実装 | Upstash env空、実行制限なし | Phase 2で対応 |
 
@@ -383,7 +432,7 @@ quest-app/
 | Quest Schemas | `src/features/quest/types/schema.ts` |
 | Gamification | `src/features/gamification/types/index.ts` |
 | Sound System | `src/lib/sound/index.ts` |
-| RPG Components | `src/components/ui/RPGWindow.tsx`, `RPGMenu.tsx`, `TypewriterText.tsx` |
+| RPG Components | `src/components/ui/RPGWindow.tsx`, `RPGMenu.tsx`, `TypewriterText.tsx`, `NPCDialog.tsx` |
 | Agent Server | `packages/quest-agent/src/server.ts` |
 | Agent Client | `src/lib/agent/client.ts` |
 | XP Server Action | `src/features/quest/actions/complete-quest.ts` |
