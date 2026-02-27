@@ -33,13 +33,13 @@ export function StepName({ value, onChange, onNext }: StepNameProps) {
     <div className="w-full">
       <RPGWindow className="mb-4">
         <div className="mb-4">
-          <h2 className="font-dot-gothic text-base font-bold text-rpg-gold">
+          <h2 className="font-dot-gothic text-lg font-bold text-rpg-gold">
             冒険者の名前を決めよう！
           </h2>
           <TypewriterText
             text="後から変更できます。ユニークな名前を選びましょう。"
             speed={30}
-            className="mt-1 text-xs text-blue-200/60"
+            className="mt-1 text-sm text-blue-200/60"
             showCursor={false}
           />
         </div>

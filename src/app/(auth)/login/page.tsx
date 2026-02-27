@@ -83,7 +83,7 @@ function LoginForm() {
         <TypewriterText
           text="冒険の書を開く"
           speed={50}
-          className="mt-1 text-sm text-blue-200/70"
+          className="mt-1 text-base text-blue-200/70"
           showCursor={false}
         />
       </div>
@@ -117,7 +117,7 @@ function LoginForm() {
             <div className="w-full border-t border-blue-200/20" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[var(--rpg-window-bg-from,#1a1a3e)] px-3 font-dot-gothic text-xs text-blue-200/50">
+            <span className="bg-[var(--rpg-window-bg-from,#1a1a3e)] px-3 font-dot-gothic text-sm text-blue-200/50">
               または
             </span>
           </div>
@@ -181,7 +181,7 @@ function LoginForm() {
             setError(null);
             setSuccess(null);
           }}
-          className="w-full text-center font-dot-gothic text-xs text-blue-200/50 hover:text-white transition-colors"
+          className="w-full text-center font-dot-gothic text-sm text-blue-200/50 hover:text-white transition-colors"
         >
           {mode === 'magic-link'
             ? '\u25B6 パスワードでログイン'
@@ -189,7 +189,7 @@ function LoginForm() {
         </button>
       </div>
 
-      <div className="mt-6 text-center font-dot-gothic text-sm text-blue-200/50">
+      <div className="mt-6 text-center font-dot-gothic text-base text-blue-200/50">
         アカウントがない方は{' '}
         <Link
           href="/register"

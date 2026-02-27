@@ -49,13 +49,13 @@ export function StepMascot({ selected, onSelect, onBack, onComplete, loading, er
     <div className="w-full">
       <RPGWindow className="mb-4">
         <div className="mb-4">
-          <h2 className="font-dot-gothic text-base font-bold text-rpg-gold">
+          <h2 className="font-dot-gothic text-lg font-bold text-rpg-gold">
             相棒を選ぼう！
           </h2>
           <TypewriterText
             text="一緒に冒険する仲間を選んでください。"
             speed={30}
-            className="mt-1 text-xs text-blue-200/60"
+            className="mt-1 text-sm text-blue-200/60"
             showCursor={false}
           />
         </div>
@@ -86,9 +86,9 @@ export function StepMascot({ selected, onSelect, onBack, onComplete, loading, er
                   />
                 </div>
                 <div className="font-dot-gothic font-bold text-white">{m.title}</div>
-                <div className="font-dot-gothic text-xs text-blue-200/60">{m.desc}</div>
+                <div className="font-dot-gothic text-sm text-blue-200/60">{m.desc}</div>
                 {active && (
-                  <span className="mt-1 inline-block font-dot-gothic text-[10px] text-rpg-gold">
+                  <span className="mt-1 inline-block font-dot-gothic text-xs text-rpg-gold">
                     &#x25B6; 選択中
                   </span>
                 )}

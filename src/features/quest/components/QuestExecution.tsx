@@ -67,7 +67,7 @@ export function QuestExecution({ onCancel }: Props) {
         <div className="max-h-80 overflow-auto" ref={scrollRef}>
           {progress.map((m, i) => (
             <div key={i} className="mb-2">
-              <span className="font-dot-gothic text-xs text-rpg-gold">
+              <span className="font-dot-gothic text-sm text-rpg-gold">
                 &#x25B6; {m}
               </span>
             </div>
@@ -75,7 +75,7 @@ export function QuestExecution({ onCancel }: Props) {
 
           <pre className="whitespace-pre-wrap font-dot-gothic text-sm text-blue-100">{streamed || ''}</pre>
           {!streamed && (
-            <div className="flex items-center gap-2 py-4 font-dot-gothic text-xs text-blue-200/40">
+            <div className="flex items-center gap-2 py-4 font-dot-gothic text-sm text-blue-200/40">
               <span className="animate-pulse">&#x25CF;</span>
               <span className="animate-pulse" style={{ animationDelay: '0.2s' }}>&#x25CF;</span>
               <span className="animate-pulse" style={{ animationDelay: '0.4s' }}>&#x25CF;</span>

@@ -63,7 +63,7 @@ export function OnboardingWizard() {
     <div className="mx-auto w-full max-w-2xl">
       {/* RPG Progress Bar */}
       <RPGWindow variant="status" className="mb-4">
-        <div className="flex items-center justify-between font-dot-gothic text-xs text-blue-200/70">
+        <div className="flex items-center justify-between font-dot-gothic text-sm text-blue-200/70">
           <span>冒険者登録 ステップ {stepForProgress}/3</span>
           <div className="flex gap-1.5">
             {[1, 2, 3].map((s) => (

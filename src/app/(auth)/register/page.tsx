@@ -49,7 +49,7 @@ export default function RegisterPage() {
         <TypewriterText
           text="新しい冒険者を登録"
           speed={50}
-          className="mt-1 text-sm text-blue-200/70"
+          className="mt-1 text-base text-blue-200/70"
           showCursor={false}
         />
       </div>
@@ -83,7 +83,7 @@ export default function RegisterPage() {
             <div className="w-full border-t border-blue-200/20" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[var(--rpg-window-bg-from,#1a1a3e)] px-3 font-dot-gothic text-xs text-blue-200/50">
+            <span className="bg-[var(--rpg-window-bg-from,#1a1a3e)] px-3 font-dot-gothic text-sm text-blue-200/50">
               または
             </span>
           </div>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
         </form>
       </div>
 
-      <div className="mt-6 text-center font-dot-gothic text-sm text-blue-200/50">
+      <div className="mt-6 text-center font-dot-gothic text-base text-blue-200/50">
         既にアカウントをお持ちの方は{' '}
         <Link
           href="/login"

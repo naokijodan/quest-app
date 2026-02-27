@@ -24,16 +24,16 @@ export function StatusBar({ initialXp, initialLevel, username }: Props) {
     <div className="rpg-hud font-dot-gothic">
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Username + Level */}
-        <span className="text-xs sm:text-sm text-rpg-gold font-bold tracking-wider">
+        <span className="text-sm sm:text-base text-rpg-gold font-bold tracking-wider">
           {name}
         </span>
-        <span className="text-xs sm:text-sm font-bold text-white">
+        <span className="text-sm sm:text-base font-bold text-white">
           Lv.{level}
         </span>
 
         {/* XP Bar - Segment style */}
         <div className="hidden sm:flex items-center gap-1.5">
-          <span className="text-[10px] text-blue-300">XP</span>
+          <span className="text-xs text-blue-300">XP</span>
           <div className="rpg-bar-segments w-20">
             {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
               <div
@@ -44,7 +44,7 @@ export function StatusBar({ initialXp, initialLevel, username }: Props) {
               />
             ))}
           </div>
-          <span className="text-[10px] text-muted">
+          <span className="text-xs text-muted">
             {current}/{next}
           </span>
         </div>

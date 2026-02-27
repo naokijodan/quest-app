@@ -33,9 +33,9 @@ export function HistoryList({ runs }: Props) {
     return (
       <RPGWindow className="text-center">
         <span className="mb-3 block text-3xl">&#x1F4DC;</span>
-        <p className="font-dot-gothic text-sm font-bold text-white">まだクエストを実行していません</p>
-        <p className="mt-1 font-dot-gothic text-xs text-blue-200/50">ギルドからクエストに挑戦しましょう！</p>
-        <a href="/" className="mt-3 inline-block font-dot-gothic text-xs text-rpg-gold hover:text-white transition-colors">
+        <p className="font-dot-gothic text-base font-bold text-white">まだクエストを実行していません</p>
+        <p className="mt-1 font-dot-gothic text-sm text-blue-200/50">ギルドからクエストに挑戦しましょう！</p>
+        <a href="/" className="mt-3 inline-block font-dot-gothic text-sm text-rpg-gold hover:text-white transition-colors">
           &#x25B6; ギルド掲示板へ
         </a>
       </RPGWindow>
@@ -63,12 +63,12 @@ export function HistoryList({ runs }: Props) {
               </span>
               <div className="min-w-0 flex-1 font-dot-gothic">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-bold text-white">
+                  <span className="truncate text-base font-bold text-white">
                     {run.quest_title}
                   </span>
                   <StatusBadge status={run.status} />
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-blue-200/50">
+                <div className="flex items-center gap-2 text-xs text-blue-200/50">
                   <span>{CATEGORY_LABELS[run.quest_category as QuestCategory]}</span>
                   <span>&#x00B7;</span>
                   <span>{dateStr}</span>
@@ -88,7 +88,7 @@ export function HistoryList({ runs }: Props) {
             {isExpanded && output && (
               <div className="mt-3 border-t border-blue-200/10 pt-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-dot-gothic text-xs text-blue-200/40">出力結果</span>
+                  <span className="font-dot-gothic text-sm text-blue-200/40">出力結果</span>
                   <Button
                     variant="ghost"
                     size="sm"

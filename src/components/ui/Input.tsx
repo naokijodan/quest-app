@@ -17,7 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-foreground"
+            className="text-base font-medium text-foreground"
           >
             {label}
           </label>
@@ -36,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-quest-danger">{error}</p>}
+        {error && <p className="text-sm text-quest-danger">{error}</p>}
       </div>
     );
   }
@@ -59,7 +59,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-foreground"
+            className="text-base font-medium text-foreground"
           >
             {label}
           </label>
@@ -78,7 +78,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-quest-danger">{error}</p>}
+        {error && <p className="text-sm text-quest-danger">{error}</p>}
       </div>
     );
   }

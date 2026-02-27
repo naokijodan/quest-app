@@ -41,31 +41,32 @@ export function ChapterCard({ chapter, locked, current, completed, href, totalQu
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="truncate text-lg font-bold text-foreground">
+              <h3 className="truncate text-xl font-bold text-foreground">
                 第{chapter.number}章 {chapter.title}
               </h3>
-              <span className="rounded-md bg-muted-bg px-2 py-0.5 text-xs text-muted">
+              <span className="rounded-md bg-muted-bg px-2 py-0.5 text-sm text-muted">
                 {chapter.subtitle}
               </span>
               {current && (
-                <span className="rounded-md bg-quest-primary/10 px-2 py-0.5 text-xs text-quest-primary">現在</span>
+                <span className="rounded-md bg-quest-primary/10 px-2 py-0.5 text-sm text-quest-primary">現在</span>
               )}
               {completed && (
-                <span className="flex items-center gap-1 rounded-md bg-quest-success/10 px-2 py-0.5 text-xs text-quest-success">
+                <span className="flex items-center gap-1 rounded-md bg-quest-success/10 px-2 py-0.5 text-sm text-quest-success">
                   <CheckCircle2 className="h-3.5 w-3.5" /> 完了
                 </span>
+
               )}
               {locked && (
-                <span className="flex items-center gap-1 rounded-md bg-muted-bg px-2 py-0.5 text-xs text-muted">
+                <span className="flex items-center gap-1 rounded-md bg-muted-bg px-2 py-0.5 text-sm text-muted">
                   <Lock className="h-3.5 w-3.5" /> 要Lv.{chapter.requiredLevel}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm text-muted">{chapter.description}</p>
+            <p className="mt-1 text-base text-muted">{chapter.description}</p>
 
             {totalQuests > 0 && !locked && (
               <div className="mt-3">
-                <div className="mb-1 flex items-center justify-between text-xs">
+                <div className="mb-1 flex items-center justify-between text-sm">
                   <span className="text-muted">進捗</span>
                   <span className={cn(
                     'font-medium',

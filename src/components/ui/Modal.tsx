@@ -51,7 +51,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       >
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+            <h2 className="text-xl font-semibold text-foreground">{title}</h2>
             <button
               onClick={onClose}
               className="rounded-lg p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"

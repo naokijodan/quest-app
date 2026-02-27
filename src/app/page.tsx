@@ -11,12 +11,35 @@ import { createClient } from '@/lib/supabase/server';
 import { getPresetQuests, getUserProfile } from '@/features/quest/actions';
 import { calculateLevel, getUnlockedCategories } from '@/features/gamification/types';
 import { QuestCard } from '@/features/quest/components/QuestCard';
-import { GuildBoardNPC } from '@/features/quest/components/GuildBoardNPC';
+import { NPCDialog } from '@/components/ui/NPCDialog';
 import { StaggerList, StaggerItem } from '@/components/ui/StaggerList';
 import { UserStoreInitializer } from '@/components/ui/UserStoreInitializer';
 import type { QuestCategory } from '@/types';
 
 const CATEGORY_ORDER: QuestCategory[] = ['basic', 'business', 'life', 'creative', 'analysis'];
+
+const NPC_MESSAGES: Record<number, string[]> = {
+  1: [
+    'ようこそ、新米冒険者よ。まずは簡単な依頼から始めるのじゃ。',
+    'おぬし、まだ駆け出しじゃな。掲示板の依頼を確認するがよい。',
+    'ふむ…新しい顔じゃな。このギルドでは依頼をこなしてXPを稼ぐのじゃ。',
+  ],
+  2: [
+    'おお、腕を上げたな！新しい依頼が解放されたぞ。',
+    'ビジネスの依頼も受けられるようになったか。成長したのう。',
+    'Lv.2か…まだまだ先は長いぞ。精進せよ。',
+  ],
+  3: [
+    'なかなかの冒険者じゃ。すべての依頼が受けられるぞ。',
+    '全カテゴリ解放！おぬしの実力は本物じゃ。',
+  ],
+};
+
+function getNPCMessage(level: number): string {
+  const messages = NPC_MESSAGES[Math.min(level, 3)] ?? NPC_MESSAGES[3]!;
+  const index = Math.floor(Math.random() * messages.length);
+  return messages[index];
+}
 
 export default async function RootPage() {
   const supabase = await createClient();
@@ -62,7 +85,7 @@ export default async function RootPage() {
         <div className="rpg-window !rounded-none" style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
           <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2 sm:px-5">
             <div className="flex items-center gap-4">
-              <Link href="/" className="font-dot-gothic text-base sm:text-lg font-bold text-rpg-gold tracking-widest hover:text-white transition-colors">
+              <Link href="/" className="font-dot-gothic text-lg sm:text-xl font-bold text-rpg-gold tracking-widest hover:text-white transition-colors">
                 Quest App
               </Link>
               <div className="hidden sm:flex items-center gap-1">
@@ -85,7 +108,11 @@ export default async function RootPage() {
       <main className="relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <div className="space-y-5">
           {/* NPC Message */}
-          <GuildBoardNPC username={profile.username} level={level} />
+          <NPCDialog
+            character="sage"
+            message={getNPCMessage(level)}
+            npcName="ギルドマスター"
+          />
 
           {/* Adventure Route CTA */}
           <Link href="/adventure">
@@ -94,8 +121,8 @@ export default async function RootPage() {
                 <div className="flex items-center gap-4">
                   <span className="text-2xl torch-flicker">&#x2694;&#xFE0F;</span>
                   <div className="font-dot-gothic">
-                    <h2 className="text-base font-bold text-white">&#x25B6; &#x5192;&#x967A;&#x306B;&#x51FA;&#x308B;</h2>
-                    <p className="text-xs text-blue-200/70">&#x30BF;&#x30FC;&#x30DF;&#x30CA;&#x30EB;&#x306E;&#x9B54;&#x738B;&#x3092;&#x5012;&#x3059;&#x65C5;&#x306B;&#x51FA;&#x3088;&#x3046;</p>
+                    <h2 className="text-lg font-bold text-white">&#x25B6; &#x5192;&#x967A;&#x306B;&#x51FA;&#x308B;</h2>
+                    <p className="text-sm text-blue-200/70">&#x30BF;&#x30FC;&#x30DF;&#x30CA;&#x30EB;&#x306E;&#x9B54;&#x738B;&#x3092;&#x5012;&#x3059;&#x65C5;&#x306B;&#x51FA;&#x3088;&#x3046;</p>
                   </div>
                 </div>
                 <span className="text-blue-200/40 group-hover:text-white transition-colors text-lg">&#x25B6;</span>
@@ -114,21 +141,21 @@ export default async function RootPage() {
                     <div className="mb-3 flex items-center justify-between font-dot-gothic">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{icon}</span>
-                        <h2 className="text-sm font-bold text-white sm:text-base">{CATEGORY_LABELS[category]}</h2>
+                        <h2 className="text-base font-bold text-white sm:text-lg">{CATEGORY_LABELS[category]}</h2>
                         {isLocked && (
-                          <span className="flex items-center gap-1 rounded border border-blue-200/20 bg-blue-900/30 px-2 py-0.5 text-[10px] text-blue-200/60">
+                          <span className="flex items-center gap-1 rounded border border-blue-200/20 bg-blue-900/30 px-2 py-0.5 text-xs text-blue-200/60">
                             <Lock className="h-3 w-3" /> Locked
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-blue-200/50">
+                      <span className="text-xs text-blue-200/50">
                         {isLocked ? 'Lvアップで解放' : `${catQuests.length} 件`}
                       </span>
                     </div>
 
                     <StaggerList className="grid gap-2 sm:grid-cols-2">
                       {catQuests.length === 0 && (
-                        <p className="text-xs text-blue-200/40 font-dot-gothic">依頼なし</p>
+                        <p className="text-sm text-blue-200/40 font-dot-gothic">依頼なし</p>
                       )}
                       {catQuests.map((q) => (
                         <StaggerItem key={q.id}>
@@ -180,7 +207,7 @@ function LandingContent() {
 
         {/* RPG Message Window */}
         <div className="rpg-window !p-5 mb-8 text-left">
-          <p className="font-dot-gothic text-sm sm:text-base text-blue-100 leading-relaxed">
+          <p className="font-dot-gothic text-base sm:text-lg text-blue-100 leading-relaxed">
             &#x30BF;&#x30FC;&#x30DF;&#x30CA;&#x30EB;&#x306E;&#x9B54;&#x738B;&#x3092;&#x5012;&#x3059;&#x5192;&#x967A;&#x306B;&#x51FA;&#x3088;&#x3046;&#x3002;<br/>
             &#x30AF;&#x30A8;&#x30B9;&#x30C8;&#x3092;&#x9078;&#x3093;&#x3067;&#x3001;30&#x79D2;&#x3067;AI&#x306E;&#x6210;&#x679C;&#x7269;&#x3092;&#x624B;&#x306B;&#x5165;&#x308C;&#x308B;&#x3002;<br/>
             &#x8AB0;&#x3067;&#x3082;&#x4F7F;&#x3048;&#x308B;&#x3001;RPG&#x98A8;AI&#x30EF;&#x30FC;&#x30AF;&#x30D5;&#x30ED;&#x30FC;&#x3002;
@@ -234,8 +261,8 @@ function FeatureCard({
   return (
     <div className="rpg-window !p-4 text-left transition-all duration-200 hover:shadow-[inset_0_0_0_1px_var(--rpg-window-border-inner),0_0_0_3px_var(--rpg-window-bg-to),0_0_0_5px_var(--rpg-window-border),0_0_16px_rgba(99,102,241,0.2)]">
       <div className="mb-2">{icon}</div>
-      <h3 className="mb-1 font-dot-gothic font-bold text-white text-sm">{title}</h3>
-      <p className="text-xs text-blue-200/60 font-dot-gothic">{description}</p>
+      <h3 className="mb-1 font-dot-gothic font-bold text-white text-base">{title}</h3>
+      <p className="text-sm text-blue-200/60 font-dot-gothic">{description}</p>
     </div>
   );
 }

@@ -34,9 +34,9 @@ export function GameNav() {
                 )}
               >
                 <span className={cn('text-lg', isActive && 'drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]')}>{icon}</span>
-                <span className={cn('text-[10px] tracking-wider', isActive && 'text-rpg-gold')}>{label}</span>
+                <span className={cn('text-xs tracking-wider', isActive && 'text-rpg-gold')}>{label}</span>
                 {isActive && (
-                  <span className="absolute -top-0.5 text-[8px] text-rpg-gold">{'\u25B6'}</span>
+                  <span className="absolute -top-0.5 text-[10px] text-rpg-gold">{'\u25B6'}</span>
                 )}
               </Link>
             );

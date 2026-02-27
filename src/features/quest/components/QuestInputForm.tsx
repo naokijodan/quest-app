@@ -10,6 +10,7 @@ import { playSound } from '@/lib/sound';
 import { useQuestExecution } from '@/features/quest/hooks/useQuestExecution';
 import { QuestExecution } from './QuestExecution';
 import { QuestResult } from './QuestResult';
+import { NPCDialog } from '@/components/ui/NPCDialog';
 
 type Phase = 'input' | 'executing' | 'completed' | 'error';
 
@@ -78,7 +79,7 @@ export function QuestInputForm({ quest }: Props) {
         <TypewriterText
           text="必要な情報を入力して「クエスト実行！」を押してください。"
           speed={25}
-          className="mt-1 text-xs text-blue-200/60"
+          className="mt-1 text-sm text-blue-200/60"
           showCursor={false}
         />
       </div>
@@ -113,9 +114,9 @@ export function QuestInputForm({ quest }: Props) {
                   )}
                   {field.type === 'select' && (
                     <div className="flex flex-col gap-1.5">
-                      <label className="font-dot-gothic text-sm font-medium text-blue-100">{field.label}</label>
+                      <label className="font-dot-gothic text-base font-medium text-blue-100">{field.label}</label>
                       <select
-                        className="w-full rounded-lg border border-blue-200/20 bg-blue-900/30 px-3 py-2 font-dot-gothic text-sm text-white focus:border-rpg-gold focus:outline-none focus:ring-2 focus:ring-rpg-gold/20"
+                        className="w-full rounded-lg border border-blue-200/20 bg-blue-900/30 px-3 py-2 font-dot-gothic text-base text-white focus:border-rpg-gold focus:outline-none focus:ring-2 focus:ring-rpg-gold/20"
                         value={values[field.name] || ''}
                         onChange={(e) => handleChange(field, e.target.value)}
                       >
@@ -129,12 +130,12 @@ export function QuestInputForm({ quest }: Props) {
                         ))}
                       </select>
                       {errors[field.name] && (
-                        <p className="font-dot-gothic text-xs text-red-300">{errors[field.name]}</p>
+                        <p className="font-dot-gothic text-sm text-red-300">{errors[field.name]}</p>
                       )}
                     </div>
                   )}
                   {field.description && (
-                    <p className="font-dot-gothic text-xs text-blue-200/40">{field.description}</p>
+                    <p className="font-dot-gothic text-sm text-blue-200/40">{field.description}</p>
                   )}
                 </div>
               ))}
@@ -162,6 +163,12 @@ export function QuestInputForm({ quest }: Props) {
 
         {phase === 'error' && (
           <motion.div key="phase-error" variants={phaseVariants} initial="enter" animate="center" exit="exit">
+            <NPCDialog
+              character="sage"
+              message="むむ…何かうまくいかなかったようじゃ。もう一度やってみるか？"
+              npcName="ギルドマスター"
+              className="mb-3"
+            />
             <div className="rpg-window !p-3 text-sm text-red-300 font-dot-gothic">
               {error || 'エラーが発生しました'}
               <div className="mt-3">

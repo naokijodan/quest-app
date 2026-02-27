@@ -66,7 +66,7 @@ function WorldMapNode({ data }: { data: ChapterNodeData }) {
           )}>
             第{chapter.number}章: {chapter.title}
           </h3>
-          <span className="border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-[10px] text-blue-200/50">
+          <span className="border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-xs text-blue-200/50">
             {chapter.subtitle}
           </span>
         </div>
@@ -77,7 +77,7 @@ function WorldMapNode({ data }: { data: ChapterNodeData }) {
         {/* Progress bar - Segment style */}
         {totalQuests > 0 && !locked && (
           <div className="mt-2">
-            <div className="mb-1 flex items-center justify-between text-[10px]">
+            <div className="mb-1 flex items-center justify-between text-xs">
               <span className="text-blue-200/50">進捗</span>
               <span className={cn('font-bold', completed ? 'text-quest-success' : 'text-white')}>
                 {completedQuests} / {totalQuests}
@@ -101,17 +101,17 @@ function WorldMapNode({ data }: { data: ChapterNodeData }) {
         {/* Status badges */}
         <div className="mt-2 flex items-center gap-2">
           {completed && (
-            <span className="flex items-center gap-1 border border-quest-success/30 bg-quest-success/10 px-2 py-0.5 text-[10px] font-bold text-quest-success">
+            <span className="flex items-center gap-1 border border-quest-success/30 bg-quest-success/10 px-2 py-0.5 text-xs font-bold text-quest-success">
               <CheckCircle2 className="h-3 w-3" /> 完了
             </span>
           )}
           {current && !completed && (
-            <span className="flex items-center gap-1 border border-quest-primary/30 bg-quest-primary/10 px-2 py-0.5 text-[10px] font-bold text-quest-primary">
+            <span className="flex items-center gap-1 border border-quest-primary/30 bg-quest-primary/10 px-2 py-0.5 text-xs font-bold text-quest-primary">
               <MapPin className="h-3 w-3" /> 現在地
             </span>
           )}
           {locked && (
-            <span className="relative z-10 flex items-center gap-1 border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-[10px] text-blue-200/50">
+            <span className="relative z-10 flex items-center gap-1 border border-blue-200/20 bg-blue-900/40 px-2 py-0.5 text-xs text-blue-200/50">
               <Lock className="h-3 w-3" /> 要 Lv.{chapter.requiredLevel}
             </span>
           )}

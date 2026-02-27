@@ -10,6 +10,7 @@ import { playSound } from '@/lib/sound';
 import { useQuestStore } from '@/stores/questStore';
 import { useUIStore } from '@/stores/uiStore';
 import { LevelUpModal } from '@/features/gamification/components/LevelUpModal';
+import { NPCDialog } from '@/components/ui/NPCDialog';
 
 interface Props {
   questRunId: string;
@@ -41,15 +42,20 @@ export function QuestResult({ questRunId, xpGained, levelUp, newLevel = 2, onRet
 
   return (
     <div className="page-enter space-y-4">
+      <NPCDialog
+        character="sage"
+        message="見事じゃ！クエスト完了！成果物を確認するがよい。"
+        npcName="ギルドマスター"
+      />
       <div className="flex flex-wrap items-center justify-between gap-3 font-dot-gothic">
         <TypewriterText
           text="クエスト完了！"
           speed={60}
-          className="text-sm font-bold text-rpg-gold"
+          className="text-base font-bold text-rpg-gold"
           showCursor={false}
         />
         <div className="flex items-center gap-2">
-          <span className="rounded border border-green-400/30 bg-green-900/30 px-2.5 py-1 text-xs font-bold text-green-300 glow-success">
+          <span className="rounded border border-green-400/30 bg-green-900/30 px-2.5 py-1 text-sm font-bold text-green-300 glow-success">
             +{xpGained} XP
           </span>
           <Button variant="secondary" size="sm" onClick={handleCopy} icon={<Copy className="h-4 w-4" />} className="font-dot-gothic">

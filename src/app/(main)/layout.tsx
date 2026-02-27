@@ -38,7 +38,7 @@ export default async function MainLayout({
         <div className="rpg-window !rounded-none" style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
           <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2 sm:px-5">
             <div className="flex items-center gap-4">
-              <Link href="/" className="font-dot-gothic text-base sm:text-lg font-bold text-rpg-gold tracking-widest hover:text-white transition-colors">
+              <Link href="/" className="font-dot-gothic text-lg sm:text-xl font-bold text-rpg-gold tracking-widest hover:text-white transition-colors">
                 Quest App
               </Link>
               <div className="hidden sm:flex items-center gap-1">
