@@ -1,29 +1,33 @@
 # Quest App - HANDOVER
 
-**最終更新:** 2026-02-27
-**現在のPhase:** Phase 6（RPG UI本格リデザイン）— **全画面RPG化完了 + NPCアニメーション + Adventure NPC統合**
-**現在のSprint:** Sprint 15 Adventure NPC・マスコット・BossVictory強化
+**最終更新:** 2026-03-04
+**現在のPhase:** Phase 7（テーマシステム + ターミナル教育）
+**現在のSprint:** Sprint 16 UIテーマ選択システム + ターミナル発見クエスト
 
 ---
 
 ### 重要: 今回のセッションで何をしたか
 
-**2026-02-27 (Sprint 15): Adventure NPCDialog統合 + 犬マスコット + BossVictory Framer Motion**
+**2026-03-04 (Sprint 16): UIテーマ選択システム + ターミナル発見クエスト**
 
 #### 変更概要
-1. **AdventureモードにwizardNPCDialog追加** — WorldMap画面・クエスト詳細・完了時の3箇所
-2. **マスコット犬スプライト生成** — DALL-Eでピクセルアート柴犬を生成、mascot-dog.pngとして配置
-3. **StepMascotの犬参照先修正** — mascot-cat-mage.png → mascot-dog.png
-4. **BossVictoryをFramer Motionに完全移行** — CSSキーフレーム → motion.div + AnimatePresence
-5. **パーティクル3種類36個** — sparkle（光の粒）+ confetti（紙吹雪）+ star（星型）
-6. **wizardスプライト確認** — npc-wizard.png (226KB) は既に配置済みを確認
+1. **3テーマ切り替えシステム** — Classic RPG / Modern Dark / Pop & Colorful
+2. **CSS変数ベースのテーマ** — data-theme属性で切り替え、既存コンポーネント変更なし
+3. **Modern テーマ** — グラスモーフィズム + backdrop-blur + パープルアクセント
+4. **Pop テーマ** — ライトモード + パステルパープル + ピンクアクセント + 丸角20px
+5. **ThemeProvider** — userStore + localStorage でテーマ永続化
+6. **オンボーディング拡張** — 「画面デザインを選ぼう」ステップ追加（3→4ステップ）
+7. **ch0-discover-terminal** — ターミナルとは何か・OS別の開き方をRPG風に案内
+8. **OS自動検出** — Mac/Windowsでステップを自動切り替え
 
 #### コミット履歴（今セッション）
 | コミット | 内容 |
 |----------|------|
+| `bd108c7` | feat: UIテーマ選択システム + ターミナル発見クエスト |
+| `5d15644` | docs: HANDOVER.md Sprint 15完了の記録 |
 | `c32f88a` | feat: Adventure NPCDialog統合・犬マスコット・BossVictory Framer Motion |
 
-#### 前セッション (Sprint 14)
+#### 前セッション (Sprint 14-15)
 | コミット | 内容 |
 |----------|------|
 | `8c95133` | feat: NPCDialogアニメーション + フォントサイズ1段階アップ |
@@ -64,7 +68,7 @@
 
 ### Git
 - **Branch:** main
-- **Latest commit:** `c32f88a` feat: Adventure NPCDialog統合・犬マスコット・BossVictory Framer Motion
+- **Latest commit:** `bd108c7` feat: UIテーマ選択システム + ターミナル発見クエスト
 - **Status:** クリーン（コミット済み・プッシュ済み）
 - **Production URL:** https://quest-app-eight.vercel.app
 - **Supabase Remote:** yabrrdonqlttzwrfpqdu (Northeast Asia / Tokyo)
@@ -247,10 +251,23 @@
     - 3種パーティクル36個: sparkle, confetti, star
 28. **[x] Google OAuth コード検証** — コード側完全対応済み確認
 
+### Sprint 16 で完了したタスク
+
+29. **[x] UIテーマ選択システム** — `bd108c7`
+    - 3テーマ: Classic RPG / Modern Dark / Pop & Colorful
+    - CSS変数ベース + data-theme属性 + ThemeProvider
+    - オンボーディングにテーマ選択ステップ追加
+30. **[x] ch0-discover-terminal クエスト** — `bd108c7`
+    - ターミナルとは何か・OS別開き方をRPG風に案内
+    - SetupChapterRunnerに登録済み
+
 ### 次セッションのタスク
 
-29. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書 `docs/GOOGLE_OAUTH_SETUP.md` 参照）
-30. **[ ] カスタムドメイン購入・設定**
+31. **[ ] DB migration: ui_theme列追加** — usersテーブルにui_theme列を追加（現在はlocalStorage）
+32. **[ ] 設定画面にテーマ切り替えUI追加** — `/settings` でいつでもテーマ変更可能に
+33. **[ ] DB seed: ch0-discover-terminalクエストデータ追加** — preset_questsに新クエスト追加
+34. **[ ] Google Cloud Console + Supabase DashboardでGoogle OAuth有効化**（手順書参照）
+35. **[ ] カスタムドメイン購入・設定**
 
 ---
 
