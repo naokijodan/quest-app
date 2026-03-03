@@ -5,6 +5,7 @@ import type { PresetQuest } from '@/types';
 import { SetupQuestWeaponCheck } from './SetupQuestWeaponCheck';
 import { SetupQuestWeaponForge } from './SetupQuestWeaponForge';
 import { SetupQuestSummonAlly } from './SetupQuestSummonAlly';
+import { SetupQuestDiscoverTerminal } from './SetupQuestDiscoverTerminal';
 import { completeAdventureQuest } from '@/features/adventure/actions';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const SETUP_COMPONENTS: Record<string, React.ComponentType<{ quest: PresetQuest; onComplete: () => void }>> = {
+  'ch0-discover-terminal': SetupQuestDiscoverTerminal,
   'ch0-weapon-check': SetupQuestWeaponCheck,
   'ch0-weapon-forge': SetupQuestWeaponForge,
   'ch0-summon-ally': SetupQuestSummonAlly,

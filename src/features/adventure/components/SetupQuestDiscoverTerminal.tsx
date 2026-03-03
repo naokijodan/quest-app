@@ -1,0 +1,203 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/Button';
+import { NPCDialog } from '@/components/ui/NPCDialog';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { ArrowRight, Monitor, Terminal } from 'lucide-react';
+import type { PresetQuest } from '@/types';
+
+interface Props {
+  quest: PresetQuest;
+  onComplete: () => void;
+}
+
+type OS = 'mac' | 'windows' | 'other';
+
+function detectOS(): OS {
+  if (typeof navigator === 'undefined') return 'other';
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('mac')) return 'mac';
+  if (ua.includes('win')) return 'windows';
+  return 'other';
+}
+
+interface Step {
+  title: string;
+  instruction: string;
+  detail: string;
+  icon: string;
+}
+
+const STEPS: Record<OS, Step[]> = {
+  mac: [
+    {
+      title: '探索の呪文を唱えよう',
+      instruction: 'キーボードの ⌘ Command + Space を同時に押してください',
+      detail: 'Spotlight（探索窓）が画面中央に出現します',
+      icon: '🔍',
+    },
+    {
+      title: '魔法の部屋を探そう',
+      instruction: '「ターミナル」と入力してEnterを押してください',
+      detail: '黒い画面が出たら成功！これが「ターミナル」＝魔法の部屋です',
+      icon: '✨',
+    },
+  ],
+  windows: [
+    {
+      title: '探索の呪文を唱えよう',
+      instruction: 'キーボードの Windows キー を押してください',
+      detail: 'スタートメニュー（探索窓）が出現します',
+      icon: '🔍',
+    },
+    {
+      title: '魔法の部屋を探そう',
+      instruction: '「PowerShell」と入力してEnterを押してください',
+      detail: '青い画面が出たら成功！これが「PowerShell」＝魔法の部屋です',
+      icon: '✨',
+    },
+  ],
+  other: [
+    {
+      title: '魔法の部屋を探そう',
+      instruction: 'お使いのOSのターミナルアプリを開いてください',
+      detail: 'Mac: ターミナル.app / Windows: PowerShell / Linux: Terminal',
+      icon: '🔍',
+    },
+  ],
+};
+
+export function SetupQuestDiscoverTerminal({ quest, onComplete }: Props) {
+  const [os, setOS] = useState<OS>('other');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [found, setFound] = useState(false);
+
+  useEffect(() => {
+    setOS(detectOS());
+  }, []);
+
+  const steps = STEPS[os];
+  const isLastStep = currentStep >= steps.length - 1;
+
+  return (
+    <div className="space-y-6 page-enter">
+      {/* Wizard NPC Introduction */}
+      <NPCDialog
+        character="wizard"
+        message={
+          found
+            ? 'おお！魔法の部屋を見つけたようじゃな！これでターミナルの呪文が使えるぞ。'
+            : 'この世界には「ターミナル」という魔法の部屋がある。\nそこでは文字の呪文（コマンド）を唱えて、あらゆることができるのじゃ。\nまずはその部屋の入り口を見つけるところから始めよう。'
+        }
+        npcName="導きの魔法使い"
+      />
+
+      {/* Terminal Explanation */}
+      {!found && (
+        <RPGWindow className="!p-5">
+          <div className="mb-4">
+            <h2 className="font-dot-gothic text-lg font-bold text-rpg-gold mb-2">
+              ターミナルとは？
+            </h2>
+            <div className="space-y-2 text-sm text-foreground/80">
+              <p>ターミナルは、文字を打ち込んでコンピュータに指示を出す「魔法の部屋」です。</p>
+              <p>ボタンやメニューの代わりに「呪文（コマンド）」を使います。</p>
+              <p className="text-rpg-gold/80 font-dot-gothic">
+                怖い見た目ですが、大丈夫。一歩ずつ進みましょう。
+              </p>
+            </div>
+          </div>
+
+          {/* OS Detection Badge */}
+          <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-quest-primary/10 border border-quest-primary/20">
+            <Monitor className="h-4 w-4 text-quest-primary-light" />
+            <span className="text-sm text-quest-primary-light font-dot-gothic">
+              {os === 'mac' ? 'Mac' : os === 'windows' ? 'Windows' : 'お使いのOS'}を検出しました
+            </span>
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-3">
+            {steps.map((step, idx) => {
+              const isActive = idx === currentStep;
+              const isDone = idx < currentStep;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-lg border p-4 transition-all ${
+                    isActive
+                      ? 'border-rpg-gold/50 bg-rpg-gold/5 shadow-[0_0_12px_rgba(251,191,36,0.1)]'
+                      : isDone
+                        ? 'border-quest-success/30 bg-quest-success/5'
+                        : 'border-card-border/30 opacity-40'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">{isDone ? '✅' : step.icon}</span>
+                    <div className="flex-1">
+                      <h3 className="font-dot-gothic font-bold text-foreground text-sm mb-1">
+                        STEP {idx + 1}: {step.title}
+                      </h3>
+                      <p className="text-sm font-bold text-rpg-gold">{step.instruction}</p>
+                      <p className="text-xs text-muted mt-1">{step.detail}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Step Navigation */}
+          <div className="mt-4 flex items-center justify-end">
+            {!isLastStep ? (
+              <Button onClick={() => setCurrentStep((s) => s + 1)}>
+                できた！次へ
+              </Button>
+            ) : (
+              <Button onClick={() => setFound(true)}>
+                <Terminal className="h-4 w-4 mr-2" />
+                ターミナルを開けた！
+              </Button>
+            )}
+          </div>
+        </RPGWindow>
+      )}
+
+      {/* Completion */}
+      {found && (
+        <RPGWindow className="!p-5">
+          <div className="text-center space-y-4">
+            <div className="text-4xl">🎉</div>
+            <h2 className="font-dot-gothic text-lg font-bold text-rpg-gold">
+              魔法の部屋を発見！
+            </h2>
+            <p className="text-sm text-foreground">
+              これで「ターミナル」が使えるようになりました。<br />
+              次は武器（CLIツール）の確認に進みましょう。
+            </p>
+            <div className="text-xs text-muted space-y-1">
+              <p>💡 ヒント: ターミナルはいつでも同じ方法で開けます</p>
+              <p>💡 黒い画面が出ても慌てないでOK。閉じるときは右上の × で閉じられます</p>
+            </div>
+          </div>
+        </RPGWindow>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted">
+          {found ? '準備完了。次のクエストへ。' : 'ターミナルを開いてみましょう。'}
+        </div>
+        <Button
+          variant="primary"
+          onClick={onComplete}
+          icon={<ArrowRight className="h-4 w-4" />}
+        >
+          {found ? '次へ進む' : 'スキップ'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+

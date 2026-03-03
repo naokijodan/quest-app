@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { AvatarType, MascotType } from '@/types';
+import type { AvatarType, MascotType, UITheme } from '@/types';
 import { StepName } from './StepName';
+import { StepTheme } from './StepTheme';
 import { StepAvatar } from './StepAvatar';
 import { StepMascot } from './StepMascot';
 import { StepComplete } from './StepComplete';
@@ -12,6 +13,7 @@ import { RPGWindow } from '@/components/ui/RPGWindow';
 
 type FormState = {
   username: string;
+  ui_theme?: UITheme;
   avatar_type?: AvatarType;
   mascot_type?: MascotType;
 };
@@ -23,15 +25,15 @@ const stepVariants = {
 };
 
 export function OnboardingWizard() {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [form, setForm] = useState<FormState>({ username: '' });
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const stepForProgress = useMemo(() => (currentStep > 3 ? 3 : currentStep), [currentStep]);
+  const stepForProgress = useMemo(() => (currentStep > 4 ? 4 : currentStep), [currentStep]);
 
   function next() {
-    setCurrentStep((s) => (s < 4 ? ((s + 1) as typeof s) : s));
+    setCurrentStep((s) => (s < 5 ? ((s + 1) as typeof s) : s));
   }
   function back() {
     setCurrentStep((s) => (s > 1 ? ((s - 1) as typeof s) : s));
@@ -45,6 +47,12 @@ export function OnboardingWizard() {
     if (!form.username || !form.avatar_type || !form.mascot_type) return;
     setSubmitting(true);
     setServerError(null);
+    // Save theme to localStorage (DB column addition is separate migration)
+    if (form.ui_theme) {
+      try {
+        localStorage.setItem('quest-app-theme', form.ui_theme);
+      } catch {}
+    }
     const result = await completeOnboarding({
       username: form.username,
       avatar_type: form.avatar_type,
@@ -56,7 +64,7 @@ export function OnboardingWizard() {
       return;
     }
     setSubmitting(false);
-    setCurrentStep(4);
+    setCurrentStep(5);
   }
 
   return (
@@ -64,9 +72,9 @@ export function OnboardingWizard() {
       {/* RPG Progress Bar */}
       <RPGWindow variant="status" className="mb-4">
         <div className="flex items-center justify-between font-dot-gothic text-sm text-blue-200/70">
-          <span>冒険者登録 ステップ {stepForProgress}/3</span>
+          <span>冒険者登録 ステップ {stepForProgress}/4</span>
           <div className="flex gap-1.5">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={`h-2.5 w-8 rounded-sm border ${
@@ -95,6 +103,17 @@ export function OnboardingWizard() {
 
           {currentStep === 2 && (
             <motion.div key="step-2" variants={stepVariants} initial="enter" animate="center" exit="exit">
+              <StepTheme
+                selected={form.ui_theme}
+                onSelect={(v) => update('ui_theme', v)}
+                onNext={next}
+                onBack={back}
+              />
+            </motion.div>
+          )}
+
+          {currentStep === 3 && (
+            <motion.div key="step-3" variants={stepVariants} initial="enter" animate="center" exit="exit">
               <StepAvatar
                 selected={form.avatar_type}
                 onSelect={(v) => update('avatar_type', v)}
@@ -104,8 +123,8 @@ export function OnboardingWizard() {
             </motion.div>
           )}
 
-          {currentStep === 3 && (
-            <motion.div key="step-3" variants={stepVariants} initial="enter" animate="center" exit="exit">
+          {currentStep === 4 && (
+            <motion.div key="step-4" variants={stepVariants} initial="enter" animate="center" exit="exit">
               <StepMascot
                 selected={form.mascot_type}
                 onSelect={(v) => update('mascot_type', v)}
@@ -117,8 +136,8 @@ export function OnboardingWizard() {
             </motion.div>
           )}
 
-          {currentStep === 4 && form.avatar_type && form.mascot_type && (
-            <motion.div key="step-4" variants={stepVariants} initial="enter" animate="center" exit="exit">
+          {currentStep === 5 && form.avatar_type && form.mascot_type && (
+            <motion.div key="step-5" variants={stepVariants} initial="enter" animate="center" exit="exit">
               <StepComplete
                 username={form.username}
                 avatar_type={form.avatar_type}

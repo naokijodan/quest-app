@@ -1,0 +1,167 @@
+## Task: UIテーマシステム基盤構築
+
+プロジェクト: ~/Desktop/quest-app/ (Next.js 16 + TailwindCSS v4 + Zustand)
+
+### 目的
+3つのUIテーマ（classic/modern/pop）を切り替えられるシステムを構築する。
+現在は90年代RPG風（classic）のみ。若者にも刺さるよう modern/pop を追加。
+
+### 実装内容
+
+#### 1. 型定義の追加 (src/types/index.ts)
+
+`UITheme` 型を追加:
+```typescript
+export type UITheme = 'classic' | 'modern' | 'pop';
+```
+
+`User` interfaceに追加:
+```typescript
+ui_theme: UITheme;
+```
+
+#### 2. CSS変数のテーマ化 (src/app/globals.css)
+
+現在の `:root` の変数群を `[data-theme="classic"]` (デフォルト) として維持し、
+2つの新テーマを追加する。:root の変数はそのまま残し（デフォルト）、
+data-theme属性で上書きする形にする。
+
+**[data-theme="modern"] を追加:**
+```css
+[data-theme="modern"] {
+  /* モダンダーク — グラスモーフィズム */
+  --background: #0a0a0f;
+  --foreground: #f0f0f5;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --muted: #a0a0b0;
+  --muted-bg: rgba(255, 255, 255, 0.03);
+  --input-border: rgba(255, 255, 255, 0.15);
+  --input-focus: #a78bfa;
+
+  --quest-primary: #8b5cf6;
+  --quest-primary-hover: #7c3aed;
+  --quest-primary-light: #a78bfa;
+  --quest-accent: #06b6d4;
+  --quest-accent-hover: #0891b2;
+
+  --rpg-gold: #e0e0e0;
+  --rpg-window-bg-from: rgba(15, 15, 25, 0.8);
+  --rpg-window-bg-to: rgba(10, 10, 20, 0.9);
+  --rpg-window-border: rgba(255, 255, 255, 0.12);
+  --rpg-window-border-inner: rgba(255, 255, 255, 0.06);
+  --rpg-glow: rgba(139, 92, 246, 0.3);
+}
+
+[data-theme="modern"] .rpg-window {
+  background: rgba(15, 15, 25, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  image-rendering: auto;
+}
+
+[data-theme="modern"] .font-dot-gothic {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+```
+
+**[data-theme="pop"] を追加:**
+```css
+[data-theme="pop"] {
+  /* ポップ＆カワイイ — ライトモード */
+  --background: #faf5ff;
+  --foreground: #1e1b4b;
+  --card-bg: #ffffff;
+  --card-border: #e9d5ff;
+  --muted: #7c6f9f;
+  --muted-bg: #f3e8ff;
+  --input-border: #d8b4fe;
+  --input-focus: #c084fc;
+
+  --quest-primary: #a855f7;
+  --quest-primary-hover: #9333ea;
+  --quest-primary-light: #c084fc;
+  --quest-accent: #f472b6;
+  --quest-accent-hover: #ec4899;
+  --quest-success: #34d399;
+  --quest-danger: #fb7185;
+
+  --rpg-gold: #9333ea;
+  --rpg-window-bg-from: #ffffff;
+  --rpg-window-bg-to: #faf5ff;
+  --rpg-window-border: #e9d5ff;
+  --rpg-window-border-inner: #f3e8ff;
+  --rpg-glow: rgba(168, 85, 247, 0.2);
+}
+
+[data-theme="pop"] .rpg-window {
+  background: #ffffff;
+  border: 2px solid #e9d5ff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #1e1b4b;
+  image-rendering: auto;
+}
+
+[data-theme="pop"] .font-dot-gothic {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-weight: 600;
+}
+
+[data-theme="pop"] .rpg-window-title span {
+  color: #9333ea;
+}
+```
+
+#### 3. ThemeProvider (src/components/ui/ThemeProvider.tsx)
+
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+import { useUserStore } from '@/stores/userStore';
+
+export function ThemeProvider({ initialTheme }: { initialTheme?: string }) {
+  const theme = useUserStore((s) => s.user?.ui_theme) ?? initialTheme ?? 'classic';
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  return null;
+}
+```
+
+#### 4. userStoreにテーマ更新メソッド追加 (src/stores/userStore.ts)
+
+UserStateに追加:
+```typescript
+setTheme: (theme: UITheme) => void;
+```
+
+実装:
+```typescript
+setTheme: (theme) =>
+  set((state) => {
+    if (!state.user) return state;
+    return {
+      user: { ...state.user, ui_theme: theme },
+    };
+  }),
+```
+
+#### 5. layout.tsxにThemeProvider追加
+
+`src/app/layout.tsx` のbody内に `<ThemeProvider />` を追加。
+
+### 重要な制約
+- 既存の rpg-window クラスは残す（classic テーマで使用）
+- CSS変数の上書きでテーマ切り替えを実現（コンポーネント変更を最小限に）
+- :root の変数はデフォルト（classic）として残す
+- data-theme属性がない場合はclassicがデフォルト
+- TypeScriptの型安全性を維持する
+- UITheme型のimportは `@/types` から行う

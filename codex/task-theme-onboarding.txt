@@ -1,0 +1,230 @@
+## Task: オンボーディングにテーマ選択ステップ追加
+
+プロジェクト: ~/Desktop/quest-app/ (Next.js 16 + React 19 + TypeScript + Framer Motion)
+
+### 目的
+オンボーディング（冒険者登録）に「UIテーマを選ぶ」ステップを追加する。
+現在3ステップ（名前→アバター→マスコット）を4ステップに拡張。
+
+### 前提
+- UITheme型が src/types/index.ts に追加済み: `export type UITheme = 'classic' | 'modern' | 'pop';`
+- User interfaceに `ui_theme: UITheme;` が追加済み
+- ThemeProvider (src/components/ui/ThemeProvider.tsx) が存在
+
+### 実装内容
+
+#### 1. StepTheme.tsx (src/features/onboarding/components/StepTheme.tsx)
+
+新規ファイル。テーマ選択コンポーネント:
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui';
+import { RPGWindow } from '@/components/ui/RPGWindow';
+import { TypewriterText } from '@/components/ui/TypewriterText';
+import { playSound } from '@/lib/sound';
+import type { UITheme } from '@/types';
+
+interface StepThemeProps {
+  selected?: UITheme;
+  onSelect: (value: UITheme) => void;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+const THEMES: { key: UITheme; title: string; desc: string; emoji: string; preview: string }[] = [
+  {
+    key: 'classic',
+    title: 'クラシックRPG',
+    desc: 'ドラクエ風の青い画面',
+    emoji: '⚔️',
+    preview: 'rpg-window風のダークブルー + ゴールド文字 + ピクセルフォント',
+  },
+  {
+    key: 'modern',
+    title: 'モダンダーク',
+    desc: 'スタイリッシュなガラス風',
+    emoji: '🌙',
+    preview: 'ガラスモーフィズム + パープル + 洗練されたフォント',
+  },
+  {
+    key: 'pop',
+    title: 'ポップ＆カラフル',
+    desc: '明るく楽しいパステル調',
+    emoji: '🌈',
+    preview: 'ライトモード + パステルパープル + ピンクアクセント',
+  },
+];
+
+export function StepTheme({ selected, onSelect, onNext, onBack }: StepThemeProps) {
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  function handleSelect(key: UITheme) {
+    playSound('cursor');
+    onSelect(key);
+    // Apply theme preview immediately
+    document.documentElement.setAttribute('data-theme', key);
+  }
+
+  function handleNext() {
+    if (!selected) {
+      setLocalError('テーマを選択してください。');
+      return;
+    }
+    playSound('confirm');
+    onNext();
+  }
+
+  function handleBack() {
+    playSound('cancel');
+    onBack();
+  }
+
+  return (
+    <div className="w-full">
+      <RPGWindow className="mb-4">
+        <div className="mb-4">
+          <h2 className="font-dot-gothic text-lg font-bold text-rpg-gold">
+            画面デザインを選ぼう！
+          </h2>
+          <TypewriterText
+            text="好みの見た目を選んでください。あとから変更もできます。"
+            speed={30}
+            className="mt-1 text-sm text-blue-200/60"
+            showCursor={false}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          {THEMES.map((t) => {
+            const active = selected === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => handleSelect(t.key)}
+                className={
+                  'rounded-lg border-2 p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 ' +
+                  (active
+                    ? 'border-rpg-gold bg-rpg-gold/10 shadow-[0_0_12px_rgba(255,215,0,0.2)]'
+                    : 'border-blue-200/20 hover:border-rpg-gold/50 bg-blue-900/20')
+                }
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl">{t.emoji}</span>
+                  <div className="flex-1">
+                    <div className="font-dot-gothic font-bold text-foreground text-base">
+                      {t.title}
+                    </div>
+                    <div className="font-dot-gothic text-sm text-muted">{t.desc}</div>
+                  </div>
+                  {active && (
+                    <span className="font-dot-gothic text-xs text-rpg-gold">▶ 選択中</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {localError && (
+          <div className="rpg-window mt-4 !p-2 text-sm text-red-300 font-dot-gothic">
+            {localError}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-between">
+          <Button variant="secondary" onClick={handleBack} className="font-dot-gothic">
+            ◀ 戻る
+          </Button>
+          <Button onClick={handleNext} disabled={!selected} className="font-dot-gothic">
+            ▶ 次へ
+          </Button>
+        </div>
+      </RPGWindow>
+    </div>
+  );
+}
+```
+
+#### 2. OnboardingWizard.tsx を修正 (src/features/onboarding/components/OnboardingWizard.tsx)
+
+**変更点:**
+- importに追加: `import { StepTheme } from './StepTheme';`
+- importに追加: `import type { UITheme } from '@/types';`
+- FormStateに追加: `ui_theme?: UITheme;`
+- ステップ数を1→2→3→4→5に変更（テーマ選択をStep 2に挿入）:
+  1. 名前入力 (StepName)
+  2. テーマ選択 (StepTheme) ← NEW
+  3. アバター選択 (StepAvatar)
+  4. マスコット選択 (StepMascot)
+  5. 完了 (StepComplete)
+- currentStepの型を `1|2|3|4|5` に変更
+- stepForProgressの計算を `currentStep > 4 ? 4 : currentStep` に変更
+- プログレスバーのセグメントを4つに変更
+- テキスト「ステップ {stepForProgress}/4」に変更
+- handleCompleteでui_themeもcompleteOnboardingに渡す（ただし現在のonboardingSchemaに含まれていないのでDB保存はスキップ、localStorage保存でOK）
+
+**handleCompleteを修正:**
+```typescript
+async function handleComplete() {
+  if (!form.username || !form.avatar_type || !form.mascot_type) return;
+  setSubmitting(true);
+  setServerError(null);
+  // Save theme to localStorage (DB column addition is separate migration)
+  if (form.ui_theme) {
+    try { localStorage.setItem('quest-app-theme', form.ui_theme); } catch {}
+  }
+  const result = await completeOnboarding({
+    username: form.username,
+    avatar_type: form.avatar_type,
+    mascot_type: form.mascot_type,
+  });
+  if (result?.error) {
+    setServerError(result.error);
+    setSubmitting(false);
+    return;
+  }
+  setSubmitting(false);
+  setCurrentStep(5);
+}
+```
+
+**AnimatePresence内のステップ配置:**
+- step1 = StepName
+- step2 = StepTheme (ui_theme, handleSelect, next, back)
+- step3 = StepAvatar
+- step4 = StepMascot
+- step5 = StepComplete
+
+#### 3. ThemeProvider.tsx を修正してlocalStorage対応
+
+ThemeProviderでlocalStorageからもテーマを読み込む:
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+import { useUserStore } from '@/stores/userStore';
+
+export function ThemeProvider({ initialTheme }: { initialTheme?: string }) {
+  const userTheme = useUserStore((s) => s.user?.ui_theme);
+
+  useEffect(() => {
+    const theme = userTheme ?? (() => {
+      try { return localStorage.getItem('quest-app-theme'); } catch { return null; }
+    })() ?? initialTheme ?? 'classic';
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [userTheme, initialTheme]);
+
+  return null;
+}
+```
+
+### 制約
+- 既存のステップのスタイルパターンに合わせる
+- AnimatePresenceのトランジションを維持
+- テーマ選択時にリアルタイムプレビュー（data-theme属性を即時反映）
+- completeOnboardingのスキーマは変更しない（DB migration不要にするためlocalStorage使用）
+- 型安全性を維持

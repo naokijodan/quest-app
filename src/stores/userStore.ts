@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User } from '@/types';
+import type { User, UITheme } from '@/types';
 
 interface UserState {
   user: User | null;
@@ -8,6 +8,7 @@ interface UserState {
   setLoading: (loading: boolean) => void;
   updateXP: (xpGained: number, newLevel: number) => void;
   incrementQuestCount: () => void;
+  setTheme: (theme: UITheme) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -34,6 +35,13 @@ export const useUserStore = create<UserState>((set) => ({
           ...state.user,
           quest_count: state.user.quest_count + 1,
         },
+      };
+    }),
+  setTheme: (theme) =>
+    set((state) => {
+      if (!state.user) return state;
+      return {
+        user: { ...state.user, ui_theme: theme },
       };
     }),
 }));

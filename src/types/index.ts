@@ -8,11 +8,15 @@ export type QuestRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'c
 export type QuestType = 'normal' | 'adventure';
 export type OutputType = 'markdown' | 'json' | 'text' | 'csv';
 
+// UI Theme type
+export type UITheme = 'classic' | 'modern' | 'pop';
+
 export interface User {
   id: string;
   username: string;
   avatar_type: AvatarType;
   mascot_type: MascotType;
+  ui_theme: UITheme;
   experience_points: number;
   level: number;
   unlocked_categories: QuestCategory[];

@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono';
 import { DotGothic16 } from 'next/font/google';
 import { Toast } from '@/components/ui/Toast';
 import { AudioUnlocker } from '@/components/ui/AudioUnlocker';
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import './globals.css';
 
 const dotGothic16 = DotGothic16({
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} ${dotGothic16.variable} antialiased`}
       >
+        <ThemeProvider />
         {children}
         <Toast />
         <AudioUnlocker />
